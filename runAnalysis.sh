@@ -3,8 +3,8 @@
 # Usage info
 show_help() {
 cat << EOF
-Usage: ${0##*/} [-hv] [-f FILE] [-p ROOT_PATH] 
-Run analysis pipeline on hadoop
+Usage: ${0##*/} [-hv] [-f FILE] [-p ROOT_PATH] [ANALYSIS_SCRIPTS]...
+Run analysis pipeline on hadoop. When no analysis script(s) is passed via the arguments, we'll run all the scripts at our disposal! 
     
     -h          display this help and exit
     -p PATH     read analysis files from hadoop path
@@ -37,7 +37,7 @@ fi
 rootPath=""
 inputFiles=()
 verbose=0
-
+analysisScripts=( 'pig LODAnalysis/pig/extractNs.py' )
 OPTIND=1 # Reset is necessary if getopts was used previously in the script.  It is a good idea to make this local in a function.
 while getopts "hvp:f:" opt; do
     case "$opt" in
@@ -60,6 +60,16 @@ done
 shift "$((OPTIND-1))" # Shift off the options and optional --.
 
 
+if [ "$#" -eq 0 ]; then
+	echo "running all analysis methods at our disposal!"
+else 
+	echo "running the following analysis methods:"
+	printf '%s\n' "$@"
+	analysisScripts=( "$@" )
+fi
+
+
+
 if [ ${#inputFiles[@]} -eq 0 ]; then
 	if [ "$rootPath" ]; then
 		echo "fetching ntriple directories from hadoop"
@@ -77,9 +87,11 @@ if [ ${#inputFiles[@]} -eq 0 ]; then
 fi
 
 
-for inputFile in "${inputFiles[@]}"
-do :
-  pig LODAnalysis/pig/extractNs.py $inputFile
+for inputFile in "${inputFiles[@]}"; do
+	for analysisFunction in "${analysisScripts[@]}"; do 
+		`$analysisFunction $inputFile`;
+	done
+  #pig LODAnalysis/pig/extractNs.py $inputFile
 done
 
 
