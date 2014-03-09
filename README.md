@@ -7,6 +7,11 @@ LODAnalysis
 * Python[3]
 * D2S4PIG[4]: clone project, run `mvn clean package` to compile, and add it to the PIG classpath
 
+
+##Analysis
+
+###Main Analysis method
+Run `runAnalysis.sh` to get more information on how to run all analysis methods
 ###NameSpace extraction
 To run, execute
 `pig LODAnalysis/pig/extractNs.py <hadoop_input_file>`. Output is stored in path `<hadoop_input_file>_analysis/namespaces`.
