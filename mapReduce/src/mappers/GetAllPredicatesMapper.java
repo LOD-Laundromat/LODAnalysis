@@ -8,12 +8,17 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /* ================================================ */
-public class GetSchemaStatsMapper extends Mapper<LongWritable, Text, Text, NullWritable> {
+public class GetAllPredicatesMapper extends Mapper<LongWritable, Text, Text, NullWritable> {
 
   private NullWritable nothing = NullWritable.get();
   private Text oKey = new Text();
   /* ----------------------------------- */
   private final String delim = "\\s?(<|\")";
+  /* ----------------------------------- */
+  private final String rdfOnly   = "http://www.w3.org/.*rdf-syntax-ns#";
+  private final String xmlSchema = "http://www.w3.org/.*/rdf-schema#";
+  private final String rdfSchema = "http://www.w3.org/.*/XMLSchema#";
+  private final String owlSchema = "http://www.w3.org/.*/07/owl#";
   /* ----------------------------------- */
   private boolean validTriple (String str) {
     return str.matches ("^"                       +
@@ -22,10 +27,6 @@ public class GetSchemaStatsMapper extends Mapper<LongWritable, Text, Text, NullW
                         "\\s+(\".*\"\\^\\^)?<.*>" +
                         "\\s+\\."                 +
                         "$");
-  }
-  /* ----------------------------------- */
-  private boolean isSchema (String term) {
-    return term.matches ("^.*http://www.w3.org/.*/(rdf-syntax-ns|rdf-schema|owl|XMLSchema)#.*$");
   }
   /* ----------------------------------- */
   @Override
@@ -42,13 +43,9 @@ public class GetSchemaStatsMapper extends Mapper<LongWritable, Text, Text, NullW
       /*
        * Now we split the triples into [s, p, o].
        */
-      String[] terms = inputTriple.split(delim);
+      String[] terms = value.toString().split(delim);
       /* ----------------------------------- */
-      for (int i = 0; i < terms.length; i++) {
-        if (isSchema (terms[i])) {
-          oKey.set (terms[i]);
-          context.write (oKey, nothing);
-        }
-      }
+      oKey.set (terms[1]);   // We are only interested in predicates
+      context.write (oKey, nothing);
     }
 }
