@@ -11,9 +11,20 @@ LODAnalysis
 To run, execute
 `pig LODAnalysis/pig/extractNs.py <hadoop_input_file>`. Output is stored in path `<hadoop_input_file>_analysis/namespaces`.
 For now, this script only counts the namespaces occuring in predicate position. (we can easily change this)
-    
-    
-    
+
+###Schema Information Extracttion
+To compile, run
+
+  ant
+
+in mapReduce directory.
+
+To run the program, run
+
+  hadoop jar lib/datasetAnalysisTools.jar jobs.GetSchemaStats <input dir> <output dir> [--reducetasks "number of reducers"]
+
+please note that "input dir" and "output dir" are supposed to be on the hadoop filesystem.
+
 ##Links
 1. [http://pig.apache.org/](http://pig.apache.org/)
 2. [http://hadoop.apache.org/](http://hadoop.apache.org/)
