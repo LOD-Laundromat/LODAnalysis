@@ -3,16 +3,16 @@ from org.apache.pig.scripting import Pig
 import sys
 from os.path import dirname, basename, splitext
 
-inputFile = ""
+
 
 if len(sys.argv) <= 1:
-    print "at least 1 arg required (input .nt file). optional arg: output file"
+    print "at least 1 arg required (input dataset dir). optional arg: output file"
     sys.exit(1)
 
 
-inputFile = sys.argv[1]
-outputDir = "%s_analysis" % (inputFile)
-outputFile = "%s/namespaces" % (outputDir)
+inputDir = sys.argv[1]
+inputFile = "%s/input.nt" % (inputDir)
+outputFile = "%s/namespaces" % (inputDir)
 if (len(sys.argv) == 3):
     outputFile = sys.argv[2]
     
@@ -21,16 +21,20 @@ REGISTER d2s4pig/target/d2s4pig-1.0.jar
 DEFINE NtLoader com.data2semantics.pig.loaders.NtLoader();
 graph = LOAD '$inputFile' USING NtLoader() AS (sub:chararray, pred:chararray, obj:chararray);
 
-mkdir $outputDir
+resources = FOREACH graph GENERATE FLATTEN(TOBAG(*));
 
 
-propNameSpaces = FOREACH graph GENERATE REGEX_EXTRACT (pred, '<(.*)[#/].*>', 1) AS namespace;
+namespaces = FOREACH resources {
+	---if url has no slashes or hashtag other than
+	namespace = (LAST_INDEX_OF($0, '/', 0) > 8 || LAST_INDEX_OF($0, '#', 0) > 8 ? REGEX_EXTRACT ($0, '<(.*)[#/].*>', 1) AS namespace: $0);
+	GENERATE namespace;
+}
 
-propNameSpaces = GROUP propNameSpaces BY namespace;
+groupedNamespaces = GROUP namespaces BY $0;
 
-nameSpaceCounts = FOREACH propNameSpaces GENERATE group, COUNT(propNameSpaces);
+namespaceCounts = FOREACH groupedNamespaces GENERATE group, COUNT(namespaces);
 rmf $outputFile
-STORE nameSpaceCounts INTO '$outputFile' USING PigStorage();
+STORE namespaceCounts INTO '$outputFile' USING PigStorage();
 """
 
 
