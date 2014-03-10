@@ -14,15 +14,16 @@ Run analysis pipeline on hadoop. When no analysis script(s) is passed via the ar
                 verbosity.
 EOF
 }
-function hadoopLs {
-	hadoopListing=()
-	cmd="hadoop fs -ls $1 | grep -e '\.nt\(\.gz\)*$'"
+function hadoopDatasetLs {
+	hadoopDatasetListing=()
+	#we want to get all available datasets in a certain folder. The names are md5 hashed, meaning they should have length 32
+	cmd="hadoop fs -ls $1 | grep -e '^.\{32\}$'"
 	#echo "hadoop fs -ls $1";
 	if [ "$verbose" -eq 1 ]; then echo "fetching hadoop files: $cmd"; fi
 	dirListing=`eval $cmd`
 	for word in ${dirListing} ; do
  		if [[ $word =~ ^/ ]];then
-	    	hadoopListing+=(${word})
+	    	hadoopDatasetListing+=(${word})
 	    fi
 	done
 }
@@ -77,8 +78,8 @@ fi
 if [ ${#inputFiles[@]} -eq 0 ]; then
 	if [ "$rootPath" ]; then
 		echo "fetching ntriple directories from hadoop"
-		hadoopLs
-		inputFiles=$hadoopListing
+		hadoopDatasetLs
+		inputFiles=$hadoopDatasetListing
 		if [ ${#inputFiles[@]} -eq 0 ]; then
 			echo "Could not find ntriple directories on hdfs. Root path: $rootPath";
 			exit 1
