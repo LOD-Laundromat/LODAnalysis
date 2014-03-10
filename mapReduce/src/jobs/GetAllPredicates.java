@@ -4,8 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import reducers.GetSchemaStatsReducer;
-import mappers.GetSchemaStatsMapper;
+import reducers.GetAllPredicatesReducer;
+import mappers.GetAllPredicatesMapper;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public class GetAllPredicates extends Configured implements Tool {
 
-	private static Logger log = LoggerFactory.getLogger(GetSchemaStats.class);
+	private static Logger log = LoggerFactory.getLogger(GetAllPredicates.class);
 
         private static String inputPath;
         private static String outputPath;
@@ -47,7 +47,7 @@ public class GetAllPredicates extends Configured implements Tool {
 
 	public static void main(String[] args) throws Exception {
 		if (args.length < 2) {
-			System.out.println("Usage: GetSchemaStats <input dir> <output dir>");
+			System.out.println("Usage: GetAllPredicates <input dir> <output dir>");
 			System.exit(0);
 		}
 
@@ -55,7 +55,7 @@ public class GetAllPredicates extends Configured implements Tool {
                 outputPath = args[1];
 
 		long time = System.currentTimeMillis();
-		int res = ToolRunner.run(new Configuration(), new GetSchemaStats(), args);
+		int res = ToolRunner.run(new Configuration(), new GetAllPredicates(), args);
 		log.info("Import time: " + (System.currentTimeMillis() - time));
 		System.exit(res);
 	}
@@ -70,7 +70,7 @@ public class GetAllPredicates extends Configured implements Tool {
 		Configuration conf = new Configuration(this.getConf());
 
 		Job job = new Job(conf);
-		job.setJarByClass(GetSchemaStats.class);
+		job.setJarByClass(GetAllPredicates.class);
 		job.setJobName(name);
 		job.setNumReduceTasks(numReduceTasks);
                 // TODO: Check this out
@@ -81,7 +81,7 @@ public class GetAllPredicates extends Configured implements Tool {
 	}
 
 	public void sampleCommonResources(String[] args) throws Exception {
-		Job job = createNewJob("Get Schema Statistics");
+		Job job = createNewJob("Get All Predicates");
 
 		// Input
 		FileInputFormat.addInputPath(job, new Path(inputPath));
@@ -92,10 +92,10 @@ public class GetAllPredicates extends Configured implements Tool {
 		job.setInputFormatClass(TextInputFormat.class);
 
 		// Job
-		job.setMapperClass(GetSchemaStatsMapper.class);
+		job.setMapperClass(GetAllPredicatesMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(NullWritable.class);
-		job.setReducerClass(GetSchemaStatsReducer.class);
+		job.setReducerClass(GetAllPredicatesReducer.class);
 
 		// Output
 		job.setOutputKeyClass(Text.class);

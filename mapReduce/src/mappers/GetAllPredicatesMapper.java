@@ -13,20 +13,16 @@ public class GetAllPredicatesMapper extends Mapper<LongWritable, Text, Text, Nul
   private NullWritable nothing = NullWritable.get();
   private Text oKey = new Text();
   /* ----------------------------------- */
-  private final String delim = "\\s?(<|\")";
+  private static final String delim = "\\s";
   /* ----------------------------------- */
-  private final String rdfOnly   = "http://www.w3.org/.*rdf-syntax-ns#";
-  private final String xmlSchema = "http://www.w3.org/.*/rdf-schema#";
-  private final String rdfSchema = "http://www.w3.org/.*/XMLSchema#";
-  private final String owlSchema = "http://www.w3.org/.*/07/owl#";
-  /* ----------------------------------- */
-  private boolean validTriple (String str) {
-    return str.matches ("^"                       +
-                        "\\s?(\".*\"\\^\\^)?<.*>" +
-                        "\\s+(\".*\"\\^\\^)?<.*>" +
-                        "\\s+(\".*\"\\^\\^)?<.*>" +
-                        "\\s+\\."                 +
-                        "$");
+  private static boolean validTriple (String str) {
+    return str.matches (
+        "^"                                +
+        "\\s?(\".*\"\\^\\^)?<.*>"          + // Subject URI
+        "\\s+(\".*\"\\^\\^)?<.*>"          + // Predicate URI
+        "\\s+((\".*\"\\^\\^)?<.*>|\".*\")" + // Object URIs or Literal
+        "\\s+\\."                          + // Dot
+        "$");
   }
   /* ----------------------------------- */
   @Override
