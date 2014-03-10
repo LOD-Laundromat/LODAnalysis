@@ -6,13 +6,13 @@ from os.path import dirname, basename, splitext
 
 
 if len(sys.argv) <= 1:
-    print "at least 1 arg required (input .nt file). optional arg: output file"
+    print "at least 1 arg required (input dataset dir). optional arg: output file"
     sys.exit(1)
 
 
-inputFile = sys.argv[1]
-outputDir = dirname(inputFile)
-outputFile = "%s/namespaces" % (outputDir)
+inputDir = sys.argv[1]
+inputFile = "%s/input.nt" % (inputDir)
+outputFile = "%s/namespaces" % (inputDir)
 if (len(sys.argv) == 3):
     outputFile = sys.argv[2]
     

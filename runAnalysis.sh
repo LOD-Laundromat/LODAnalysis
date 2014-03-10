@@ -30,10 +30,14 @@ function hadoopDatasetLs {
 
 #do sanity check (we need to be in the proper directory to make sure the relative paths in for instance our pig scripts can be reached properly)
 #just a naive check (check if there is an LODAnalysis dir in the current working dir)
-#if [ ! -d LODAnalysis ]; then
-#    echo "Wrong working directory. Cannot locate LODAnalysis path in current working directory";
-#    exit 1
-#fi
+if [ ! -d LODAnalysis ]; then
+    echo "Wrong working directory. Cannot locate LODAnalysis path in current working directory.";
+	fileDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	if [[ "$fileDir" == `pwd` ]]; then
+		echo "You are currently working in the LODAnalysis directory. You should probably move one dir upwards"
+	fi
+    exit 1
+fi
 
 # Initialize our own variables:
 outputPath=""
@@ -79,8 +83,8 @@ if [ ${#inputFiles[@]} -eq 0 ]; then
 	if [ "$rootPath" ]; then
 		echo "fetching ntriple directories from hadoop"
 		hadoopDatasetLs
-		inputFiles=$hadoopDatasetListing
-		if [ ${#inputFiles[@]} -eq 0 ]; then
+		datasetDirs=$hadoopDatasetListing
+		if [ ${#datasetDirs[@]} -eq 0 ]; then
 			echo "Could not find ntriple directories on hdfs. Root path: $rootPath";
 			exit 1
 		fi
@@ -92,9 +96,9 @@ if [ ${#inputFiles[@]} -eq 0 ]; then
 fi
 
 
-for inputFile in "${inputFiles[@]}"; do
+for datasetDir in "${datasetDirs[@]}"; do
 	for analysisFunction in "${analysisScripts[@]}"; do
-		`$analysisFunction $inputFile $outputPath`;
+		`$analysisFunction $datasetDir $outputPath`;
 	done
   #pig LODAnalysis/pig/extractNs.py $inputFile
 done
