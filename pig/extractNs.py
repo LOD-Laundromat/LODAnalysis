@@ -23,10 +23,12 @@ graph = LOAD '$inputFile' USING NtLoader() AS (sub:chararray, pred:chararray, ob
 
 resources = FOREACH graph GENERATE FLATTEN(TOBAG(*));
 
+---filter out literals
+filteredResources = FILTER resources BY SUBSTRING($0, 0, 1) == '<';
 
-namespaces = FOREACH resources {
-	---if url has no slashes or hashtag other than
-	namespace = (LAST_INDEX_OF($0, '/', 0) > 8 || LAST_INDEX_OF($0, '#', 0) > 8 ? REGEX_EXTRACT ($0, '<(.*)[#/].*>', 1) AS namespace: $0);
+namespaces = FOREACH filteredResources {
+	---if url has no slashes or hashtag other than the one in http://, use complete uri as namespace..
+	namespace = (LAST_INDEX_OF($0, '/') > 8 OR LAST_INDEX_OF($0, '#') > 8 ? REGEX_EXTRACT ($0, '<(.*)[#/].*>', 1): $0);
 	GENERATE namespace;
 }
 
