@@ -1,9 +1,15 @@
 import java.lang.Exception;
+import java.lang.StringBuilder;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 import java.util.Scanner;
 
 import data.Triple;
@@ -21,25 +27,34 @@ public class BkChain extends Object {
   private static Map<String, Set<String>> sameAsObjectSet   = new HashMap<String, Set<String>>();
 
   public static void main (String[] argv) {
-
     long tripleCounter = 0;
-    try {
-      input = new Scanner (System.in);
-      /* ----------------------------------- */
-      while (input.hasNextLine()) {
-          triple = new Triple(input.nextLine());
+    String inputString = null;
+    Triple inputTriple = null;
+    String inputFile;
 
-          filterTriple(triple);
-          updateTripleCounter();
-      }
-      checkoutSameAsChain();
-      //printSets();
-      /* ----------------------------------- */
-    } finally {
-      if (input != null) {
-        input.close();
-      }
+    if (argv.length < 1) {
+      System.err.println ("give the input file!");
+      System.exit(1);
     }
+
+    inputFile = argv[0];
+
+    try {
+      BufferedReader br = new BufferedReader(new FileReader(inputFile));
+      try {
+        while ((inputString = br.readLine()) != null) {
+          inputTriple = new Triple(inputString);
+          filterTriple(inputTriple);
+          updateTripleCounter();
+        }
+      } finally {
+        br.close();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    checkoutSameAsChain();
   }
   /* ----------------------------------- */
   private static void filterTriple (Triple triple) {
@@ -51,15 +66,55 @@ public class BkChain extends Object {
   }
   /* ----------------------------------- */
   private static void checkoutSameAsChain() {
-    for (String c : classSet) {
-      if (sameAsSubjectSet.get(c) != null) {
-        for (String s : sameAsSubjectSet.get(c)) {
-          System.out.println (s);
+
+    boolean foundReplacement;
+    List<String> temp = new ArrayList<String>();
+
+    while (true) {
+      foundReplacement = false;
+      /* ----------------------------------- */
+      System.out.println ("-------------------------------");
+      for (String c : classSet) {
+        System.out.println ("Subject class=" + c);
+        if (sameAsSubjectSet.get(c) != null) {
+          for (String s : sameAsSubjectSet.get(c)) {
+            if (!classSet.contains(s)){
+              temp.add(s);
+              foundReplacement = true;
+            }
+          }
         }
-      } else if (sameAsObjectSet.get(c) != null) {
-        for (String s : sameAsObjectSet.get(c)) {
-          System.out.println (s);
+      }
+      if (foundReplacement) {
+        for (String s : temp) {
+          System.out.println(s);
+          classSet.add(s);
         }
+        temp.clear();
+      }
+      /* ----------------------------------- */
+      System.out.println ("-------------------------------");
+      for (String c : classSet) {
+        System.out.println ("Object class=" + c);
+        if (sameAsObjectSet.get(c) != null) {
+          for (String s : sameAsObjectSet.get(c)) {
+            if (!classSet.contains(s)){
+              temp.add(s);
+              foundReplacement = true;
+            }
+          }
+        }
+      }
+      if (foundReplacement) {
+        for (String s : temp) {
+          System.out.println(s);
+          classSet.add(s);
+        }
+        temp.clear();
+      }
+      /* ----------------------------------- */
+      if (foundReplacement == false) {
+        break;
       }
     }
   }
@@ -109,7 +164,7 @@ public class BkChain extends Object {
   /* ----------------------------------- */
   private static void updateTripleCounter() {
     if (tripleCounter % threshold == 0) {
-      System.out.println (tripleCounter + "M");
+      System.out.println (tripleCounter);
     }
     tripleCounter++;
   }
