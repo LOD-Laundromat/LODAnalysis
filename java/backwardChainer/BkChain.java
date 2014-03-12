@@ -54,6 +54,7 @@ public class BkChain extends Object {
       e.printStackTrace();
     }
 
+//    printSets();
     checkoutSameAsChain();
   }
   /* ----------------------------------- */
@@ -67,56 +68,39 @@ public class BkChain extends Object {
   /* ----------------------------------- */
   private static void checkoutSameAsChain() {
 
-    boolean foundReplacement;
     List<String> temp = new ArrayList<String>();
 
-    while (true) {
-      foundReplacement = false;
-      /* ----------------------------------- */
-      System.out.println ("-------------------------------");
+    do {
       for (String c : classSet) {
-        System.out.println ("Subject class=" + c);
+        /* ----------------------------------- */
         if (sameAsSubjectSet.get(c) != null) {
           for (String s : sameAsSubjectSet.get(c)) {
             if (!classSet.contains(s)){
               temp.add(s);
-              foundReplacement = true;
             }
           }
         }
-      }
-      if (foundReplacement) {
-        for (String s : temp) {
-          System.out.println(s);
-          classSet.add(s);
-        }
-        temp.clear();
-      }
-      /* ----------------------------------- */
-      System.out.println ("-------------------------------");
-      for (String c : classSet) {
-        System.out.println ("Object class=" + c);
+        /* ----------------------------------- */
         if (sameAsObjectSet.get(c) != null) {
           for (String s : sameAsObjectSet.get(c)) {
             if (!classSet.contains(s)){
               temp.add(s);
-              foundReplacement = true;
             }
           }
         }
+        /* ----------------------------------- */
       }
-      if (foundReplacement) {
+      /* ----------------------------------- */
+      if (temp.size() > 0) {
         for (String s : temp) {
           System.out.println(s);
           classSet.add(s);
         }
         temp.clear();
-      }
-      /* ----------------------------------- */
-      if (foundReplacement == false) {
+      } else {
         break;
       }
-    }
+    } while (true);
   }
   /* ----------------------------------- */
   private static void filterClasses (Triple triple) {
@@ -157,8 +141,12 @@ public class BkChain extends Object {
   /* ----------------------------------- */
   private static void printSets() {
     for (Map.Entry<String, Set<String>> entry : sameAsSubjectSet.entrySet()) {
-      System.out.println ("key = " + entry.getKey());
-      System.out.println ("Value = " + entry.getValue());
+      System.out.println ("S key = " + entry.getKey());
+      System.out.println ("S Value = " + entry.getValue());
+    }
+    for (Map.Entry<String, Set<String>> entry : sameAsObjectSet.entrySet()) {
+      System.out.println ("O key = " + entry.getKey());
+      System.out.println ("O Value = " + entry.getValue());
     }
   }
   /* ----------------------------------- */
