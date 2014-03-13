@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import data.Triple;
+import rdf.Rdf;
+import rdfs.Rdfs;
+import owl.Owl;
 
 public class BkChain extends Object {
 
@@ -55,27 +58,32 @@ public class BkChain extends Object {
     }
 
 //    printSets();
-    checkoutSameAsChain();
+    checkoutSameAsChain(classSet);
+    for (String type : classSet) {
+      System.out.println (type);
+    }
   }
   /* ----------------------------------- */
   private static void filterTriple (Triple triple) {
-        filterClasses    (triple);
-        filterProperties (triple);
-        filterSameAs     (triple);
-        //filterDomain     (triple);
-        //filterRange      (triple);
+        filterClasses       (triple);
+        filterProperties    (triple);
+        filterSameAs        (triple);
+        filterDomain        (triple);
+        filterRange         (triple);
+        filterSubClassOfAndEquClass       (triple);
+        filterSubPropertyOfAndEquProperty (triple);
   }
   /* ----------------------------------- */
-  private static void checkoutSameAsChain() {
+  private static void checkoutSameAsChain(Set<String> set) {
 
     List<String> temp = new ArrayList<String>();
 
     do {
-      for (String c : classSet) {
+      for (String c : set) {
         /* ----------------------------------- */
         if (sameAsSubjectSet.get(c) != null) {
           for (String s : sameAsSubjectSet.get(c)) {
-            if (!classSet.contains(s)){
+            if (!set.contains(s)){
               temp.add(s);
             }
           }
@@ -83,18 +91,16 @@ public class BkChain extends Object {
         /* ----------------------------------- */
         if (sameAsObjectSet.get(c) != null) {
           for (String s : sameAsObjectSet.get(c)) {
-            if (!classSet.contains(s)){
+            if (!set.contains(s)){
               temp.add(s);
             }
           }
         }
-        /* ----------------------------------- */
       }
       /* ----------------------------------- */
       if (temp.size() > 0) {
         for (String s : temp) {
-          System.out.println(s);
-          classSet.add(s);
+          set.add(s);
         }
         temp.clear();
       } else {
@@ -104,13 +110,13 @@ public class BkChain extends Object {
   }
   /* ----------------------------------- */
   private static void filterClasses (Triple triple) {
-    if (triple.getObject().matches(".*#Class>")) {
+    if (triple.getObject().equals(Rdfs.CLASS)) {
           classSet.add(triple.getSubject());
     }
   }
   /* ----------------------------------- */
   private static void filterProperties (Triple triple) {
-    if (triple.getObject().matches(".*#Property>")) {
+    if (triple.getObject().equals(Rdf.PROPERTY)) {
           propertySet.add(triple.getSubject());
     }
   }
@@ -119,7 +125,7 @@ public class BkChain extends Object {
     Set<String> objectSet = null;
     Set<String> subjectSet = null;
 
-    if (triple.getPredicate().matches(".*owl#sameAs>")) {
+    if (triple.getPredicate().equals(Owl.SAMEAS)) {
 
       if (sameAsSubjectSet.get(triple.getSubject()) == null) {
         objectSet = new HashSet<String>();
@@ -136,6 +142,42 @@ public class BkChain extends Object {
       } else {
         sameAsObjectSet.get(triple.getObject()).add(triple.getSubject());
       }
+    }
+  }
+  /* ----------------------------------- */
+  private static void filterSubClassOfAndEquClass (Triple triple) {
+    if (triple.getPredicate().equals(Rdfs.SUBCLASSOF) ||
+        triple.getPredicate().equals(Owl.EQUCLASS)) {
+      classSet.add(triple.getSubject());
+      classSet.add(triple.getObject());
+    }
+  }
+  /* ----------------------------------- */
+  private static void filterSubPropertyOfAndEquProperty (Triple triple) {
+    if (triple.getPredicate().equals(Rdfs.SUBPROPERTYOF) ||
+        triple.getPredicate().equals(Owl.EQUPROPERTY)) {
+      propertySet.add(triple.getSubject());
+      propertySet.add(triple.getObject());
+    }
+  }
+  /* ----------------------------------- */
+  private static void filterDomain (Triple triple) {
+    if (triple.getPredicate().equals(Rdfs.DOMAIN)) {
+      propertySet.add(triple.getSubject());
+      classSet.add(triple.getObject());
+    }
+  }
+  /* ----------------------------------- */
+  private static void filterRange (Triple triple) {
+    if (triple.getPredicate().equals(Rdfs.RANGE)) {
+      propertySet.add(triple.getSubject());
+      classSet.add(triple.getObject());
+    }
+  }
+  /* ----------------------------------- */
+  private static void filterDatatype (Triple triple) {
+    if (triple.getPredicate().equals(Rdfs.DATATYPE)) {
+      classSet.add(triple.getSubject());
     }
   }
   /* ----------------------------------- */
