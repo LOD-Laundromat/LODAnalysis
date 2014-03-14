@@ -11,7 +11,7 @@ reducerTasks=1
 # Checking optional arguments
 # -------------------------------------
 usage() {
-  echo "Usage: $0 <hadoop job name> <input> <output>";
+  echo "Usage: $0 <hadoop job name> <input> <output> [options]"
   exit 1;
 }
 # -------------------------------------
