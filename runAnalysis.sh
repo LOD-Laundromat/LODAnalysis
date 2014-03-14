@@ -44,7 +44,7 @@ outputPath=""
 rootPath=""
 inputFiles=()
 verbose=0
-analysisScripts=( 'pig LODAnalysis/pig/extractGeneralNsAndUriStats.py', 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
+analysisScripts=( 'pig LODAnalysis/pig/calcStats.py', 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
 OPTIND=1 # Reset is necessary if getopts was used previously in the script.  It is a good idea to make this local in a function.
 while getopts "hvpo:f:" opt; do
     case "$opt" in
