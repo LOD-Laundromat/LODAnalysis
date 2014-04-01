@@ -1,10 +1,9 @@
 package lodanalysis;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.List;
-
-import lodanalysis.authority.CalcAuthority;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -16,7 +15,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class Entry {
-	List<String> possibleAnalysis;
+//	List<String> possibleAnalysis;
 	CommandLine line;
 
 	public Entry(String[] args)  {
@@ -31,47 +30,45 @@ public class Entry {
 		try {
 			line = parser.parse(getOptions(), args);
 			validateParameters();
+			run();
 		} catch (ParseException e) {
 			String jarName = new java.io.File(Entry.class.getProtectionDomain()
 					  .getCodeSource()
 					  .getLocation()
 					  .getPath())
 					.getName();
-			String header = "Java entry class to run our LOD cloud experiments. Usage: " + jarName + " [[OPTION]]... " + possibleAnalysis.toString();
-			if (e.getMessage().length() > 0) System.err.println("Wrong parameters: " + e.getMessage());
+			String header = "Java entry class to run our LOD cloud experiments. Usage: " + jarName + " [[OPTION]]... [[com.package.ClassToRun]]";
+			if (e.getMessage().length() > 0) System.err.println("Wrong parameters: " + e.getMessage() + "\n");
 			help.printHelp(header, options);
 			System.exit(1);
+		} catch (ClassNotFoundException e) {
+			System.err.println("Could not initialize class " + e.getMessage());
+			System.exit(1);
+		} catch (ReflectiveOperationException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
 		}
-		run();
+		
 	}
 	
-	private void run() {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void run() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		for (Object arg: line.getArgList()) {
 			String argString = (String)arg;
-			if (possibleAnalysis.contains(argString)) {
-				if (argString.equals("authority")) {
-					new CalcAuthority(this);
-				}
-				break;
-			} else {
-				System.out.println("murml murml, skipping unrecognized argument " + argString);
-			}
+			System.out.println("running");
+			Class myClass = Class.forName(argString);
+			Class[] types = {this.getClass()};
+			Constructor constructor = myClass.getConstructor(types);
+
+			Object[] parameters = {this};
+			constructor.newInstance(parameters);
 		}
 	}
 
 	private void validateParameters() throws ParseException{
 		if (line.hasOption("help")) throw new ParseException("");
-		if (line.getArgList().size() == 0) throw new ParseException("You forgot to tell me what task you want me to run!");
-		boolean hasValidAnalysisArg = false;
-		for (Object arg: line.getArgList()) {
-			String argString = (String)arg;
-			if (possibleAnalysis.contains(argString)) {
-				hasValidAnalysisArg = true;
-				break;
-			}
-		}
-		
-		if (!hasValidAnalysisArg) throw new ParseException("Could not identify from your arguments what type of analysis to run");
+		if (line.getArgList().size() == 0) throw new ParseException("You forgot to tell me what class(es) you want to run!");
 		if (!line.hasOption("path")) throw new ParseException("Please specify the path where we can find the dataset directories");
 		
 		if (!new File(line.getOptionValue("path")).exists()) throw new ParseException("The datasets path you specified does not exist");

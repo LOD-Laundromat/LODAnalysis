@@ -1,12 +1,14 @@
 package lodanalysis.authority;
 
 import lodanalysis.Entry;
+import lodanalysis.RuneableClass;
 
 
 
-public class CalcAuthority {
+public class CalcAuthority extends RuneableClass {
 	
-	public CalcAuthority(Entry options) {
+	public CalcAuthority(Entry entry) {
+		super(entry);
 		System.out.println("in calc!");
 	}
 	
