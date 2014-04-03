@@ -46,7 +46,7 @@ inputFiles=()
 verbose=0
 analysisScripts=( 'pig LODAnalysis/pig/calcStats.py', 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
 OPTIND=1 # Reset is necessary if getopts was used previously in the script.  It is a good idea to make this local in a function.
-while getopts "hvpo:f:" opt; do
+while getopts "hvp:o:f:" opt; do
     case "$opt" in
         h)
             show_help
@@ -69,13 +69,7 @@ done
 shift "$((OPTIND-1))" # Shift off the options and optional --.
 
 
-if [ "$#" -eq 0 ]; then
-	echo "running all analysis methods at our disposal!"
-else
-	echo "running the following analysis methods:"
-	printf '%s\n' "$@"
-	analysisScripts=( "$@" )
-fi
+
 
 
 
@@ -86,6 +80,7 @@ if [ ${#inputFiles[@]} -eq 0 ]; then
 		datasetDirs=$hadoopDatasetListing
 		if [ ${#datasetDirs[@]} -eq 0 ]; then
 			echo "Could not find ntriple directories on hdfs. Root path: $rootPath";
+			show_help >&2
 			exit 1
 		fi
 	else
@@ -95,6 +90,13 @@ if [ ${#inputFiles[@]} -eq 0 ]; then
 	fi
 fi
 
+if [ "$#" -eq 0 ]; then
+	echo "running all analysis methods at our disposal!"
+else
+	echo "running the following analysis methods:"
+	printf '%s\n' "$@"
+	analysisScripts=( "$@" )
+fi
 
 for datasetDir in "${datasetDirs[@]}"; do
 	for analysisFunction in "${analysisScripts[@]}"; do
