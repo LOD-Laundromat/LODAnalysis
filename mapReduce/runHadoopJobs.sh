@@ -51,7 +51,7 @@ for opt do
     ;;
     # --------------------------
     *)
-    if test "$opt" == ""; then
+    if [ -z "$opt" ]; then
       usage;
     fi
     case $givenMandatoryArgs in
@@ -75,7 +75,7 @@ done
 # -------------------------------------
 # Checking for mandatory arguments
 # -------------------------------------
-if [[ $givenMandatoryArgs -lt 3 ]]; then
+if [ $givenMandatoryArgs -lt 3 ]; then
   usage;
 fi
 # -------------------------------------

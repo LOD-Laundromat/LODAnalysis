@@ -19,8 +19,15 @@ public class Entry {
 	CommandLine line;
 
 	public Entry(String[] args)  {
-		Arrays.asList(new String[]{"authority"});
+//		Arrays.asList(new String[]{"authority"});
 		parseArgs(args);
+	}
+	
+	public File[] getDatasetDirs() {
+		File datasetParentDir = new File(line.getOptionValue("path"));
+		return datasetParentDir.listFiles();
+		
+//		return null;
 	}
 
 	private void parseArgs(String[] args) {

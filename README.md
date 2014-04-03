@@ -14,6 +14,8 @@ LODAnalysis
 * Fetch datasets (wouter)
 * hadoop fs -put all datasets
 * exec `runAnalysis.sh -p <hadoop_path>`
+* hadoop fs -get (but merge) hadoop analysis
+* java -jar .. <class1> <class2>
 
 
 

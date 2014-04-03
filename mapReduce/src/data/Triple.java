@@ -11,13 +11,14 @@ public class Triple extends Object {
   private String object    = null;;
   /* ----------------------------- */
   private boolean isValidTriple (String tripleString) {
-    return tripleString.matches (
-        "^"                                +
-        "\\s?(\".*\"\\^\\^)?<.*>"          + // Subject URI
-        "\\s+(\".*\"\\^\\^)?<.*>"          + // Predicate URI
-        "\\s+((\".*\"\\^\\^)?<.*>|\".*\")" + // Object URIs or Literal
-        "\\s+\\."                          + // Dot
-        "$");
+	  return true;
+//    return tripleString.matches (
+//        "^"                                +
+//        "\\s?(\".*\"\\^\\^)?<.*>"          + // Subject URI
+//        "\\s+(\".*\"\\^\\^)?<.*>"          + // Predicate URI
+//        "\\s+((\".*\"\\^\\^)?<.*>|\".*\")" + // Object URIs or Literal
+//        "\\s+\\."                          + // Dot
+//        "$");
   }
   /* ----------------------------- */
   public Triple (String input) throws Exception {
