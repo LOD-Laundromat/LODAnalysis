@@ -9,6 +9,16 @@ LODAnalysis
 
 
 ##Analysis
+###pipeline:
+
+* Fetch datasets (wouter)
+* hadoop fs -put all datasets
+* exec `runAnalysis.sh -p <hadoop_path>`
+* hadoop fs -get (but merge) hadoop analysis
+* java -jar .. <class1> <class2>
+
+
+
 
 ###Main Analysis method
 Run `runAnalysis.sh` to get more information on how to run all analysis methods

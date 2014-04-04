@@ -3,3 +3,7 @@
 .pydevproject
 *.class
 bin
+/target
+.settings
+*.log
+*.err

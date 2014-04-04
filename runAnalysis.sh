@@ -1,5 +1,8 @@
 #!/bin/bash
-
+errLog='LODAnalysis/runAnalysis.err'
+log='LODAnalysis/runAnalysis.log'
+rm -f $errLog;
+rm -f $log;
 # Usage info
 show_help() {
 cat << EOF
@@ -17,13 +20,16 @@ EOF
 function hadoopDatasetLs {
 	hadoopDatasetListing=()
 	#we want to get all available datasets in a certain folder. The names are md5 hashed, meaning they should have length 32
-	cmd="hadoop fs -ls $1 | grep -e '^.\{32\}$'"
+	cmd="hadoop fs -ls $1 | grep -e '[a-z0-9]\{32\}$'"
+	#echo $cmd;
 	#echo "hadoop fs -ls $1";
 	if [ "$verbose" -eq 1 ]; then echo "fetching hadoop files: $cmd"; fi
 	dirListing=`eval $cmd`
 	for word in ${dirListing} ; do
- 		if [[ $word =~ ^/ ]];then
-	    	hadoopDatasetListing+=(${word})
+ 		if [[ $word =~ ^/ && -n $word ]];then
+ 			#echo $word;
+	    	hadoopDatasetListing+=($word)
+	    	#echo ${hadoopDatasetListing[@]}
 	    fi
 	done
 }
@@ -44,9 +50,10 @@ outputPath=""
 rootPath=""
 inputFiles=()
 verbose=0
-analysisScripts=( 'pig LODAnalysis/pig/extractGeneralNsAndUriStats.py', 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
+#analysisScripts=( 'pig LODAnalysis/pig/calcStats.py', 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
+analysisScripts=( 'pig LODAnalysis/pig/calcStats.py')
 OPTIND=1 # Reset is necessary if getopts was used previously in the script.  It is a good idea to make this local in a function.
-while getopts "hvpo:f:" opt; do
+while getopts "hvp:o:f:" opt; do
     case "$opt" in
         h)
             show_help
@@ -69,13 +76,7 @@ done
 shift "$((OPTIND-1))" # Shift off the options and optional --.
 
 
-if [ "$#" -eq 0 ]; then
-	echo "running all analysis methods at our disposal!"
-else
-	echo "running the following analysis methods:"
-	printf '%s\n' "$@"
-	analysisScripts=( "$@" )
-fi
+
 
 
 
@@ -83,9 +84,12 @@ if [ ${#inputFiles[@]} -eq 0 ]; then
 	if [ "$rootPath" ]; then
 		echo "fetching ntriple directories from hadoop"
 		hadoopDatasetLs
-		datasetDirs=$hadoopDatasetListing
+		#echo ${hadoopDatasetListing[@]}
+		#exit;
+		datasetDirs=("${hadoopDatasetListing[@]}")
 		if [ ${#datasetDirs[@]} -eq 0 ]; then
 			echo "Could not find ntriple directories on hdfs. Root path: $rootPath";
+			show_help >&2
 			exit 1
 		fi
 	else
@@ -95,10 +99,35 @@ if [ ${#inputFiles[@]} -eq 0 ]; then
 	fi
 fi
 
-
+if [ "$#" -eq 0 ]; then
+	echo "running all analysis methods at our disposal!"
+else
+	echo "running the following analysis methods:"
+	printf '%s\n' "$@"
+	analysisScripts=( "$@" )
+fi
+#echo ${datasetDirs[@]}
+#exit;
+numDatasets=${#datasetDirs[@]}
+numAnalysis=${#analysisScripts[@]}
+datasetCount=1
 for datasetDir in "${datasetDirs[@]}"; do
+	datasetBasename=`basename $datasetDir`
+	analysisCount=1
 	for analysisFunction in "${analysisScripts[@]}"; do
-		`$analysisFunction $datasetDir $outputPath`;
+		printf "running for: $datasetBasename. Dataset $datasetCount / $numDatasets, Analysis $analysisCount / $numAnalysis \r"
+		#echo "$analysisFunction $datasetDir $outputPath"
+		#echo $datasetDir;
+		cmd="$analysisFunction $datasetDir $outputPath"
+		#if [ "$verbose" -eq 1 ]; then echo "running analysis: $cmd"; fi
+		echo "running $cmd" >> $log;
+		`$cmd >> $log 2>> $errLog`;
+		if [[ $? != 0 ]]; then
+			echo "Running cmd '$cmd' failed"
+		fi;
+		analysisCount=`expr $analysisCount + 1`
 	done
   #pig LODAnalysis/pig/extractNs.py $inputFile
+  datasetCount=`expr $datasetCount + 1`
 done
+printf "\ndone!\n"

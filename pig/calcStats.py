@@ -14,6 +14,9 @@ inputDir = sys.argv[1]
 inputFile = "%s/input.nt" % (inputDir)
 namespaceCountsOutput = "%s/namespaceCounts" % (inputDir)
 namespaceUniqCountsOutput = "%s/namespaceUniqCounts" % (inputDir)
+languageTagCounts = "%s/langTagCounts" % (inputDir)
+languageTagCountsWithoutRegion = "%s/langTagCountsWithoutRegion" % (inputDir)
+dataTypeCounts = "%s/dataTypeCounts" % (inputDir)
 uniqUris = "%s/urisUniq" % (inputDir)
 if (len(sys.argv) == 3):
     outputFile = sys.argv[2]
@@ -22,12 +25,37 @@ pigScript = """
 REGISTER d2s4pig/target/d2s4pig-1.0.jar
 DEFINE NtLoader com.data2semantics.pig.loaders.NtLoader();
 graph = LOAD '$inputFile' USING NtLoader() AS (sub:chararray, pred:chararray, obj:chararray);
-
 resources = FOREACH graph GENERATE FLATTEN(TOBAG(*));
+
+
+objects = FOREACH graph GENERATE obj;
+literals = FILTER objects BY SUBSTRING($0, 0, 1) != '<';
+
+---calc data types
+
+dataTypes = FOREACH literals GENERATE REGEX_EXTRACT ($0, '.*"\\\^\\\^<(.*)>$', 1);
+groupedDataTypes = GROUP dataTypes BY $0;
+dataTypeCounts =  FOREACH groupedDataTypes GENERATE group, COUNT(dataTypes);
+rmf $dataTypeCounts
+STORE dataTypeCounts INTO '$dataTypeCounts' USING PigStorage();
+
+---calc lang tags
+languageTags = FOREACH literals GENERATE REGEX_EXTRACT ($0, '.*"@(.*)\\\s*$', 1);
+groupedLanguageTags = GROUP languageTags BY $0;
+languageTagCounts =  FOREACH groupedLanguageTags GENERATE group, COUNT(languageTags);
+rmf $languageTagCounts
+STORE languageTagCounts INTO '$languageTagCounts' USING PigStorage();
+
+---calc lang tags (without regions. e.g. fr-be becomes fr)
+languageTagsWithoutReg = FOREACH languageTags GENERATE (INDEXOF($0, '-') > 0? REGEX_EXTRACT ($0, '(.*)-.*$', 1) :$0);
+groupedLanguageTagsWithoutReg = GROUP languageTagsWithoutReg BY $0;
+languageTagWihtoutRegCounts =  FOREACH groupedLanguageTagsWithoutReg GENERATE group, COUNT(languageTagsWithoutReg);
+rmf $languageTagCountsWithoutRegion
+STORE languageTagWihtoutRegCounts INTO '$languageTagCountsWithoutRegion' USING PigStorage();
+
 
 ---filter out literals
 filteredResources = FILTER resources BY SUBSTRING($0, 0, 1) == '<';
-
 
 
 

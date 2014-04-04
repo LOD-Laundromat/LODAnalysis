@@ -1,6 +1,5 @@
-package data;
+package lodanalysis.backwardChainer.data;
 
-import java.io.IOException;
 /* ----------------------------- */
 public class Triple extends Object {
 
@@ -10,27 +9,37 @@ public class Triple extends Object {
   private String predicate = null;;
   private String object    = null;;
   /* ----------------------------- */
+  boolean validity = true;
+  /* ----------------------------- */
   private boolean isValidTriple (String tripleString) {
-	  return true;
-//    return tripleString.matches (
-//        "^"                                +
-//        "\\s?(\".*\"\\^\\^)?<.*>"          + // Subject URI
-//        "\\s+(\".*\"\\^\\^)?<.*>"          + // Predicate URI
-//        "\\s+((\".*\"\\^\\^)?<.*>|\".*\")" + // Object URIs or Literal
-//        "\\s+\\."                          + // Dot
-//        "$");
+    return tripleString.matches (
+        "^"                                +
+        "\\s?(\".*\"\\^\\^)?<.*>"          + // Subject URI
+        "\\s+(\".*\"\\^\\^)?<.*>"          + // Predicate URI
+        "\\s+((\".*\"\\^\\^)?<.*>|\".*\")" + // Object URIs or Literal
+        "\\s+\\."                          + // Dot
+        "$");
   }
   /* ----------------------------- */
-  public Triple (String input) throws Exception {
-    if (!isValidTriple(input)) {
-      throw new Exception("Invalid Triple");
-    }
+  public Triple (String input) {
+  /*
+   * For the performance reasons, I'm ganna skip this step,
+   * Anyways, Wouter is going to check the validity of triples.
+   */
+  //  if (!isValidTriple(input)) {
+  //    validity = false;
+  //    return;
+  //  }
     /* ----------------------------- */
     String[] terms = input.split(delim);
     /* ----------------------------- */
     subject   = terms[0];
     predicate = terms[1];
     object    = terms[2];
+  }
+  /* ----------------------------- */
+  public boolean isValid() {
+    return validity;
   }
   /* ----------------------------- */
   public String getSubject() {
@@ -45,4 +54,8 @@ public class Triple extends Object {
     return object;
   }
   /* ----------------------------- */
+  @Override
+  public String toString() {
+   return subject + " " + predicate + " " + object + " .";
+  }
 }
