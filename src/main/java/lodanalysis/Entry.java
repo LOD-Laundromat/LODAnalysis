@@ -3,7 +3,6 @@ package lodanalysis;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -26,8 +25,10 @@ public class Entry {
 	public File[] getDatasetDirs() {
 		File datasetParentDir = new File(line.getOptionValue("path"));
 		return datasetParentDir.listFiles();
-		
-//		return null;
+	}
+	
+	public File getDatasetParentDir() {
+		return new File(line.getOptionValue("path"));
 	}
 
 	private void parseArgs(String[] args) {
@@ -63,7 +64,6 @@ public class Entry {
 	private void run() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		for (Object arg: line.getArgList()) {
 			String argString = (String)arg;
-			System.out.println("running");
 			Class myClass = Class.forName(argString);
 			Class[] types = {this.getClass()};
 			Constructor constructor = myClass.getConstructor(types);
