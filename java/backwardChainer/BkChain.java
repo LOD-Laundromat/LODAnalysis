@@ -46,9 +46,13 @@ public class BkChain extends Object {
       BufferedReader br = new BufferedReader(new FileReader(inputFile));
       try {
         while ((inputString = br.readLine()) != null) {
-          inputTriple = new Triple(inputString);
-          filterTriple(inputTriple);
-          updateTripleCounter();
+          try {
+            inputTriple = new Triple(inputString);
+            filterTriple(inputTriple);
+            updateTripleCounter();
+          } catch (Exception e) {
+            // ignore
+          }
         }
       } finally {
         br.close();
