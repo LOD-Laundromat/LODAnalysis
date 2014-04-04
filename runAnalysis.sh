@@ -10,7 +10,7 @@ Usage: ${0##*/} [-hv] [-f FILE] [-p ROOT_PATH] [ANALYSIS_SCRIPTS]...
 Run analysis pipeline on hadoop. When no analysis script(s) is passed via the arguments, we'll run all the scripts at our disposal!
 
     -h          display this help and exit
-    -p PATH     read analysis files from hadoop path
+    -p PATH     read analysis files from hadoop path (defaults to home dir)
     -o PATH     The hadoop output directory
     -f FILE     only analyze this hadoop ntriple file (no need for -p option here)
     -v          verbose mode. Can be used multiple times for increased
@@ -47,7 +47,7 @@ fi
 
 # Initialize our own variables:
 outputPath=""
-rootPath=""
+rootPath="."
 inputFiles=()
 verbose=0
 #analysisScripts=( 'pig LODAnalysis/pig/calcStats.py', 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
@@ -81,19 +81,13 @@ shift "$((OPTIND-1))" # Shift off the options and optional --.
 
 
 if [ ${#inputFiles[@]} -eq 0 ]; then
-	if [ "$rootPath" ]; then
-		echo "fetching ntriple directories from hadoop"
-		hadoopDatasetLs
-		#echo ${hadoopDatasetListing[@]}
-		#exit;
-		datasetDirs=("${hadoopDatasetListing[@]}")
-		if [ ${#datasetDirs[@]} -eq 0 ]; then
-			echo "Could not find ntriple directories on hdfs. Root path: $rootPath";
-			show_help >&2
-			exit 1
-		fi
-	else
-		echo "No root path -and- no input file defined in settings. Cannot analyze ntriples"
+	echo "fetching ntriple directories from hadoop path '$rootPath'"
+	hadoopDatasetLs
+	#echo ${hadoopDatasetListing[@]}
+	#exit;
+	datasetDirs=("${hadoopDatasetListing[@]}")
+	if [ ${#datasetDirs[@]} -eq 0 ]; then
+		echo "Could not find ntriple directories on hdfs. Root path: $rootPath";
 		show_help >&2
 		exit 1
 	fi

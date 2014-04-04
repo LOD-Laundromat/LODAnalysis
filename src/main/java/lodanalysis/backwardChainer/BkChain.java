@@ -24,7 +24,6 @@ public class BkChain extends RuneableClass {
 
 	public BkChain(Entry entry) {
 		super(entry);
-		System.out.println("test");
 		for (File datasetDir : entry.getDatasetDirs()) {
 			run(datasetDir);
 		}
@@ -44,14 +43,14 @@ public class BkChain extends RuneableClass {
           long tripleCounter = 0;
           String inputString = null;
           Triple inputTriple = null;
-          String inputFile;
-
-          if (argv.length < 1) {
-            System.err.println ("give the input file!");
-            System.exit(1);
-          }
-
-          inputFile = argv[0];
+//          String inputFile;
+//          if (argv.length < 1) {
+//            System.err.println ("give the input file!");
+//            System.exit(1);
+//          }
+//
+//          inputFile = argv[0];
+          File inputFile = new File(datasetDir, "input.nt");
 
           try {
             BufferedReader br = new BufferedReader(new FileReader(inputFile));
