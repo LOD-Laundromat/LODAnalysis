@@ -21,7 +21,7 @@ public class Triple extends Object {
         "$");
   }
   /* ----------------------------- */
-  public Triple (String input) {
+  public Triple (String input) throws Exception {
   /*
    * For the performance reasons, I'm ganna skip this step,
    * Anyways, Wouter is going to check the validity of triples.
@@ -33,9 +33,13 @@ public class Triple extends Object {
     /* ----------------------------- */
     String[] terms = input.split(delim);
     /* ----------------------------- */
-    subject   = terms[0];
-    predicate = terms[1];
-    object    = terms[2];
+    if (terms.length > 3) {
+      subject   = terms[0];
+      predicate = terms[1];
+      object    = terms[2];
+    } else {
+      throw new Exception("invalid Triple");
+    }
   }
   /* ----------------------------- */
   public boolean isValid() {
