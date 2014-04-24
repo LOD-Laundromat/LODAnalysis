@@ -12,7 +12,7 @@ Run analysis pipeline on hadoop. When no analysis script(s) is passed via the ar
     -h          display this help and exit
     -p PATH     read analysis files from hadoop path (defaults to home dir)
     -o PATH     The hadoop output directory
-    -f FILE     only analyze this hadoop ntriple file (no need for -p option here)
+    -d DIRNAME  only analyze this dataset dir (no need for -p option here)
     -v          verbose mode. Can be used multiple times for increased
                 verbosity.
 EOF
@@ -48,12 +48,12 @@ fi
 # Initialize our own variables:
 outputPath=""
 rootPath="."
-inputFiles=()
+datasetDirs=()
 verbose=0
-analysisScripts=( 'pig LODAnalysis/pig/calcStats.py', 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
+analysisScripts=( 'pig LODAnalysis/pig/calcStats.py' 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
 #analysisScripts=( 'LODAnalysis/mapReduce/runHadoopJobs.sh GetSchemaStats')
 OPTIND=1 # Reset is necessary if getopts was used previously in the script.  It is a good idea to make this local in a function.
-while getopts "hvp:o:f:" opt; do
+while getopts "hvp:o:d:" opt; do
     case "$opt" in
         h)
             show_help
@@ -65,7 +65,7 @@ while getopts "hvp:o:f:" opt; do
             ;;
         o)  outputPath=$OPTARG
             ;;
-        f)  inputFiles=( $OPTARG )
+        d)  declare -a datasetDirs=( $OPTARG )
 		    ;;
         '?')
             show_help >&2
@@ -76,11 +76,10 @@ done
 shift "$((OPTIND-1))" # Shift off the options and optional --.
 
 
+#echo $datasetDirs
+#exit;
 
-
-
-
-if [ ${#inputFiles[@]} -eq 0 ]; then
+if [ ${#datasetDirs[@]} -eq 0 ]; then
 	echo "fetching ntriple directories from hadoop path '$rootPath'"
 	hadoopDatasetLs
 	#echo ${hadoopDatasetListing[@]}
@@ -114,7 +113,8 @@ for datasetDir in "${datasetDirs[@]}"; do
 		#echo $datasetDir;
 		cmd="$analysisFunction $datasetDir $outputPath"
 		#if [ "$verbose" -eq 1 ]; then echo "running analysis: $cmd"; fi
-		echo "running $cmd" >> $log;
+		dateString=`date`
+		echo "$dateString - running $cmd" >> $log;
 		`$cmd >> $log 2>> $errLog`;
 		if [[ $? != 0 ]]; then
 			echo "Running cmd '$cmd' failed"
