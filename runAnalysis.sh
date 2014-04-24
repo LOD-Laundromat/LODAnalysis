@@ -113,7 +113,8 @@ for datasetDir in "${datasetDirs[@]}"; do
 		#echo $datasetDir;
 		cmd="$analysisFunction $datasetDir $outputPath"
 		#if [ "$verbose" -eq 1 ]; then echo "running analysis: $cmd"; fi
-		echo "running $cmd" >> $log;
+		dateString=`date`
+		echo "$dateString - running $cmd" >> $log;
 		`$cmd >> $log 2>> $errLog`;
 		if [[ $? != 0 ]]; then
 			echo "Running cmd '$cmd' failed"
