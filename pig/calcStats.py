@@ -14,14 +14,32 @@ inputDir = sys.argv[1]
 inputFile = "%s/input.nt" % (inputDir)
 namespaceCountsOutput = "%s/namespaceCounts" % (inputDir)
 namespaceUniqCountsOutput = "%s/namespaceUniqCounts" % (inputDir)
-namespaceCountsOutput = "%s/namespaceTripleCounts" % (inputDir)
+namespaceTripleCountsOutput = "%s/namespaceTripleCounts" % (inputDir)
 languageTagCounts = "%s/langTagCounts" % (inputDir)
 languageTagCountsWithoutRegion = "%s/langTagCountsWithoutRegion" % (inputDir)
 dataTypeCounts = "%s/dataTypeCounts" % (inputDir)
 uniqUris = "%s/urisUniq" % (inputDir)
 if (len(sys.argv) == 3):
     outputFile = sys.argv[2]
+
+
+@outputSchema("nsConcat:chararray") 
+def concatBag(bag):
+    #outBag = []
+    namespaces = []
+    for tuple in bag:
+        storeTuple = False
+        for word in tuple:
+            if word != "":
+                namespaces.append(word)
+            
+    namespaces = set(namespaces)
+    sortedNs = sorted(namespaces)
     
+    concatNs = "#$#$".join(sortedNs)
+        
+    return concatNs
+
 pigScript = """
 REGISTER d2s4pig/target/d2s4pig-1.0.jar
 DEFINE NtLoader com.data2semantics.pig.loaders.NtLoader();
@@ -39,8 +57,8 @@ namespaceTriples = FOREACH graph  {
 }
 groupedNsTriples = GROUP namespaceTriples BY ns;
 groupedNsTriplesCounts = FOREACH groupedNsTriples GENERATE group, COUNT(namespaceTriples);
-rmf testoutput
-STORE groupedNsTriplesCounts INTO 'testoutput' USING PigStorage();
+rmf $namespaceTripleCountsOutput
+STORE groupedNsTriplesCounts INTO '$namespaceTripleCountsOutput' USING PigStorage();
 
 
 

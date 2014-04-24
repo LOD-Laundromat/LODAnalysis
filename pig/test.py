@@ -24,8 +24,6 @@ pigScript = """
 REGISTER d2s4pig/target/d2s4pig-1.0.jar
 DEFINE NtLoader com.data2semantics.pig.loaders.NtLoader();
 REGISTER datafu/dist/datafu-1.2.1-SNAPSHOT.jar
-DEFINE AppendToBag datafu.pig.bags.AppendToBag();
-DEFINE distinctUdf org.apache.pig.builtin.Distinct();
 graph = LOAD 'test/input.nt' USING NtLoader() AS (sub:chararray, pred:chararray, obj:chararray);
 
 namespaceTriples = FOREACH graph  {
