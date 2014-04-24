@@ -118,6 +118,7 @@ for datasetDir in "${datasetDirs[@]}"; do
 		`$cmd >> $log 2>> $errLog`;
 		if [[ $? != 0 ]]; then
 			echo "Running cmd '$cmd' failed"
+			echo "failed" >> $log
 		fi;
 		analysisCount=`expr $analysisCount + 1`
 	done
