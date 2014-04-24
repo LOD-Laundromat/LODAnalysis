@@ -1,15 +1,17 @@
-package lodanalysis;
+package lodanalysis.utils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
 public class Utils {
-
+	
 	public static Map<String, Integer> getCountsInDir(File dir) throws IOException {
 		Map<String, Integer> counts = new HashMap<String, Integer>();
 
@@ -32,5 +34,6 @@ public class Utils {
 		if (counts.size() == 0) throw new IllegalStateException("No counts loaded from " + dir.getAbsolutePath());
 		return counts;
 	}
-
+	
+	
 }

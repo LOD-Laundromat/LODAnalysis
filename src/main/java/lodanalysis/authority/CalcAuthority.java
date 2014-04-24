@@ -14,7 +14,7 @@ import org.apache.commons.io.FileUtils;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
-import lodanalysis.Utils;
+import lodanalysis.utils.Utils;
 
 
 /**

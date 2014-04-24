@@ -13,21 +13,30 @@
 			<artifactId>commons-cli</artifactId>
 			<version>1.2</version>
 		</dependency>
-            <dependency>
-	<groupId>commons-lang</groupId>
-	<artifactId>commons-lang</artifactId>
-	<version>2.6</version>
-</dependency>
-            
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
 <dependency>
-	<groupId>commons-io</groupId>
-	<artifactId>commons-io</artifactId>
-	<version>2.4</version>
+  <groupId>org.semanticweb.yars</groupId>
+  <artifactId>nxparser</artifactId>
+  <version>1.2.5</version>
 </dependency>
-            
 	</dependencies>
 	<repositories>
-
+		<repository>
+			<id>nxparser-repo</id>
+			<url>
+                                http://nxparser.googlecode.com/svn/repository
+                        </url>
+		</repository>
 	</repositories>
 
 

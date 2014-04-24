@@ -61,7 +61,6 @@ rmf $namespaceTripleCountsOutput
 STORE groupedNsTriplesCounts INTO '$namespaceTripleCountsOutput' USING PigStorage();
 
 
-
 resources = FOREACH graph GENERATE FLATTEN(TOBAG(*));
 
 
@@ -69,7 +68,6 @@ objects = FOREACH graph GENERATE obj;
 literals = FILTER objects BY SUBSTRING($0, 0, 1) != '<';
 
 ---calc data types
-
 dataTypes = FOREACH literals GENERATE REGEX_EXTRACT ($0, '.*"\\\^\\\^<(.*)>$', 1);
 groupedDataTypes = GROUP dataTypes BY $0;
 dataTypeCounts =  FOREACH groupedDataTypes GENERATE group, COUNT(dataTypes);
