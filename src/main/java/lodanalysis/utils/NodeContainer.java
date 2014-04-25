@@ -16,6 +16,7 @@ public class NodeContainer {
 	public String ns = null;
 	public String datatype = null;
 	public Boolean isLiteral = null;
+	public Boolean isUri = null;
 	public String langTag = null;
 	public String langTagWithoutReg = null;;
 	
@@ -30,8 +31,12 @@ public class NodeContainer {
 	 * do this once a-priori, as our counters often re-use info
 	 */
 	private void calcInfo() {
-		this.ns = getNs(stringRepresentation);
 		this.isLiteral = stringRepresentation.startsWith("\"");
+		this.isUri = stringRepresentation.startsWith("<");
+		if (this.isUri) {
+			this.ns = getNs(stringRepresentation);
+		}
+		
 		if (position == Position.OBJ && isLiteral) {
 			//only for literals
 			getDataType();
@@ -96,7 +101,8 @@ public class NodeContainer {
 			"datatype: " + datatype + "\n" + 
 			"lang tag: " + langTag + "\n" +
 			"lang tag (without reg): " + langTagWithoutReg + "\n" +
-			"isLiteral: " + (isLiteral? "yes": "no") + "\n";
+			"isLiteral: " + (isLiteral? "yes": "no") + "\n" +
+			"isUri: " + (isUri? "yes": "no") + "\n";
 	}
 	public static void main(String[] args) {
 //		System.out.println(new NodeContainer("<http://google.com>", Position.OBJ).toString());

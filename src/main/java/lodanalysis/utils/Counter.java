@@ -16,4 +16,8 @@ public class Counter {
 	public Integer get() {
 		return count;
 	}
+	
+	public String toString() {
+		return count.toString();
+	}
 }

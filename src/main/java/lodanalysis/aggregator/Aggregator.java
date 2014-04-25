@@ -27,7 +27,10 @@ public class Aggregator  extends RuneableClass {
 	Set<String> uniqUris = new HashSet<String>();
 	public Aggregator(Entry entry) throws IOException {
 		super(entry);
-		for (File datasetDir : entry.getDatasetDirs()) {
+		File[] datasetDirs = entry.getDatasetDirs();
+		int totalDirCount = datasetDirs.length;
+		for (File datasetDir : datasetDirs) {
+			System.out.println("calculating aggregate info\rn");
 			processDataset(datasetDir);
 		}
 	}
@@ -131,17 +134,21 @@ public class Aggregator  extends RuneableClass {
 			/**
 			 * store ns counters
 			 */
-			if (!totalNsCounts.containsKey(sub.ns)) {
-				totalNsCounts.put(sub.ns, new Counter(1));
-			} else {
-				totalNsCounts.get(sub.ns).increase();
+			if (sub.isUri) {
+				if (!totalNsCounts.containsKey(sub.ns)) {
+					totalNsCounts.put(sub.ns, new Counter(1));
+				} else {
+					totalNsCounts.get(sub.ns).increase();
+				}
 			}
-			if (!totalNsCounts.containsKey(pred.ns)) {
-				totalNsCounts.put(pred.ns, new Counter(1));
-			} else {
-				totalNsCounts.get(pred.ns).increase();
+			if (pred.isUri) {
+				if (!totalNsCounts.containsKey(pred.ns)) {
+					totalNsCounts.put(pred.ns, new Counter(1));
+				} else {
+					totalNsCounts.get(pred.ns).increase();
+				}
 			}
-			if (!obj.isLiteral) {
+			if (obj.isUri) {
 				if (!totalNsCounts.containsKey(obj.ns)) {
 					totalNsCounts.put(obj.ns, new Counter(1));
 				} else {
@@ -154,7 +161,7 @@ public class Aggregator  extends RuneableClass {
 			 */
 			uniqUris.add(sub.stringRepresentation);
 			uniqUris.add(pred.stringRepresentation);
-			if (!obj.isLiteral) uniqUris.add(obj.stringRepresentation);
+			if (obj.isUri) uniqUris.add(obj.stringRepresentation);
 			
 			if (obj.isLiteral) {
 				/**
