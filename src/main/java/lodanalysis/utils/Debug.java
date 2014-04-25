@@ -1,5 +1,7 @@
 package lodanalysis.utils;
 
+import java.util.HashMap;
+
 import lodanalysis.Entry;
 
 
@@ -15,5 +17,6 @@ public class Debug {
 	public static void main(String[] args) {
 //		new Entry(new String[]{"-path", "testDatasets", "lodanalysis.authority.CalcAuthority"});
 		new Entry(new String[]{"-path", "testDatasets", "lodanalysis.aggregator.Aggregator"});
+		
 	}
 }

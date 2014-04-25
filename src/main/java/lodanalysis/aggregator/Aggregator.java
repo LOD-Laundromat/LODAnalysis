@@ -14,6 +14,7 @@ import lodanalysis.RuneableClass;
 import lodanalysis.utils.Counter;
 import lodanalysis.utils.NodeContainer;
 
+import org.apache.commons.io.FileUtils;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
@@ -24,15 +25,29 @@ public class Aggregator  extends RuneableClass {
 	Map<String, Counter> langTagWithoutRegCounts = new HashMap<String, Counter>();
 	Map<String, Counter> totalNsCounts = new HashMap<String, Counter>();
 	Map<String, Counter> nsCountsUniq = new HashMap<String, Counter>();
-	Set<String> uniqUris = new HashSet<String>();
+	Map<String, Counter> uniqUriCounts = new HashMap<String, Counter>();
+	Map<String, Counter> uniqBnodeCounts = new HashMap<String, Counter>();
+	
 	public Aggregator(Entry entry) throws IOException {
 		super(entry);
 		File[] datasetDirs = entry.getDatasetDirs();
 		int totalDirCount = datasetDirs.length;
-		for (File datasetDir : datasetDirs) {
-			System.out.println("calculating aggregate info\rn");
+		for (int i = 0; i < totalDirCount; i++) {
+			File datasetDir = datasetDirs[i];
+			String percentage = (String.format("%.0f%%",(100 * (float)i) / (float) totalDirCount));
+			System.out.print("aggregating (" + percentage + ") " + getDatasetName(datasetDir) + "\r");
 			processDataset(datasetDir);
 		}
+		System.out.println();
+	}
+	
+	
+	 
+	private String getDatasetName(File datasetDir) throws IOException {
+		String name = "";
+		File basenameFile = new File(datasetDir, "basename");
+		if (basenameFile.exists()) name = FileUtils.readFileToString(basenameFile).trim();
+		return name;
 	}
 
 	private void processDataset(File datasetDir) throws IOException {
@@ -56,51 +71,25 @@ public class Aggregator  extends RuneableClass {
 	}
 
 	private void store(File datasetDir) throws IOException {
-		String newLine = System.getProperty("line.separator");
+		writeCountersToFile(new File(datasetDir, "namespaceCounts"), totalNsCounts);
+		writeCountersToFile(new File(datasetDir, "namespaceUniqCounts"), nsCountsUniq);
+		writeCountersToFile(new File(datasetDir, "languageTagCounts"), langTagCounts);
+		writeCountersToFile(new File(datasetDir, "langTagCountsWithoutRegion"), langTagWithoutRegCounts);
+		writeCountersToFile(new File(datasetDir, "dataTypeCounts"), dataTypeCounts);
+		writeCountersToFile(new File(datasetDir, "urisUniq"), uniqUriCounts);
+		writeCountersToFile(new File(datasetDir, "bnodesUniq"), uniqBnodeCounts);
 		
-		FileWriter nsCountsOutput = new FileWriter(new File(datasetDir, "namespaceCounts"));
-		
-		for (String ns: totalNsCounts.keySet()) {
-			nsCountsOutput.write(ns + "\t" + totalNsCounts.get(ns) + newLine);
-		}
-		nsCountsOutput.close();
-		
-		FileWriter nsUniqCountsOutput = new FileWriter(new File(datasetDir, "namespaceUniqCounts"));
-		for (String ns: nsCountsUniq.keySet()) {
-			nsUniqCountsOutput.write(ns + "\t" + nsCountsUniq.get(ns) + newLine);
-		}
-		nsUniqCountsOutput.close();
-		
+		//this one is a bit different (key is a set of strings)
 		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, "namespaceTripleCounts"));
 		for (Set<String> tripleNs: tripleNsCounts.keySet()) {
-			namespaceTripleCountsOutput.write(tripleNs.toString() + "\t" + tripleNsCounts.get(tripleNs) + newLine);
+			namespaceTripleCountsOutput.write(tripleNs.toString() + "\t" + tripleNsCounts.get(tripleNs) + System.getProperty("line.separator"));
 		}
 		namespaceTripleCountsOutput.close();
-		
-		
-		FileWriter languageTagCountsOutput = new FileWriter(new File(datasetDir, "languageTagCounts"));
-		for (String langTag: langTagCounts.keySet()) {
-			languageTagCountsOutput.write(langTag + "\t" + langTagCounts.get(langTag) + newLine);
-		}
-		languageTagCountsOutput.close();
-		
-		FileWriter langTagCountsWithoutRegionOutput = new FileWriter(new File(datasetDir, "langTagCountsWithoutRegion"));
-		for (String langTag: langTagWithoutRegCounts.keySet()) {
-			langTagCountsWithoutRegionOutput.write(langTag + "\t" + langTagWithoutRegCounts.get(langTag) + newLine);
-		}
-		langTagCountsWithoutRegionOutput.close();
-		
-		
-		FileWriter dataTypeCountsOutput = new FileWriter(new File(datasetDir, "dataTypeCounts"));
-		for (String langTag: dataTypeCounts.keySet()) {
-			dataTypeCountsOutput.write(langTag + "\t" + dataTypeCounts.get(langTag) + newLine);
-		}
-		dataTypeCountsOutput.close();
 	}
 
 	private void postProcessAnalysis() {
 		//we've got all the unique uris. Use these to count how diverse each namespace is used (i.e., the 'namespaceUniqCounts'
-		for (String uri: uniqUris) {
+		for (String uri: uniqUriCounts.keySet()) {
 			String ns = NodeContainer.getNs(uri);
 			if (!nsCountsUniq.containsKey(ns)) {
 				nsCountsUniq.put(ns, new Counter(1));
@@ -108,7 +97,6 @@ public class Aggregator  extends RuneableClass {
 				nsCountsUniq.get(ns).increase();
 			}
 		}
-		
 	}
 
 	private void processLine(Node[] nodes) {
@@ -134,83 +122,55 @@ public class Aggregator  extends RuneableClass {
 			/**
 			 * store ns counters
 			 */
-			if (sub.isUri) {
-				if (!totalNsCounts.containsKey(sub.ns)) {
-					totalNsCounts.put(sub.ns, new Counter(1));
-				} else {
-					totalNsCounts.get(sub.ns).increase();
-				}
-			}
-			if (pred.isUri) {
-				if (!totalNsCounts.containsKey(pred.ns)) {
-					totalNsCounts.put(pred.ns, new Counter(1));
-				} else {
-					totalNsCounts.get(pred.ns).increase();
-				}
-			}
-			if (obj.isUri) {
-				if (!totalNsCounts.containsKey(obj.ns)) {
-					totalNsCounts.put(obj.ns, new Counter(1));
-				} else {
-					totalNsCounts.get(obj.ns).increase();
-				}
-			}
+			if (sub.isUri) upCounter(totalNsCounts, sub.ns);
+			if (pred.isUri) upCounter(totalNsCounts, pred.ns);
+			if (obj.isUri) upCounter(totalNsCounts, obj.ns);
 			
 			/**
 			 * store uniq uris
 			 */
-			uniqUris.add(sub.stringRepresentation);
-			uniqUris.add(pred.stringRepresentation);
-			if (obj.isUri) uniqUris.add(obj.stringRepresentation);
+			if (sub.isUri) upCounter(uniqUriCounts, sub.stringRepresentation);
+			if (pred.isUri) upCounter(uniqUriCounts, pred.stringRepresentation);
+			if (obj.isUri) upCounter(uniqUriCounts, obj.stringRepresentation);
+			
+			/**
+			 * store uniq bnodes
+			 */
+			if (sub.isBnode) upCounter(uniqBnodeCounts, sub.stringRepresentation);
+			if (pred.isBnode) upCounter(uniqBnodeCounts, pred.stringRepresentation);
+			if (obj.isBnode) upCounter(uniqBnodeCounts, obj.stringRepresentation);
+			
 			
 			if (obj.isLiteral) {
-				/**
-				 * store datatypes of literals
-				 */
-				if (!dataTypeCounts.containsKey(obj.datatype)) {
-					dataTypeCounts.put(obj.datatype, new Counter(1));
-				} else {
-					dataTypeCounts.get(obj.datatype).increase();
-				}
-				
-				/**
-				 * store lang tag of literals
-				 */
-				if (!langTagCounts.containsKey(obj.langTag)) {
-					langTagCounts.put(obj.langTag, new Counter(1));
-				} else {
-					langTagCounts.get(obj.langTag).increase();
-				}
-				if (!langTagWithoutRegCounts.containsKey(obj.langTagWithoutReg)) {
-					langTagWithoutRegCounts.put(obj.langTagWithoutReg, new Counter(1));
-				} else {
-					langTagWithoutRegCounts.get(obj.langTagWithoutReg).increase();
-				}
-				
+				upCounter(dataTypeCounts, obj.datatype);
+				upCounter(langTagCounts, obj.langTag);
+				upCounter(langTagWithoutRegCounts, obj.langTagWithoutReg);
 			}
-			
-			
-			
-			
 		} else {
 			System.out.println("Could not get triple from line. " + nodes.toString());
 		}
 		
 	}
-
-	private String getDataType(String obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private void fetchNsTriples(String sub, String pred, String obj) {
-		Set<String> tripleNs = new HashSet<String>();
-//		if (subNs != null) tripleNs.add(subNs);
-//		if (predNs != null) tripleNs.add(predNs);
-//		if (objNs != null) tripleNs.add(objNs);
-		
-	}
 	
-	
-
+	/**
+	 * just a simple helper method, to update the maps with a string as key, and counter as val
+	 */
+	private void upCounter(Map<String, Counter> map, String key) {
+		if (!map.containsKey(key)) {
+			map.put(key, new Counter(1));
+		} else {
+			map.get(key).increase();
+		}
+	}
+	/**
+	 * just a simple helper method, to store the maps with a string as key, and counter as val
+	 * @throws IOException 
+	 */
+	private void writeCountersToFile(File targetFile, Map<String, Counter> map) throws IOException {
+		FileWriter fw = new FileWriter(targetFile);
+		for (String key: map.keySet()) {
+			fw.write(key + "\t" + map.get(key) + System.getProperty("line.separator"));
+		}
+		fw.close();
+	}
 }

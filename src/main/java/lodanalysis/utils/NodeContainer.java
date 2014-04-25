@@ -17,6 +17,7 @@ public class NodeContainer {
 	public String datatype = null;
 	public Boolean isLiteral = null;
 	public Boolean isUri = null;
+	public Boolean isBnode = null;
 	public String langTag = null;
 	public String langTagWithoutReg = null;;
 	
@@ -33,6 +34,7 @@ public class NodeContainer {
 	private void calcInfo() {
 		this.isLiteral = stringRepresentation.startsWith("\"");
 		this.isUri = stringRepresentation.startsWith("<");
+		this.isBnode = stringRepresentation.startsWith("_");
 		if (this.isUri) {
 			this.ns = getNs(stringRepresentation);
 		}
