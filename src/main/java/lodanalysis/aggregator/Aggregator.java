@@ -1,13 +1,19 @@
 package lodanalysis.aggregator;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
@@ -19,6 +25,10 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
 public class Aggregator  extends RuneableClass {
+	private InputStream gzipStream;
+	private InputStream fileStream;
+	private Reader decoder;
+	private BufferedReader reader;
 	Map<Set<String>, Counter> tripleNsCounts = new HashMap<Set<String>, Counter>();
 	Map<String, Counter> dataTypeCounts = new HashMap<String, Counter>();
 	Map<String, Counter> langTagCounts = new HashMap<String, Counter>();
@@ -51,11 +61,12 @@ public class Aggregator  extends RuneableClass {
 	}
 
 	private void processDataset(File datasetDir) throws IOException {
-		File inputFile = new File(datasetDir, "input.nt");
+		File inputFile = new File(datasetDir, "input.nt.gz");
+		if (!inputFile.exists()) inputFile = new File(datasetDir, "input.nt");
 		if (inputFile.exists()) {
-			FileInputStream is = new FileInputStream(inputFile);
+			BufferedReader br = getNtripleInputStream(inputFile);
 
-			NxParser nxp = new NxParser(is);
+			NxParser nxp = new NxParser(br);
 
 			while (nxp.hasNext())
 			     processLine(nxp.next());
@@ -64,6 +75,7 @@ public class Aggregator  extends RuneableClass {
 			  
 			postProcessAnalysis();
 			store(datasetDir);
+			close();
 		} else {
 			System.out.println("no input file found in dataset " + datasetDir.getName());
 		}
@@ -172,5 +184,27 @@ public class Aggregator  extends RuneableClass {
 			fw.write(key + "\t" + map.get(key) + System.getProperty("line.separator"));
 		}
 		fw.close();
+	}
+	
+	private BufferedReader getNtripleInputStream(File file) throws IOException {
+		reader = null;
+		if (file.getName().endsWith(".gz")) {
+			fileStream = new FileInputStream(file);
+			gzipStream = new GZIPInputStream(fileStream);
+			decoder = new InputStreamReader(gzipStream, "UTF-8");
+			reader = new BufferedReader(decoder);
+		} else {
+			reader = new BufferedReader(new FileReader(file));
+		}
+		
+		return reader;
+	}
+	
+	private void close() throws IOException {
+		if (gzipStream != null) gzipStream.close();
+		if (fileStream != null) fileStream.close();
+		if (decoder != null) decoder.close();
+		if (reader != null) reader.close();
+		
 	}
 }

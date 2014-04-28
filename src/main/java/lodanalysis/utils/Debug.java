@@ -1,7 +1,5 @@
 package lodanalysis.utils;
 
-import java.util.HashMap;
-
 import lodanalysis.Entry;
 
 
