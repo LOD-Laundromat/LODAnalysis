@@ -7,6 +7,9 @@ public class NodeContainer {
 	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
 	private static Pattern DATA_TYPE_PATTERN = Pattern.compile(".*\"\\^\\^<(.*)>$");
 	private static Pattern LANG_TAG_PATTERN = Pattern.compile(".*\"@(.*)\\s*$");
+	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
+	private static Pattern IGNORE_RDF_URI_ITERATORS = Pattern.compile("^<http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_\\d+>$");
+	
 	
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
@@ -19,7 +22,8 @@ public class NodeContainer {
 	public Boolean isUri = null;
 	public Boolean isBnode = null;
 	public String langTag = null;
-	public String langTagWithoutReg = null;;
+	public String langTagWithoutReg = null;
+	public boolean ignoreIri = false;
 	
 	public NodeContainer(String stringRepresentation, Position position) {
 		this.stringRepresentation = stringRepresentation;
@@ -35,6 +39,7 @@ public class NodeContainer {
 		this.isLiteral = stringRepresentation.startsWith("\"");
 		this.isUri = stringRepresentation.startsWith("<");
 		this.isBnode = stringRepresentation.startsWith("_");
+		ignoreIri = IGNORE_RDF_URI_ITERATORS.matcher(stringRepresentation).matches();
 		if (this.isUri) {
 			this.ns = getNs(stringRepresentation);
 		}
@@ -57,7 +62,7 @@ public class NodeContainer {
 					ns = m.group(1);
 				}
 			} else {
-				ns = stringRepresentation;
+				ns = stringRepresentation.substring(1, stringRepresentation.length() - 1);
 			}
 		}
 		return ns;
@@ -104,13 +109,18 @@ public class NodeContainer {
 			"lang tag: " + langTag + "\n" +
 			"lang tag (without reg): " + langTagWithoutReg + "\n" +
 			"isLiteral: " + (isLiteral? "yes": "no") + "\n" +
-			"isUri: " + (isUri? "yes": "no") + "\n";
+			"isUri: " + (isUri? "yes": "no") + "\n" + 
+			"ignore: " + (ignoreIri? "yes": "no") + "\n";
 	}
 	public static void main(String[] args) {
-//		System.out.println(new NodeContainer("<http://google.com>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://google.co/df/fdm>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://google.co/df#fdm>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("<http://google.com_1>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("<http://google.co/df/fdm_1111>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("<http://google.co/df#fdm_>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("<http://google.co/df#_12332>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("<http://google.co/df/_12332>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_111>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_>", Position.OBJ).toString());
+		System.out.println(new NodeContainer("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ).toString());
 		System.out.println(new NodeContainer("\"That Seventies Show\"", Position.OBJ).toString());
 		System.out.println(new NodeContainer("\"That Seventies Show\"@en", Position.OBJ).toString());
 		System.out.println(new NodeContainer("\"That Seventies Show\"@en-be", Position.OBJ).toString());
