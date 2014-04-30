@@ -7,8 +7,10 @@ public class NodeContainer {
 	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
 	private static Pattern DATA_TYPE_PATTERN = Pattern.compile(".*\"\\^\\^<(.*)>$");
 	private static Pattern LANG_TAG_PATTERN = Pattern.compile(".*\"@(.*)\\s*$");
+	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 	private static Pattern IGNORE_RDF_URI_ITERATORS = Pattern.compile("^<http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_\\d+>$");
+	private static String BNODE_SUBSTRING = "/.well-known/genid/";
 	
 	
 	public enum Position {SUB, PRED, OBJ};
@@ -38,9 +40,13 @@ public class NodeContainer {
 	private void calcInfo() {
 		this.isLiteral = stringRepresentation.startsWith("\"");
 		this.isUri = stringRepresentation.startsWith("<");
-		this.isBnode = stringRepresentation.startsWith("_");
-		ignoreIri = IGNORE_RDF_URI_ITERATORS.matcher(stringRepresentation).matches();
-		if (this.isUri) {
+		if (isUri && stringRepresentation.contains(BNODE_SUBSTRING)) {
+			//we rewrite each bnode to uri. check whether this is one of these uris
+			this.isBnode = true;
+			this.isUri = false;
+		}
+		this.ignoreIri = IGNORE_RDF_URI_ITERATORS.matcher(stringRepresentation).matches();
+		if (!ignoreIri && this.isUri) {
 			this.ns = getNs(stringRepresentation);
 		}
 		

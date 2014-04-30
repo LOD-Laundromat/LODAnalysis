@@ -25,6 +25,8 @@ import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
 public class Aggregator  extends RuneableClass {
+	private static int DELTA_ID = 1;//useful when we re-run code. We store this id in each directory. When we re-run a (possibly newer) dataset dir, we can check whether we should re-analyze this dir, or skip it
+	private static String DELTA_FILENAME = "aggregator_delta";
 	private InputStream gzipStream;
 	private InputStream fileStream;
 	private Reader decoder;
@@ -40,18 +42,36 @@ public class Aggregator  extends RuneableClass {
 	
 	public Aggregator(Entry entry) throws IOException {
 		super(entry);
+
 		File[] datasetDirs = entry.getDatasetDirs();
 		int totalDirCount = datasetDirs.length;
 		for (int i = 0; i < totalDirCount; i++) {
 			File datasetDir = datasetDirs[i];
 			String percentage = (String.format("%.0f%%",(100 * (float)i) / (float) totalDirCount));
 			System.out.print("aggregating (" + percentage + ") " + getDatasetName(datasetDir) + "\r");
-			processDataset(datasetDir);
+			if (getDelta(datasetDir) < DELTA_ID) {
+				processDataset(datasetDir);
+				storeDelta(datasetDir);
+			} else {
+				if (entry.isVerbose()) System.out.println("Skipping " + datasetDir.getName() + ". Already analyzed");
+			}
+			
 		}
 		System.out.println();
 	}
 	
-	
+	private void storeDelta(File datasetDir) throws IOException {
+		File deltaFile = new File(datasetDir, DELTA_FILENAME);
+		FileUtils.write(deltaFile, Integer.toString(DELTA_ID));
+	}
+	private int getDelta(File datasetDir) throws IOException {
+		int delta = -1;
+		File deltaFile = new File(datasetDir, DELTA_FILENAME);
+		if (deltaFile.exists()) {
+			delta = Integer.parseInt(FileUtils.readFileToString(deltaFile).trim());
+		}
+		return delta;
+	}
 	 
 	private String getDatasetName(File datasetDir) throws IOException {
 		String name = "";
@@ -61,25 +81,29 @@ public class Aggregator  extends RuneableClass {
 	}
 
 	private void processDataset(File datasetDir) throws IOException {
-		File inputFile = new File(datasetDir, "input.nt.gz");
-		if (!inputFile.exists()) inputFile = new File(datasetDir, "input.nt");
-		if (inputFile.exists()) {
-			BufferedReader br = getNtripleInputStream(inputFile);
-
-			NxParser nxp = new NxParser(br);
-
-			while (nxp.hasNext())
-			     processLine(nxp.next());
-			
-			  
-			  
-			postProcessAnalysis();
-			store(datasetDir);
-			close();
-		} else {
-			System.out.println("no input file found in dataset " + datasetDir.getName());
-		}
+		try {
+			File inputFile = new File(datasetDir, "input.nt.gz");
+			if (!inputFile.exists()) inputFile = new File(datasetDir, "input.nt");
+			if (inputFile.exists()) {
+				BufferedReader br = getNtripleInputStream(inputFile);
+	
+				NxParser nxp = new NxParser(br);
+	
+				while (nxp.hasNext())
+				     processLine(nxp.next());
+				  
+				postProcessAnalysis();
+				store(datasetDir);
+				close();
+			} else {
+				System.out.println("no input file found in dataset " + datasetDir.getName());
+			}
 		
+		} catch (Throwable e) {
+			//cancel on ALL exception. I want to know whats going on!
+			System.out.println("Exception analyzing " + datasetDir.getName());
+			e.printStackTrace();
+		}
 	}
 
 	private void store(File datasetDir) throws IOException {
