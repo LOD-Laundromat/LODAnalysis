@@ -22,7 +22,7 @@ public class NodeContainer {
 	public String datatype = null;
 	public Boolean isLiteral = null;
 	public Boolean isUri = null;
-	public Boolean isBnode = null;
+	public Boolean isBnode = false;
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
