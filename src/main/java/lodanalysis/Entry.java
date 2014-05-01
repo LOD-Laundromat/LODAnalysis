@@ -24,7 +24,6 @@ public class Entry {
 	private CommandLine line;
 	private Set<File> datasetDirs = new HashSet<File>();
 	public Entry(String[] args)  {
-//		Arrays.asList(new String[]{"authority"});
 		parseArgs(args);
 	}
 	

@@ -15,9 +15,7 @@ public class Aggregator  extends RuneableClass {
 	
 	public Aggregator(Entry entry) throws IOException {
 		super(entry);
-
 		Collection<File> datasetDirs = entry.getDatasetDirs();
-		System.out.println("size: " + datasetDirs.size());
 		int totalDirCount = datasetDirs.size();
 		int count = 0;
 		for (File datasetDir: datasetDirs) {

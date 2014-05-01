@@ -3,13 +3,14 @@ package lodanalysis.utils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.math.NumberUtils;
+
 public class NodeContainer {
 	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
-	private static Pattern DATA_TYPE_PATTERN = Pattern.compile(".*\"\\^\\^<(.*)>$");
-	private static Pattern LANG_TAG_PATTERN = Pattern.compile(".*\"@(.*)\\s*$");
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
-	private static Pattern IGNORE_RDF_URI_ITERATORS = Pattern.compile("^<http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_\\d+>$");
+	
+	private static String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private static String BNODE_SUBSTRING = "/.well-known/genid/";
 	
 	
@@ -45,7 +46,7 @@ public class NodeContainer {
 			this.isBnode = true;
 			this.isUri = false;
 		}
-		this.ignoreIri = IGNORE_RDF_URI_ITERATORS.matcher(stringRepresentation).matches();
+		calcIgnoreUri();
 		if (!ignoreIri && this.isUri) {
 			this.ns = getNs(stringRepresentation);
 		}
@@ -56,6 +57,14 @@ public class NodeContainer {
 			getLangTagInfo();
 		}
 		
+	}
+	
+	private void calcIgnoreUri() {
+		//note: ignoreIri's default val is false
+		if (stringRepresentation.startsWith(IGNORE_RDF_URI_PREFIX)) {
+			String postFix = stringRepresentation.substring(IGNORE_RDF_URI_PREFIX.length(), stringRepresentation.length()-1);
+			this.ignoreIri = NumberUtils.isDigits(postFix);
+		}
 	}
 	public static String getNs(String stringRepresentation) {
 		String ns = null;
@@ -75,32 +84,56 @@ public class NodeContainer {
 	}
 
 	private void getDataType() {
-		String type = null;
-		if (stringRepresentation.startsWith("\"")) {
-			//this is a literal
-			Matcher m = DATA_TYPE_PATTERN.matcher(stringRepresentation);
-			if (m.find()) {
-				type = m.group(1);
+		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("^^")) {
+			int closingQuote = stringRepresentation.lastIndexOf("\"");
+			
+			if (
+					stringRepresentation.length() <= closingQuote + 2 
+					|| stringRepresentation.charAt(closingQuote+1) != '^' 
+					|| stringRepresentation.charAt(closingQuote+2) != '^'
+					|| stringRepresentation.charAt(closingQuote+3) != '<') {
+				//ah, no lang tag after all!! either nothing comes after the quote, or something else than an '^^' follows
+			} else {
+				StringBuilder dataTypeBuilder = new StringBuilder();
+				for(int i = closingQuote + 4; i < stringRepresentation.length(); i++) {
+				   char c = stringRepresentation.charAt(i);
+				   if (c == '>') break;
+				   dataTypeBuilder.append(c);
+				}
+				if (dataTypeBuilder.length() > 0) {
+					this.datatype = dataTypeBuilder.toString();
+				}
+				
 			}
 		}
-		this.datatype = type;
 	}
 	
 	private void getLangTagInfo() {
-		String langTag = null;
-		if (stringRepresentation.startsWith("\"")) {
-			//this is a literal
-			Matcher m = LANG_TAG_PATTERN.matcher(stringRepresentation);
-			if (m.find()) {
-				langTag = m.group(1);
+		this.langTag = null;
+		
+		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("@")) {
+			//this is probably a literal
+			
+			int closingQuote = stringRepresentation.lastIndexOf("\"");
+			if (stringRepresentation.length() == closingQuote + 1 || stringRepresentation.charAt(closingQuote+1) != '@') {
+				//ah, no lang tag after all!! either nothing comes after the quote, or something else than an '@' follows
+			} else {
+				StringBuilder langTagBuilder = new StringBuilder();
+				for(int i = closingQuote + 2; i < stringRepresentation.length(); i++) {
+				   char c = stringRepresentation.charAt(i);
+				   if (c == ' ') break;
+					   
+				   langTagBuilder.append(c);
+				}
+				if (langTagBuilder.length() > 0) {
+					this.langTag = langTagBuilder.toString();
+				}
 			}
 		}
-		this.langTag = langTag;
-		
-		if (langTag != null && langTag.contains("-")) {
-			this.langTagWithoutReg = langTag.substring(0, langTag.indexOf('-'));
+		if (this.langTag != null && this.langTag.contains("-")) {
+			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-'));
 		} else {
-			this.langTagWithoutReg = langTag;
+			this.langTagWithoutReg = this.langTag;
 		}
 	}
 	
@@ -119,16 +152,16 @@ public class NodeContainer {
 			"ignore: " + (ignoreIri? "yes": "no") + "\n";
 	}
 	public static void main(String[] args) {
-		System.out.println(new NodeContainer("<http://google.com_1>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("<http://google.co/df/fdm_1111>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("<http://google.co/df#fdm_>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("<http://google.co/df#_12332>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("<http://google.co/df/_12332>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("<http://google.com_1>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("<http://google.co/df/fdm_1111>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("<http://google.co/df#fdm_>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("<http://google.co/df#_12332>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("<http://google.co/df/_12332>", Position.OBJ).toString());
 		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_111>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("\"That Seventies Show\"", Position.OBJ).toString());
-		System.out.println(new NodeContainer("\"That Seventies Show\"@en", Position.OBJ).toString());
-		System.out.println(new NodeContainer("\"That Seventies Show\"@en-be", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("\"That Seventies Show\"", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("\"That Seventies Show\"@en", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("\"That Seventies Show\"@en-be", Position.OBJ).toString());
 	}
 }
