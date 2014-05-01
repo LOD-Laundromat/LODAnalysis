@@ -35,6 +35,7 @@ public class AggregateDataset  {
 	Map<String, Counter> nsCountsUniq = new HashMap<String, Counter>();
 	Map<String, Counter> uniqUriCounts = new HashMap<String, Counter>();
 	Map<String, Counter> uniqBnodeCounts = new HashMap<String, Counter>();
+	Map<String, Counter> schemaCounts = new HashMap<String, Counter>();
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
 		new AggregateDataset(entry, datasetDir);
@@ -79,6 +80,7 @@ public class AggregateDataset  {
 		writeCountersToFile(new File(datasetDir, "dataTypeCounts"), dataTypeCounts);
 		writeCountersToFile(new File(datasetDir, "urisUniq"), uniqUriCounts);
 		writeCountersToFile(new File(datasetDir, "bnodesUniq"), uniqBnodeCounts);
+		writeCountersToFile(new File(datasetDir, "UsedSchemaURIs"), schemaCounts);
 
 		//this one is a bit different (key is a set of strings)
 		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, "namespaceTripleCounts"));
@@ -106,6 +108,13 @@ public class AggregateDataset  {
 			NodeContainer pred = new NodeContainer(nodes[1].toN3(), NodeContainer.Position.PRED);
 			NodeContainer obj = new NodeContainer(nodes[2].toN3(), NodeContainer.Position.OBJ);
 
+
+                        /**
+                         * Collecting and counting schema URIs
+                         */
+                        if (sub.isSchema) upCounter(schemaCounts, sub.getSchemaURI());
+                        if (pred.isSchema) upCounter(schemaCounts, pred.getSchemaURI());
+                        if (obj.isSchema) upCounter(schemaCounts, obj.getSchemaURI());
 
 			/**
 			 * store ns triples
@@ -143,9 +152,15 @@ public class AggregateDataset  {
 
 
 			if (obj.isLiteral) {
-				upCounter(dataTypeCounts, obj.datatype);
-				upCounter(langTagCounts, obj.langTag);
-				upCounter(langTagWithoutRegCounts, obj.langTagWithoutReg);
+				if (obj.datatype != null) {
+					upCounter(dataTypeCounts, obj.datatype);
+				}
+				if (obj.langTag != null) {
+					upCounter(langTagCounts, obj.langTag);
+				}
+				if (obj.langTagWithoutReg!= null) {
+					upCounter(langTagWithoutRegCounts, obj.langTagWithoutReg);
+				}
 			}
 		} else {
 			System.out.println("Could not get triple from line. " + nodes.toString());
@@ -157,6 +172,10 @@ public class AggregateDataset  {
 	 * just a simple helper method, to update the maps with a string as key, and counter as val
 	 */
 	private void upCounter(Map<String, Counter> map, String key) {
+		if (key == null) {
+			System.out.println ("FUCKKKKKK");
+			System.exit(1);
+		}
 		if (!map.containsKey(key)) {
 			map.put(key, new Counter(1));
 		} else {

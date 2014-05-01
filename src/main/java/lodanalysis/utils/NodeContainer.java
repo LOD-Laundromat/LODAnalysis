@@ -9,13 +9,18 @@ public class NodeContainer {
 	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
-	
-	private static String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
-	private static String BNODE_SUBSTRING = "/.well-known/genid/";
+
+        private static final String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
+        private static final String BNODE_SUBSTRING = "/.well-known/genid/";
+        private static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema";
+        private static final String RDF_URI  = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
+        private static final String XML_URI  = "http://www.w3.org/2001/XMLSchema";
+        private static final String OWL_URI  = "http://www.w3.org/2002/07/owl";
 
 
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
+        private String schemaURI = null;
 	public String stringRepresentation;
 	//calculated stuff:
 
@@ -24,6 +29,7 @@ public class NodeContainer {
 	public Boolean isLiteral = null;
 	public Boolean isUri = null;
 	public Boolean isBnode = false;
+	public boolean isSchema = false;
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
@@ -33,7 +39,6 @@ public class NodeContainer {
 		this.position = position;
 		calcInfo();
 	}
-
 
 	/**
 	 * do this once a-priori, as our counters often re-use info
@@ -45,6 +50,9 @@ public class NodeContainer {
 			//we rewrite each bnode to uri. check whether this is one of these uris
 			this.isBnode = true;
 			this.isUri = false;
+		}
+		if (isSchemaNode(stringRepresentation)) {
+			isSchema = true;
 		}
 		calcIgnoreUri();
 		if (!ignoreIri && this.isUri) {
@@ -58,7 +66,7 @@ public class NodeContainer {
 		}
 
 	}
-	
+
 	private void calcIgnoreUri() {
 		//note: ignoreIri's default val is false
 		if (stringRepresentation.startsWith(IGNORE_RDF_URI_PREFIX)) {
@@ -66,6 +74,37 @@ public class NodeContainer {
 			this.ignoreIri = NumberUtils.isDigits(postFix);
 		}
 	}
+
+        /**
+         * Checks to see if current node belongs to any of RDF, RDFS, OWL, or XML
+         * vocabularies or not?
+         */
+	private boolean isSchemaNode(String stringRepresentation) {
+		int startIdx = stringRepresentation.indexOf ('<');
+		int hashSignIdx = stringRepresentation.lastIndexOf('#');
+		if (startIdx < hashSignIdx && startIdx >= 0 && hashSignIdx > 0) {
+			String uri = stringRepresentation.substring (startIdx + 1, hashSignIdx);
+			if (uri.equals (RDFS_URI) ||
+					uri.equals (OWL_URI)  ||
+					uri.equals (RDF_URI)  ||
+					uri.equals (XML_URI)) {
+				int endCharIdx = stringRepresentation.lastIndexOf (">");
+				if (endCharIdx > startIdx + 1) {
+					schemaURI = stringRepresentation.substring (startIdx + 1, endCharIdx);
+					return true;
+				}
+					}
+		}
+		return false;
+	}
+        /**
+         * If this is a schema node, then this routine can be used to get the
+         * vocabulary URI that this schema belongs to.
+         */
+        public String getSchemaURI() {
+          return schemaURI;
+        }
+
 	public static String getNs(String stringRepresentation) {
 		String ns = null;
 		if (stringRepresentation.startsWith("<")) {
@@ -86,10 +125,10 @@ public class NodeContainer {
 	private void getDataType() {
 		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("^^")) {
 			int closingQuote = stringRepresentation.lastIndexOf("\"");
-			
+
 			if (
-					stringRepresentation.length() <= closingQuote + 2 
-					|| stringRepresentation.charAt(closingQuote+1) != '^' 
+					stringRepresentation.length() <= closingQuote + 2
+					|| stringRepresentation.charAt(closingQuote+1) != '^'
 					|| stringRepresentation.charAt(closingQuote+2) != '^'
 					|| stringRepresentation.charAt(closingQuote+3) != '<') {
 				//ah, no lang tag after all!! either nothing comes after the quote, or something else than an '^^' follows
@@ -103,17 +142,17 @@ public class NodeContainer {
 				if (dataTypeBuilder.length() > 0) {
 					this.datatype = dataTypeBuilder.toString();
 				}
-				
+
 			}
 		}
 	}
 
 	private void getLangTagInfo() {
 		this.langTag = null;
-		
+
 		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("@")) {
 			//this is probably a literal
-			
+
 			int closingQuote = stringRepresentation.lastIndexOf("\"");
 			if (stringRepresentation.length() == closingQuote + 1 || stringRepresentation.charAt(closingQuote+1) != '@') {
 				//ah, no lang tag after all!! either nothing comes after the quote, or something else than an '@' follows
@@ -122,7 +161,7 @@ public class NodeContainer {
 				for(int i = closingQuote + 2; i < stringRepresentation.length(); i++) {
 				   char c = stringRepresentation.charAt(i);
 				   if (c == ' ') break;
-					   
+
 				   langTagBuilder.append(c);
 				}
 				if (langTagBuilder.length() > 0) {
