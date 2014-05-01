@@ -11,13 +11,13 @@ public class NodeContainer {
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 	private static Pattern IGNORE_RDF_URI_ITERATORS = Pattern.compile("^<http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_\\d+>$");
 	private static String BNODE_SUBSTRING = "/.well-known/genid/";
-	
-	
+
+
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
 	public String stringRepresentation;
 	//calculated stuff:
-	
+
 	public String ns = null;
 	public String datatype = null;
 	public Boolean isLiteral = null;
@@ -26,14 +26,14 @@ public class NodeContainer {
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
-	
+
 	public NodeContainer(String stringRepresentation, Position position) {
 		this.stringRepresentation = stringRepresentation;
 		this.position = position;
 		calcInfo();
 	}
-	
-	
+
+
 	/**
 	 * do this once a-priori, as our counters often re-use info
 	 */
@@ -49,13 +49,13 @@ public class NodeContainer {
 		if (!ignoreIri && this.isUri) {
 			this.ns = getNs(stringRepresentation);
 		}
-		
+
 		if (position == Position.OBJ && isLiteral) {
 			//only for literals
 			getDataType();
 			getLangTagInfo();
 		}
-		
+
 	}
 	public static String getNs(String stringRepresentation) {
 		String ns = null;
@@ -85,7 +85,7 @@ public class NodeContainer {
 		}
 		this.datatype = type;
 	}
-	
+
 	private void getLangTagInfo() {
 		String langTag = null;
 		if (stringRepresentation.startsWith("\"")) {
@@ -96,26 +96,25 @@ public class NodeContainer {
 			}
 		}
 		this.langTag = langTag;
-		
+
 		if (langTag != null && langTag.contains("-")) {
 			this.langTagWithoutReg = langTag.substring(0, langTag.indexOf('-'));
 		} else {
 			this.langTagWithoutReg = langTag;
 		}
 	}
-	
-	
-	
-	
+
+
+
 	public String toString() {
-		return 
-			"orig string: " + stringRepresentation + "\n" + 
+		return
+			"orig string: " + stringRepresentation + "\n" +
 			"ns: " + ns + "\n" +
-			"datatype: " + datatype + "\n" + 
+			"datatype: " + datatype + "\n" +
 			"lang tag: " + langTag + "\n" +
 			"lang tag (without reg): " + langTagWithoutReg + "\n" +
 			"isLiteral: " + (isLiteral? "yes": "no") + "\n" +
-			"isUri: " + (isUri? "yes": "no") + "\n" + 
+			"isUri: " + (isUri? "yes": "no") + "\n" +
 			"ignore: " + (ignoreIri? "yes": "no") + "\n";
 	}
 	public static void main(String[] args) {

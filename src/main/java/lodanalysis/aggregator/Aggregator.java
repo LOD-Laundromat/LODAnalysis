@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils;
 public class Aggregator  extends RuneableClass {
 	private static int DELTA_ID = 1;//useful when we re-run code. We store this id in each directory. When we re-run a (possibly newer) dataset dir, we can check whether we should re-analyze this dir, or skip it
 	private static String DELTA_FILENAME = "aggregator_delta";
-	
+
 	public Aggregator(Entry entry) throws IOException {
 		super(entry);
 
@@ -33,7 +33,7 @@ public class Aggregator  extends RuneableClass {
 		}
 		System.out.println();
 	}
-	
+
 	private void storeDelta(File datasetDir) throws IOException {
 		File deltaFile = new File(datasetDir, DELTA_FILENAME);
 		FileUtils.write(deltaFile, Integer.toString(DELTA_ID));
@@ -46,7 +46,7 @@ public class Aggregator  extends RuneableClass {
 		}
 		return delta;
 	}
-	 
+
 	private String getDatasetName(File datasetDir) throws IOException {
 		String name = "";
 		File basenameFile = new File(datasetDir, "basename");
@@ -54,5 +54,5 @@ public class Aggregator  extends RuneableClass {
 		return name;
 	}
 
-	
+
 }
