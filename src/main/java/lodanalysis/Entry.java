@@ -26,11 +26,11 @@ public class Entry {
 	public Entry(String[] args)  {
 		parseArgs(args);
 	}
-	
+
 	public Set<File> getDatasetDirs() {
 		return datasetDirs;
 	}
-	
+
 	public File getDatasetParentDir() {
 		return new File(line.getOptionValue("path"));
 	}
@@ -65,9 +65,9 @@ public class Entry {
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void run() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		for (Object arg: line.getArgList()) {
@@ -85,7 +85,7 @@ public class Entry {
 		if (line.hasOption("help")) throw new ParseException("");
 		if (line.getArgList().size() == 0) throw new ParseException("You forgot to tell me what class(es) you want to run!");
 		if (!line.hasOption("path") && !line.hasOption("dataset")) throw new ParseException("Please specify the path where we can find the dataset directories");
-		
+
 		if (line.hasOption("path")) {
 			if (!new File(line.getOptionValue("path")).exists()) throw new ParseException("The datasets path you specified does not exist");
 			if (!new File(line.getOptionValue("path")).isDirectory()) throw new ParseException("The datasets path you specified is not a directory");
@@ -94,7 +94,7 @@ public class Entry {
 			if (!new File(line.getOptionValue("dataset")).exists()) throw new ParseException("The dataset you specified does not exist");
 			if (!new File(line.getOptionValue("dataset")).isDirectory()) throw new ParseException("The dataset you specified is not a directory");
 		}
-		
+
 	}
 
 	public boolean isVerbose() {

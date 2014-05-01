@@ -12,13 +12,13 @@ public class NodeContainer {
 	
 	private static String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private static String BNODE_SUBSTRING = "/.well-known/genid/";
-	
-	
+
+
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
 	public String stringRepresentation;
 	//calculated stuff:
-	
+
 	public String ns = null;
 	public String datatype = null;
 	public Boolean isLiteral = null;
@@ -27,14 +27,14 @@ public class NodeContainer {
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
-	
+
 	public NodeContainer(String stringRepresentation, Position position) {
 		this.stringRepresentation = stringRepresentation;
 		this.position = position;
 		calcInfo();
 	}
-	
-	
+
+
 	/**
 	 * do this once a-priori, as our counters often re-use info
 	 */
@@ -50,13 +50,13 @@ public class NodeContainer {
 		if (!ignoreIri && this.isUri) {
 			this.ns = getNs(stringRepresentation);
 		}
-		
+
 		if (position == Position.OBJ && isLiteral) {
 			//only for literals
 			getDataType();
 			getLangTagInfo();
 		}
-		
+
 	}
 	
 	private void calcIgnoreUri() {
@@ -107,7 +107,7 @@ public class NodeContainer {
 			}
 		}
 	}
-	
+
 	private void getLangTagInfo() {
 		this.langTag = null;
 		
@@ -136,19 +136,18 @@ public class NodeContainer {
 			this.langTagWithoutReg = this.langTag;
 		}
 	}
-	
-	
-	
-	
+
+
+
 	public String toString() {
-		return 
-			"orig string: " + stringRepresentation + "\n" + 
+		return
+			"orig string: " + stringRepresentation + "\n" +
 			"ns: " + ns + "\n" +
-			"datatype: " + datatype + "\n" + 
+			"datatype: " + datatype + "\n" +
 			"lang tag: " + langTag + "\n" +
 			"lang tag (without reg): " + langTagWithoutReg + "\n" +
 			"isLiteral: " + (isLiteral? "yes": "no") + "\n" +
-			"isUri: " + (isUri? "yes": "no") + "\n" + 
+			"isUri: " + (isUri? "yes": "no") + "\n" +
 			"ignore: " + (ignoreIri? "yes": "no") + "\n";
 	}
 	public static void main(String[] args) {

@@ -44,26 +44,26 @@ public class AggregateDataset  {
 		System.out.println(datasetDir.getName());
 		processDataset(datasetDir);
 	}
-	
+
 	private void processDataset(File datasetDir) throws IOException {
 		try {
 			File inputFile = new File(datasetDir, "input.nt.gz");
 			if (!inputFile.exists()) inputFile = new File(datasetDir, "input.nt");
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
-	
+
 				NxParser nxp = new NxParser(br);
-	
+
 				while (nxp.hasNext())
 				     processLine(nxp.next());
-				  
+
 				postProcessAnalysis();
 				store(datasetDir);
 				close();
 			} else {
 				if (entry.isVerbose()) System.out.println("no input file found in dataset " + datasetDir.getName());
 			}
-		
+
 		} catch (Throwable e) {
 			//cancel on ALL exception. I want to know whats going on!
 			System.out.println("Exception analyzing " + datasetDir.getName());
@@ -79,7 +79,7 @@ public class AggregateDataset  {
 		writeCountersToFile(new File(datasetDir, "dataTypeCounts"), dataTypeCounts);
 		writeCountersToFile(new File(datasetDir, "urisUniq"), uniqUriCounts);
 		writeCountersToFile(new File(datasetDir, "bnodesUniq"), uniqBnodeCounts);
-		
+
 		//this one is a bit different (key is a set of strings)
 		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, "namespaceTripleCounts"));
 		for (Set<String> tripleNs: tripleNsCounts.keySet()) {
@@ -105,8 +105,8 @@ public class AggregateDataset  {
 			NodeContainer sub = new NodeContainer(nodes[0].toN3(), NodeContainer.Position.SUB);
 			NodeContainer pred = new NodeContainer(nodes[1].toN3(), NodeContainer.Position.PRED);
 			NodeContainer obj = new NodeContainer(nodes[2].toN3(), NodeContainer.Position.OBJ);
-			
-			
+
+
 			/**
 			 * store ns triples
 			 */
@@ -119,29 +119,29 @@ public class AggregateDataset  {
 			} else {
 				tripleNsCounts.get(tripleNs).increase();
 			}
-			
+
 			/**
 			 * store ns counters
 			 */
 			if (sub.isUri) upCounter(totalNsCounts, sub.ns);
 			if (pred.isUri) upCounter(totalNsCounts, pred.ns);
 			if (obj.isUri) upCounter(totalNsCounts, obj.ns);
-			
+
 			/**
 			 * store uniq uris
 			 */
 			if (sub.isUri) upCounter(uniqUriCounts, sub.stringRepresentation);
 			if (pred.isUri) upCounter(uniqUriCounts, pred.stringRepresentation);
 			if (obj.isUri) upCounter(uniqUriCounts, obj.stringRepresentation);
-			
+
 			/**
 			 * store uniq bnodes
 			 */
 			if (sub.isBnode) upCounter(uniqBnodeCounts, sub.stringRepresentation);
 			if (pred.isBnode) upCounter(uniqBnodeCounts, pred.stringRepresentation);
 			if (obj.isBnode) upCounter(uniqBnodeCounts, obj.stringRepresentation);
-			
-			
+
+
 			if (obj.isLiteral) {
 				upCounter(dataTypeCounts, obj.datatype);
 				upCounter(langTagCounts, obj.langTag);
@@ -150,9 +150,9 @@ public class AggregateDataset  {
 		} else {
 			System.out.println("Could not get triple from line. " + nodes.toString());
 		}
-		
+
 	}
-	
+
 	/**
 	 * just a simple helper method, to update the maps with a string as key, and counter as val
 	 */
@@ -174,7 +174,7 @@ public class AggregateDataset  {
 		}
 		fw.close();
 	}
-	
+
 	private BufferedReader getNtripleInputStream(File file) throws IOException {
 		reader = null;
 		if (file.getName().endsWith(".gz")) {
@@ -185,15 +185,15 @@ public class AggregateDataset  {
 		} else {
 			reader = new BufferedReader(new FileReader(file));
 		}
-		
+
 		return reader;
 	}
-	
+
 	private void close() throws IOException {
 		if (gzipStream != null) gzipStream.close();
 		if (fileStream != null) fileStream.close();
 		if (decoder != null) decoder.close();
 		if (reader != null) reader.close();
-		
+
 	}
 }
