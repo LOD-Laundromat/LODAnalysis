@@ -34,6 +34,8 @@ public class NodeContainer {
 
 	/**
 	 * do this once a-priori, as our counters often re-use info
+	 * NOTE: we can afford to optimize these calculations (i.e. avoid regex), because we know how exactly we serialize the ntriples.
+	 * This makes detection of things like lang tags and datatypes very easy and very fast.
 	 */
 	private void calcInfo() {
 		this.isLiteral = stringRepresentation.startsWith("\"");
