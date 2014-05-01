@@ -61,7 +61,7 @@ public class AggregateDataset  {
 				store(datasetDir);
 				close();
 			} else {
-				System.out.println("no input file found in dataset " + datasetDir.getName());
+				if (entry.isVerbose()) System.out.println("no input file found in dataset " + datasetDir.getName());
 			}
 		
 		} catch (Throwable e) {

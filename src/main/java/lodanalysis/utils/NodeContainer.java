@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.math.NumberUtils;
 
 public class NodeContainer {
-	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
+//	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 	
@@ -68,16 +68,16 @@ public class NodeContainer {
 	}
 	public static String getNs(String stringRepresentation) {
 		String ns = null;
-		if (stringRepresentation.startsWith("<")) {
+		if (stringRepresentation.charAt(0) == '<') {
 			//this is a uri
-			if (stringRepresentation.lastIndexOf('#') > 7 || stringRepresentation.lastIndexOf('/') > 7) {
+			ns = stringRepresentation.substring(1, stringRepresentation.length() - 1); //initialize with ns as whole URI
+			
+			int hashTagIndex = ns.lastIndexOf('#');
+			int slashIndex = ns.lastIndexOf('/');
+			if (hashTagIndex > 6 || slashIndex > 6) {
 				//ok, this has a namespace, and not something like http://google.com
-				Matcher m = NS_PATTERN.matcher(stringRepresentation);
-				if (m.find()) {
-					ns = m.group(1);
-				}
-			} else {
-				ns = stringRepresentation.substring(1, stringRepresentation.length() - 1);
+				int nsLength = Math.max(hashTagIndex, slashIndex);
+				ns = ns.substring(0, nsLength);
 			}
 		}
 		return ns;
