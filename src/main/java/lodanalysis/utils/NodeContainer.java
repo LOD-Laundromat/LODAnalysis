@@ -1,16 +1,14 @@
 package lodanalysis.utils;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.math.NumberUtils;
 
 public class NodeContainer {
-	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
-        private static final String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
+	private static final String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
         private static final String BNODE_SUBSTRING = "/.well-known/genid/";
         private static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema";
         private static final String RDF_URI  = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
@@ -42,6 +40,8 @@ public class NodeContainer {
 
 	/**
 	 * do this once a-priori, as our counters often re-use info
+	 * NOTE: we can afford to optimize these calculations (i.e. avoid regex), because we know how exactly we serialize the ntriples.
+	 * This makes detection of things like lang tags and datatypes very easy and very fast.
 	 */
 	private void calcInfo() {
 		this.isLiteral = stringRepresentation.startsWith("\"");
@@ -107,16 +107,16 @@ public class NodeContainer {
 
 	public static String getNs(String stringRepresentation) {
 		String ns = null;
-		if (stringRepresentation.startsWith("<")) {
+		if (stringRepresentation.charAt(0) == '<') {
 			//this is a uri
-			if (stringRepresentation.lastIndexOf('#') > 7 || stringRepresentation.lastIndexOf('/') > 7) {
+			ns = stringRepresentation.substring(1, stringRepresentation.length() - 1); //initialize with ns as whole URI
+			
+			int hashTagIndex = ns.lastIndexOf('#');
+			int slashIndex = ns.lastIndexOf('/');
+			if (hashTagIndex > 6 || slashIndex > 6) {
 				//ok, this has a namespace, and not something like http://google.com
-				Matcher m = NS_PATTERN.matcher(stringRepresentation);
-				if (m.find()) {
-					ns = m.group(1);
-				}
-			} else {
-				ns = stringRepresentation.substring(1, stringRepresentation.length() - 1);
+				int nsLength = Math.max(hashTagIndex, slashIndex);
+				ns = ns.substring(0, nsLength);
 			}
 		}
 		return ns;

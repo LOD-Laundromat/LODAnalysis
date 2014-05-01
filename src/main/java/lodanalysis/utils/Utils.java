@@ -32,4 +32,10 @@ public class Utils {
 		if (counts.size() == 0) throw new IllegalStateException("No counts loaded from " + dir.getAbsolutePath());
 		return counts;
 	}
+	public static String getDatasetName(File datasetDir) throws IOException {
+		String name = "";
+		File basenameFile = new File(datasetDir, "basename");
+		if (basenameFile.exists()) name = FileUtils.readFileToString(basenameFile).trim();
+		return name;
+	}
 }
