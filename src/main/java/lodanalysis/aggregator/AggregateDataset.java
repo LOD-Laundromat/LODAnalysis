@@ -19,10 +19,12 @@ import lodanalysis.Entry;
 import lodanalysis.utils.Counter;
 import lodanalysis.utils.NodeContainer;
 
+import org.apache.commons.io.FileUtils;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
-public class AggregateDataset  {
+public class AggregateDataset implements Runnable  {
+	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;
 	private Reader decoder;
@@ -37,15 +39,15 @@ public class AggregateDataset  {
 	Map<String, Counter> uniqBnodeCounts = new HashMap<String, Counter>();
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
-		new AggregateDataset(entry, datasetDir);
+		AggregateDataset aggr = new AggregateDataset(entry, datasetDir);
+		aggr.run();
 	}
 	public AggregateDataset(Entry entry, File datasetDir) throws IOException {
 		this.entry = entry;
-		System.out.println(datasetDir.getName());
-		processDataset(datasetDir);
+		this.datasetDir = datasetDir;
 	}
 
-	private void processDataset(File datasetDir) throws IOException {
+	private void processDataset() throws IOException {
 		try {
 			File inputFile = new File(datasetDir, "input.nt.gz");
 			if (!inputFile.exists()) inputFile = new File(datasetDir, "input.nt");
@@ -58,7 +60,7 @@ public class AggregateDataset  {
 				     processLine(nxp.next());
 
 				postProcessAnalysis();
-				store(datasetDir);
+				store();
 				close();
 			} else {
 				if (entry.isVerbose()) System.out.println("no input file found in dataset " + datasetDir.getName());
@@ -71,7 +73,7 @@ public class AggregateDataset  {
 		}
 	}
 
-	private void store(File datasetDir) throws IOException {
+	private void store() throws IOException {
 		writeCountersToFile(new File(datasetDir, "namespaceCounts"), totalNsCounts);
 		writeCountersToFile(new File(datasetDir, "namespaceUniqCounts"), nsCountsUniq);
 		writeCountersToFile(new File(datasetDir, "languageTagCounts"), langTagCounts);
@@ -195,5 +197,22 @@ public class AggregateDataset  {
 		if (decoder != null) decoder.close();
 		if (reader != null) reader.close();
 
+	}
+	
+	private void storeDelta() throws IOException {
+		File deltaFile = new File(datasetDir, Aggregator.DELTA_FILENAME);
+		FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
+	}
+	
+	@Override
+	public void run() {
+		try {
+			processDataset();
+			storeDelta();
+			Aggregator.PROCESSED_COUNT++;
+			Aggregator.printProgress(datasetDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

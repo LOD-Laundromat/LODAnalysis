@@ -4,7 +4,6 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,8 +15,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
 public class Entry {
 //	List<String> possibleAnalysis;
@@ -29,6 +26,21 @@ public class Entry {
 
 	public Set<File> getDatasetDirs() {
 		return datasetDirs;
+	}
+	
+	public int getNumThreads() {
+		int numThreads = 1;
+		if (line.hasOption("threads")) {
+			String threadsString = line.getOptionValue("threads");
+			int parsedNumThreads = 0;
+			try {
+				parsedNumThreads = Integer.parseInt(threadsString);
+			} catch (Exception e) {
+				//hmm, did not parse. ignore!
+			}
+			if (parsedNumThreads > 1) numThreads = parsedNumThreads;
+		}
+		return numThreads;
 	}
 
 	public File getDatasetParentDir() {
@@ -104,29 +116,24 @@ public class Entry {
 		return line.hasOption("force");
 	}
 
+	@SuppressWarnings("static-access")
 	private Options getOptions() {
 		Options options = new Options();
 		Option verbose = new Option("verbose", "be extra verbose");
 		Option force = new Option("force", "force execution (i.e. ignore delta id)");
-		@SuppressWarnings("static-access")
-		 Option path = OptionBuilder
-		 .withArgName("path")
-		 .hasArg()
-		 .withDescription("Path containing all the dataset directories")
-		 .create("path");
-		@SuppressWarnings("static-access")
-		Option dataset = OptionBuilder
-				.withArgName("dataset")
-				.hasArg()
-				.withDescription("Dataset directory. Useful for debugging, when you only want to analyze 1 dataset")
-				.create("dataset");
+		Option path = OptionBuilder.withArgName("path").hasArg().withDescription("Path containing all the dataset directories").create("path");
+		Option threads = OptionBuilder.withArgName("threads").hasArg().withDescription("Number of threats to use").create("threads");
+		Option dataset = OptionBuilder.withArgName("dataset").hasArg()
+				.withDescription("Dataset directory. Useful for debugging, when you only want to analyze 1 dataset").create("dataset");
 		Option help = new Option("help", "print this message");
-
+		
+		
 		options.addOption(help);
 		options.addOption(verbose);
 		options.addOption(force);
-		 options.addOption(path);
-		 options.addOption(dataset);
+		options.addOption(path);
+		options.addOption(dataset);
+		options.addOption(threads);
 		return options;
 	}
 
