@@ -1,15 +1,12 @@
 package lodanalysis.utils;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.math.NumberUtils;
 
 public class NodeContainer {
-//	private static Pattern NS_PATTERN = Pattern.compile("<(.*)[#/].*>");
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
-	
 	private static String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private static String BNODE_SUBSTRING = "/.well-known/genid/";
 
