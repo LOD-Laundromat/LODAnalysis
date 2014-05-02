@@ -14,20 +14,21 @@ public class NodeContainer {
         private static final String RDF_URI  = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
         private static final String XML_URI  = "http://www.w3.org/2001/XMLSchema";
         private static final String OWL_URI  = "http://www.w3.org/2002/07/owl";
+        private static final String W3C_URI_PREFIX = "<http://www.w3.org/";
 
 
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
-        private String schemaURI = null;
 	public String stringRepresentation;
 	//calculated stuff:
-
+	
+	private boolean isW3cNs = false;//used for pruning some checks
 	public String ns = null;
 	public String datatype = null;
 	public Boolean isLiteral = null;
 	public Boolean isUri = null;
-	public Boolean isBnode = false;
-	public Boolean isSchema = false;
+	public boolean isBnode = false;
+	public boolean isSchema = false;
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
@@ -46,18 +47,20 @@ public class NodeContainer {
 	private void calcInfo() {
 		this.isLiteral = stringRepresentation.startsWith("\"");
 		this.isUri = stringRepresentation.startsWith("<");
-		if (isUri && stringRepresentation.contains(BNODE_SUBSTRING)) {
-			//we rewrite each bnode to uri. check whether this is one of these uris
-			this.isBnode = true;
-			this.isUri = false;
+		
+		if (isUri) {
+			if (stringRepresentation.startsWith(W3C_URI_PREFIX)) this.isW3cNs = true;
+			if (stringRepresentation.contains(BNODE_SUBSTRING)) {
+				//we rewrite each bnode to uri. check whether this is one of these uris
+				this.isBnode = true;
+				this.isUri = false;
+			}
 		}
-		if (this.isUri && isSchemaNode(stringRepresentation)) {
-			isSchema = true;
-		}
+		
 		calcIgnoreUri();
-		if (!ignoreIri && this.isUri) {
-			this.ns = getNs(stringRepresentation);
-		}
+		if (!ignoreIri && this.isUri) this.ns = getNs(stringRepresentation);
+		
+		if (this.ns != null) getSchemaInfo();
 
 		if (position == Position.OBJ && isLiteral) {
 			//only for literals
@@ -69,7 +72,7 @@ public class NodeContainer {
 
 	private void calcIgnoreUri() {
 		//note: ignoreIri's default val is false
-		if (stringRepresentation.startsWith(IGNORE_RDF_URI_PREFIX)) {
+		if (this.isW3cNs && stringRepresentation.startsWith(IGNORE_RDF_URI_PREFIX)) {
 			String postFix = stringRepresentation.substring(IGNORE_RDF_URI_PREFIX.length(), stringRepresentation.length()-1);
 			this.ignoreIri = NumberUtils.isDigits(postFix);
 		}
@@ -79,28 +82,12 @@ public class NodeContainer {
 	 * Checks to see if current node belongs to any of RDF, RDFS, OWL, or XML
 	 * vocabularies or not?
 	 */
-	private boolean isSchemaNode(String stringRepresentation) {
-		int startIdx = stringRepresentation.indexOf('<');
-		int hashSignIdx = stringRepresentation.lastIndexOf('#');
-		if (startIdx < hashSignIdx && startIdx >= 0 && hashSignIdx > 0) {
-			String uri = stringRepresentation.substring(startIdx + 1, hashSignIdx);
-			if (uri.equals(RDFS_URI) || uri.equals(OWL_URI) || uri.equals(RDF_URI) || uri.equals(XML_URI)) {
-				int endCharIdx = stringRepresentation.lastIndexOf(">");
-				if (endCharIdx > startIdx + 1) {
-					schemaURI = stringRepresentation.substring(startIdx + 1, endCharIdx);
-					return true;
-				}
-			}
+	private void getSchemaInfo() {
+		//prune following check using 'startsWith' (i.e., we don't have to run all four string-equals)
+		if (this.isW3cNs &&
+				(this.ns.equals(RDF_URI) || this.ns.equals(RDFS_URI) || this.ns.equals(OWL_URI) || this.ns.equals(XML_URI))) {
+			this.isSchema = true;
 		}
-		return false;
-	}
-
-	/**
-	 * If this is a schema node, then this routine can be used to get the
-	 * vocabulary URI that this schema belongs to.
-	 */
-	public String getSchemaURI() {
-		return schemaURI;
 	}
 
 	public static String getNs(String stringRepresentation) {

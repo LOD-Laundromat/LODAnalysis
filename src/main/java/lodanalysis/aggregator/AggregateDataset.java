@@ -41,6 +41,7 @@ public class AggregateDataset implements Runnable  {
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
 		AggregateDataset aggr = new AggregateDataset(entry, datasetDir);
+
 		aggr.run();
 	}
 	public AggregateDataset(Entry entry, File datasetDir) throws IOException {
@@ -114,11 +115,11 @@ public class AggregateDataset implements Runnable  {
 			 * Collecting and counting schema URIs
 			 */
 			if (sub.isSchema)
-				upCounter(schemaCounts, sub.getSchemaURI());
+				upCounter(schemaCounts, sub.ns);
 			if (pred.isSchema)
-				upCounter(schemaCounts, pred.getSchemaURI());
+				upCounter(schemaCounts, pred.ns);
 			if (obj.isSchema)
-				upCounter(schemaCounts, obj.getSchemaURI());
+				upCounter(schemaCounts, obj.ns);
 
 			/**
 			 * store ns triples
@@ -176,15 +177,12 @@ public class AggregateDataset implements Runnable  {
 	 * just a simple helper method, to update the maps with a string as key, and counter as val
 	 */
 	private void upCounter(Map<String, Counter> map, String key) {
-		if (key == null) {
-			System.out.println ("FUCKKKKKK");
-			System.exit(1);
+		Counter counter = map.get(key);
+		if (counter == null) {
+			counter = new Counter(1);
+			map.put(key, counter);
 		}
-		if (!map.containsKey(key)) {
-			map.put(key, new Counter(1));
-		} else {
-			map.get(key).increase();
-		}
+		counter.increase();
 	}
 	/**
 	 * just a simple helper method, to store the maps with a string as key, and counter as val
@@ -225,9 +223,21 @@ public class AggregateDataset implements Runnable  {
 		FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
 	}
 	
+	/**
+	 * del delta. This way, when we re-run (forced) a dataset analysis, but we stop in the middle, we know we have to re-run this dataset again later on
+	 * @throws IOException
+	 */
+	private void delDelta() throws IOException {
+		File deltaFile = new File(datasetDir, Aggregator.DELTA_FILENAME);
+		if (deltaFile.exists()) deltaFile.delete();
+	}
+	
 	@Override
 	public void run() {
 		try {
+			
+			if (entry.isVerbose()) System.out.println(datasetDir.getName());
+			delDelta();
 			processDataset();
 			storeDelta();
 			Aggregator.PROCESSED_COUNT++;

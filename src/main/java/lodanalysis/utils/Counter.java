@@ -1,23 +1,23 @@
 package lodanalysis.utils;
 
 public class Counter {
-	private Integer count = 0;
+	private int count = 0;
 
 	public Counter() {
 
 	}
-	public Counter(Integer initVal) {
+	public Counter(int initVal) {
 		count = initVal;
 	}
 
 	public void increase() {
 		count++;
 	}
-	public Integer get() {
+	public int get() {
 		return count;
 	}
 
 	public String toString() {
-		return count.toString();
+		return Integer.toString(count);
 	}
 }
