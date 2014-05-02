@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -83,6 +84,8 @@ public class Entry {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void run() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		for (Object arg: line.getArgList()) {
+			Date startTime = new Date();
+			System.out.println("Started: " + startTime.toString());
 			String argString = (String)arg;
 			Class myClass = Class.forName(argString);
 			Class[] types = {this.getClass()};
@@ -90,6 +93,11 @@ public class Entry {
 
 			Object[] parameters = {this};
 			constructor.newInstance(parameters);
+			Date endTime = new Date();
+			long diff = endTime.getTime() - startTime.getTime();
+			long diffSeconds = diff / 1000 % 60;  
+			long diffMinutes = diff / (60 * 1000) % 60; 
+			System.out.println("Finished: " + endTime.toString() + " (duration: " + diffMinutes + " min, " + diffSeconds + " seconds)");
 		}
 	}
 

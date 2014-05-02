@@ -202,7 +202,7 @@ public class AggregateDataset implements Runnable  {
 		reader = null;
 		if (file.getName().endsWith(".gz")) {
 			fileStream = new FileInputStream(file);
-			gzipStream = new GZIPInputStream(fileStream);
+			gzipStream = new GZIPInputStream(fileStream, 200536);//maximize buffer: http://java-performance.com/
 			decoder = new InputStreamReader(gzipStream, "UTF-8");
 			reader = new BufferedReader(decoder);
 		} else {
