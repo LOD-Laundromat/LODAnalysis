@@ -80,6 +80,10 @@ public class NodeContainer {
 	/**
 	 * Checks to see if current node belongs to any of RDF, RDFS, OWL, or XML
 	 * vocabularies or not?
+	 * 
+	 * TODO: depending on the backward chaining, remove this option, and only execute it later on. 
+	 * After all, we already retrieve all the namespace, and the calc below is a subset of these counts. We can just use these aggregate counts, and get the keys for the uris below
+	 * This way, we don't need to execute this function for every URI, but we can run this function once on the NS-count map
 	 */
 	private void getSchemaInfo() {
 		//prune following check using 'startsWith' (i.e., we don't have to run all four string-equals)
