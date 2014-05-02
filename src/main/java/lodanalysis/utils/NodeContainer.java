@@ -27,7 +27,7 @@ public class NodeContainer {
 	public Boolean isLiteral = null;
 	public Boolean isUri = null;
 	public Boolean isBnode = false;
-	public boolean isSchema = false;
+	public Boolean isSchema = false;
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
@@ -51,7 +51,7 @@ public class NodeContainer {
 			this.isBnode = true;
 			this.isUri = false;
 		}
-		if (isSchemaNode(stringRepresentation)) {
+		if (this.isUri && isSchemaNode(stringRepresentation)) {
 			isSchema = true;
 		}
 		calcIgnoreUri();
@@ -75,49 +75,44 @@ public class NodeContainer {
 		}
 	}
 
-        /**
-         * Checks to see if current node belongs to any of RDF, RDFS, OWL, or XML
-         * vocabularies or not?
-         */
+	/**
+	 * Checks to see if current node belongs to any of RDF, RDFS, OWL, or XML
+	 * vocabularies or not?
+	 */
 	private boolean isSchemaNode(String stringRepresentation) {
-		int startIdx = stringRepresentation.indexOf ('<');
+		int startIdx = stringRepresentation.indexOf('<');
 		int hashSignIdx = stringRepresentation.lastIndexOf('#');
 		if (startIdx < hashSignIdx && startIdx >= 0 && hashSignIdx > 0) {
-			String uri = stringRepresentation.substring (startIdx + 1, hashSignIdx);
-			if (uri.equals (RDFS_URI) ||
-					uri.equals (OWL_URI)  ||
-					uri.equals (RDF_URI)  ||
-					uri.equals (XML_URI)) {
-				int endCharIdx = stringRepresentation.lastIndexOf (">");
+			String uri = stringRepresentation.substring(startIdx + 1, hashSignIdx);
+			if (uri.equals(RDFS_URI) || uri.equals(OWL_URI) || uri.equals(RDF_URI) || uri.equals(XML_URI)) {
+				int endCharIdx = stringRepresentation.lastIndexOf(">");
 				if (endCharIdx > startIdx + 1) {
-					schemaURI = stringRepresentation.substring (startIdx + 1, endCharIdx);
+					schemaURI = stringRepresentation.substring(startIdx + 1, endCharIdx);
 					return true;
 				}
-					}
+			}
 		}
 		return false;
 	}
-        /**
-         * If this is a schema node, then this routine can be used to get the
-         * vocabulary URI that this schema belongs to.
-         */
-        public String getSchemaURI() {
-          return schemaURI;
-        }
+
+	/**
+	 * If this is a schema node, then this routine can be used to get the
+	 * vocabulary URI that this schema belongs to.
+	 */
+	public String getSchemaURI() {
+		return schemaURI;
+	}
 
 	public static String getNs(String stringRepresentation) {
 		String ns = null;
-		if (stringRepresentation.charAt(0) == '<') {
-			//this is a uri
+		int hashTagIndex = stringRepresentation.lastIndexOf('#');
+		int slashIndex = stringRepresentation.lastIndexOf('/');
+		if (hashTagIndex > 7 || slashIndex > 7) {
+			//ok, this has a namespace, and not something like http://google.com
+			int nsLength = Math.max(hashTagIndex, slashIndex);
+			ns = stringRepresentation.substring(1, nsLength);
+		} else {
 			ns = stringRepresentation.substring(1, stringRepresentation.length() - 1); //initialize with ns as whole URI
-			
-			int hashTagIndex = ns.lastIndexOf('#');
-			int slashIndex = ns.lastIndexOf('/');
-			if (hashTagIndex > 6 || slashIndex > 6) {
-				//ok, this has a namespace, and not something like http://google.com
-				int nsLength = Math.max(hashTagIndex, slashIndex);
-				ns = ns.substring(0, nsLength);
-			}
 		}
 		return ns;
 	}

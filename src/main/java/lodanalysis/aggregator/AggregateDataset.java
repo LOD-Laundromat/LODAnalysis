@@ -110,13 +110,15 @@ public class AggregateDataset implements Runnable  {
 			NodeContainer pred = new NodeContainer(nodes[1].toN3(), NodeContainer.Position.PRED);
 			NodeContainer obj = new NodeContainer(nodes[2].toN3(), NodeContainer.Position.OBJ);
 
-
-                        /**
-                         * Collecting and counting schema URIs
-                         */
-                        if (sub.isSchema) upCounter(schemaCounts, sub.getSchemaURI());
-                        if (pred.isSchema) upCounter(schemaCounts, pred.getSchemaURI());
-                        if (obj.isSchema) upCounter(schemaCounts, obj.getSchemaURI());
+			/**
+			 * Collecting and counting schema URIs
+			 */
+			if (sub.isSchema)
+				upCounter(schemaCounts, sub.getSchemaURI());
+			if (pred.isSchema)
+				upCounter(schemaCounts, pred.getSchemaURI());
+			if (obj.isSchema)
+				upCounter(schemaCounts, obj.getSchemaURI());
 
 			/**
 			 * store ns triples
