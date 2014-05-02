@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -14,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
+import lodanalysis.Settings;
 import lodanalysis.utils.Utils;
 
 
@@ -28,20 +30,37 @@ import lodanalysis.utils.Utils;
  */
 
 public class CalcAuthority extends RuneableClass {
-	private static String NS_UNIQUE_FILENAME = "namespaceUniqCounts";
-	private static String AUTHORITY_FILENAME = "authority";
+	
 	
 	//key: namespace, values: datasets and counts
 	Map<String, Map<String, Integer>> namespaceCounts = new HashMap<String, Map<String, Integer>>();
 	Set<String> datasets = new HashSet<String>();
+	private File authorityLogFile;
+	
 	public CalcAuthority(Entry entry) throws IOException {
 		super(entry);
-		for (File datasetDir : entry.getDatasetDirs()) {
+		authorityLogFile = new File(entry.getDatasetParentDir(), Settings.FILE_NAME_LOG_AUTHORITY);
+		if (authorityLogFile.exists()) authorityLogFile.delete();
+		
+		
+		
+		Set<File> datasetDirs = entry.getDatasetDirs();
+		int totalDirCount = datasetDirs.size();
+		int readCount = 0;
+		for (File datasetDir : datasetDirs) {
 			datasets.add(datasetDir.getName());//useful when writing back to dirs later
 			retrieveNsCounts(datasetDir);
+			readCount++;
+			printProgress("reading ns counts to memory", totalDirCount, readCount);
 		}
-//		calcAuthorities();
+		System.out.println();
 		storeAuthorities(calcAuthorities());
+		System.out.println();
+	}
+	
+	public void printProgress(String msg, int totalCount, int processedCount) throws IOException {
+		String percentage = (String.format("%.0f%%",(100 * (float)processedCount) / (float) totalCount));
+		System.out.print(msg + " (" + percentage + ")\r");
 	}
 
 	private void storeAuthorities(Map<String, String> calcAuthorities) throws IOException {
@@ -61,12 +80,12 @@ public class CalcAuthority extends RuneableClass {
 		for (String dataset: authoritiesByDatasets.keySet()) {
 			System.out.println(dataset + authoritiesByDatasets.get(dataset));
 			//overwrites, does not append
-			FileUtils.writeLines(new File(entry.getDatasetParentDir(), dataset + "/" + AUTHORITY_FILENAME), authoritiesByDatasets.get(dataset));
+			FileUtils.writeLines(new File(entry.getDatasetParentDir(), dataset + "/" + Settings.FILE_NAME_AUTHORITY), authoritiesByDatasets.get(dataset));
 		}
 		//finally, initialize empty authority file for those datasets without authority (otherwise, we are not sure wheter a script has been run in a certain dataset dir when the authority file is missing)
 		datasets.removeAll(authoritiesByDatasets.keySet());
 		for (String dataset: datasets) {
-			File authorityFile = new File(entry.getDatasetParentDir(), dataset + "/" + AUTHORITY_FILENAME);
+			File authorityFile = new File(entry.getDatasetParentDir(), dataset + "/" + Settings.FILE_NAME_AUTHORITY);
 			
 			//if file already exists (perhaps previous analysis), delete
 			if (authorityFile.exists()) authorityFile.delete();
@@ -76,14 +95,29 @@ public class CalcAuthority extends RuneableClass {
 		}
 		
 	}
-
+	
+	private boolean hasInputFile(File datasetDir) {
+		boolean hasFile = false;
+		if (new File(datasetDir, Settings.FILE_NAME_INPUT_GZ).exists() || new File(datasetDir, Settings.FILE_NAME_INPUT).exists()) {
+			hasFile = true;
+		}
+		return hasFile;
+	}
+	
+	
 	private void retrieveNsCounts(File datasetDir) throws IOException {
 		
-		File nsUniqCountDir = new File(datasetDir, NS_UNIQUE_FILENAME);
-		if (!nsUniqCountDir.exists())
-			throw new IllegalStateException("Could not find dir containing ns counts: " + nsUniqCountDir.getAbsolutePath());
+		File nsUniqCountsFile = new File(datasetDir, Settings.FILE_NAME_NS_UNIQ_COUNTS);
+		if (!nsUniqCountsFile.exists()) {
+			 if (hasInputFile(datasetDir)) {
+				 throw new IllegalStateException("Could not find file containing ns counts: " + nsUniqCountsFile.getAbsolutePath());
+			 } else {
+				 //just ignore. we don't have counts, but we were not able to calc these counts as well. 
+				 return;
+			 }
+		}
 		
-		for (java.util.Map.Entry<String, Integer> entry: Utils.getCountsInDir(nsUniqCountDir).entrySet()) {
+		for (java.util.Map.Entry<String, Integer> entry: Utils.getCountsInFile(nsUniqCountsFile).entrySet()) {
 			String namespace = entry.getKey();
 			if (!namespaceCounts.containsKey(namespace)) namespaceCounts.put(namespace, new HashMap<String, Integer>());
 			namespaceCounts.get(namespace).put(datasetDir.getName(), entry.getValue());
@@ -119,43 +153,95 @@ public class CalcAuthority extends RuneableClass {
 		namespaceCounts = null;
 		
 		//key: namespace, val: dataset
+		
+		Set<String> namespaces = nsAuthoritiesWithDuplicates.keySet();
+		int totalNsCounts = namespaces.size();
+		int calcCount = 0;
+			
 		Map<String, String> nsAuthorities = new HashMap<String, String>();
-		for (String namespace: nsAuthoritiesWithDuplicates.keySet()) {
+		for (String namespace: namespaces) {
 			List<String> datasets = nsAuthoritiesWithDuplicates.get(namespace);
 			if (datasets.size() == 1) {
 				nsAuthorities.put(namespace, datasets.get(0));
 			} else {
+				//blegh, we need to properly analyze both datasets and hope we can find an autority
 				nsAuthorities.put(namespace, selectBaseOnRelativeNumber(namespace, datasets));
 			}
+			calcCount++;
+			printProgress("calculated authorities", totalNsCounts, calcCount);
 		}
 		return nsAuthorities;
 	}
+	
+	/**
+	 * Calculate the total number of namespaces. The dataset where the relative size of this particular namespace is the largest, 'wins' (i.e. is the authority)
+	 */
 	private String selectBaseOnRelativeNumber(String namespace, List<String> datasets) throws IOException {
 		
-		TreeMap<Double, String> relativeNsSize = new TreeMap<Double, String>();
+		TreeMap<Double, Set<String>> relativeNsSize = new TreeMap<Double, Set<String>>();
 		for (String dataset: datasets) {
-			File nsUniqCountDir = new File(entry.getDatasetParentDir(), "dataset/" + NS_UNIQUE_FILENAME);
-			if (!nsUniqCountDir.exists()) throw new IllegalStateException("Could not find dir containing ns counts: " + nsUniqCountDir.getAbsolutePath());
+			File nsUniqCountFile = new File(entry.getDatasetParentDir(), dataset + "/" + Settings.FILE_NAME_NS_UNIQ_COUNTS);
+			if (!nsUniqCountFile.exists()) throw new IllegalStateException("Could not find dir containing ns counts: " + nsUniqCountFile.getAbsolutePath());
 			
 			Integer totalNsCount = 0;
 			Integer currentNsCount = null;
-			for (java.util.Map.Entry<String, Integer> entry: Utils.getCountsInDir(nsUniqCountDir).entrySet()) {
+			for (java.util.Map.Entry<String, Integer> entry: Utils.getCountsInFile(nsUniqCountFile).entrySet()) {
 				totalNsCount += entry.getValue();
 				if (entry.getKey().equals(namespace)) {
 					currentNsCount = entry.getValue();
 				}
 			}
 			if (currentNsCount == null) throw new IllegalStateException("Tried to find the namespace count for namespace " + namespace + ", in dataset " + dataset + ", but could not find it! It should be there though..");
+			
 			Double relsize = (double)currentNsCount / (double)totalNsCount;
-			if (relativeNsSize.containsKey(relsize)) throw new IllegalStateException("We have a problem. We are ending up with two datasets who are both an authority of one namespace. "
-					+ "Hoped this wouldnt happen. Namespace: " + namespace + ". Datasets: " + dataset + " and " + relativeNsSize.get(relsize));
-			relativeNsSize.put((double)currentNsCount / (double)totalNsCount, dataset);
+			if (relativeNsSize.containsKey(relsize)) {
+//				throw new IllegalStateException("We have a problem. We are ending up with two datasets who are both an authority of one namespace. "
+//						+ "Hoped this wouldnt happen. Namespace: " + namespace + ". Datasets: " + dataset + " and " + relativeNsSize.get(relsize));
+//				System.out.println("multiple authorities, one namespace....");
+			}
+			
+			/**
+			 * add this dataset, and the relative size of this ns, to our object
+			 */
+			Double relSize = (double)currentNsCount / (double)totalNsCount;
+			Set<String> datasetsWithRelSize = relativeNsSize.get(relsize);
+			if (datasetsWithRelSize != null) {
+				datasetsWithRelSize.add(dataset);
+			} else {
+				datasetsWithRelSize = new HashSet<String>();
+				datasetsWithRelSize.add(dataset);
+				relativeNsSize.put(relSize, datasetsWithRelSize);
+			}
 		}
+		
+		
+		
 		String dataset = null;
 		for (Double relSize: relativeNsSize.descendingKeySet()) {
 			//get firs val
-			dataset = relativeNsSize.get(relSize);
-			break;
+			Set<String> datasetsWithRelSize = relativeNsSize.get(relSize);
+			if (datasetsWithRelSize.size() > 1) {
+				System.out.println("multiple datasets as authority for one namespace.... Picking at random");
+				
+				int size = datasetsWithRelSize.size();
+				int item = new Random().nextInt(size); // In real life, the Random object should be rather more shared than this
+				int i = 0;
+				for(String datasetWithRelSize: datasetsWithRelSize)	{
+				    if (i == item) {
+				    	dataset = datasetWithRelSize;
+				    	String msg = "outcome: dataset " + dataset + " is authority for " + namespace;
+				    	System.out.println("outcome: dataset " + dataset + " is authority for " + namespace);
+				    	FileUtils.writeStringToFile(authorityLogFile, "duplicate auth. " + msg, "UTF-8", true);
+				    	break;
+				    }
+				    i++;
+				}
+			} else {
+				for(String datasetWithRelSize: datasetsWithRelSize)	{
+			    	dataset = datasetWithRelSize;
+			    	break;
+				}
+			}
 		}
 		return dataset;
 	}

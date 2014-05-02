@@ -52,8 +52,8 @@ public class AggregateDataset implements Runnable  {
 
 	private void processDataset() throws IOException {
 		try {
-			File inputFile = new File(datasetDir, "input.nt.gz");
-			if (!inputFile.exists()) inputFile = new File(datasetDir, "input.nt");
+			File inputFile = new File(datasetDir, Settings.FILE_NAME_INPUT_GZ);
+			if (!inputFile.exists()) inputFile = new File(datasetDir, Settings.FILE_NAME_INPUT);
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 
