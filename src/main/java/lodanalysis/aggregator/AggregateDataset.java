@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import lodanalysis.Entry;
+import lodanalysis.Settings;
 import lodanalysis.utils.Counter;
 import lodanalysis.utils.NodeContainer;
 
@@ -76,14 +77,14 @@ public class AggregateDataset implements Runnable  {
 	}
 
 	private void store() throws IOException {
-		writeCountersToFile(new File(datasetDir, "namespaceCounts"), totalNsCounts);
-		writeCountersToFile(new File(datasetDir, "namespaceUniqCounts"), nsCountsUniq);
-		writeCountersToFile(new File(datasetDir, "languageTagCounts"), langTagCounts);
-		writeCountersToFile(new File(datasetDir, "langTagCountsWithoutRegion"), langTagWithoutRegCounts);
-		writeCountersToFile(new File(datasetDir, "dataTypeCounts"), dataTypeCounts);
-		writeCountersToFile(new File(datasetDir, "urisUniq"), uniqUriCounts);
-		writeCountersToFile(new File(datasetDir, "bnodesUniq"), uniqBnodeCounts);
-		writeCountersToFile(new File(datasetDir, "UsedSchemaURIs"), schemaCounts);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_NS_COUNTS), totalNsCounts);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_NS_UNIQ_COUNTS), nsCountsUniq);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_UNIQ_URIS_COUNTS), uniqUriCounts);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
+		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_SCHEMA_URI_COUNTS), schemaCounts);
 
 		//this one is a bit different (key is a set of strings)
 		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, "namespaceTripleCounts"));
