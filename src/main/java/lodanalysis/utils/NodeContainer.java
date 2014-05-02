@@ -10,10 +10,10 @@ public class NodeContainer {
 
 	private static final String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
-	private static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema";
-	private static final String RDF_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
-	private static final String XML_URI = "http://www.w3.org/2001/XMLSchema";
-	private static final String OWL_URI = "http://www.w3.org/2002/07/owl";
+	private static final String RDFS_URI = "<http://www.w3.org/2000/01/rdf-schema";
+	private static final String RDF_URI = "<http://www.w3.org/1999/02/22-rdf-syntax-ns";
+	private static final String XML_URI = "<http://www.w3.org/2001/XMLSchema";
+	private static final String OWL_URI = "<http://www.w3.org/2002/07/owl";
 	private static final String W3C_URI_PREFIX = "<http://www.w3.org/";
 
 	public enum Position {SUB, PRED, OBJ};
@@ -84,7 +84,8 @@ public class NodeContainer {
 	private void getSchemaInfo() {
 		//prune following check using 'startsWith' (i.e., we don't have to run all four string-equals)
 		if (this.isW3cNs &&
-				(this.ns.equals(RDF_URI) || this.ns.equals(RDFS_URI) || this.ns.equals(OWL_URI) || this.ns.equals(XML_URI))) {
+				(this.stringRepresentation.startsWith(RDF_URI) || this.stringRepresentation.startsWith(RDFS_URI) ||
+				 this.stringRepresentation.startsWith(OWL_URI) || this.stringRepresentation.startsWith(XML_URI))) {
 			this.isSchema = true;
 		}
 	}
