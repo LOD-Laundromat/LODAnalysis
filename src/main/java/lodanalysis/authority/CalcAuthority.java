@@ -19,7 +19,7 @@ import lodanalysis.utils.Utils;
 
 /**
  * We calculate authority by:
- * - counting the number of unique namespaces per dataset (done in pig)
+ * - counting the number of unique namespaces per dataset
  * - And here, we:
  * 		- per namespace, get the dataset which uses this namespace the most (diversity-wise, as we use this unique list)
  * 		- the dataset which uses the most diverse set, is the authority.

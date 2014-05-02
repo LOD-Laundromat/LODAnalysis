@@ -177,6 +177,7 @@ public class AggregateDataset implements Runnable  {
 	 * just a simple helper method, to update the maps with a string as key, and counter as val
 	 */
 	private void upCounter(Map<String, Counter> map, String key) {
+		if (key == null) key = "null";
 		Counter counter = map.get(key);
 		if (counter == null) {
 			counter = new Counter(1);

@@ -9,13 +9,12 @@ public class NodeContainer {
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
 	private static final String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
-        private static final String BNODE_SUBSTRING = "/.well-known/genid/";
-        private static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema";
-        private static final String RDF_URI  = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
-        private static final String XML_URI  = "http://www.w3.org/2001/XMLSchema";
-        private static final String OWL_URI  = "http://www.w3.org/2002/07/owl";
-        private static final String W3C_URI_PREFIX = "<http://www.w3.org/";
-
+	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
+	private static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema";
+	private static final String RDF_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
+	private static final String XML_URI = "http://www.w3.org/2001/XMLSchema";
+	private static final String OWL_URI = "http://www.w3.org/2002/07/owl";
+	private static final String W3C_URI_PREFIX = "<http://www.w3.org/";
 
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
