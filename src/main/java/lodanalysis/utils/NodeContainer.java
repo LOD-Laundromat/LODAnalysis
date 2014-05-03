@@ -104,9 +104,9 @@ public class NodeContainer {
 		if (hashTagIndex > 6 || slashIndex > 6) {
 			//ok, this has a namespace, and not something like http://google.com
 			int nsLength = Math.max(hashTagIndex, slashIndex);
-			ns = stringRepresentation.substring(0, nsLength);
+			ns = stringRepresentation.substring(0, nsLength).intern();
 		} else {
-			ns = stringRepresentation; //initialize with ns as whole URI
+			ns = stringRepresentation.intern(); //initialize with ns as whole URI
 		}
 		return ns;
 	}
@@ -129,7 +129,7 @@ public class NodeContainer {
 				   dataTypeBuilder.append(c);
 				}
 				if (dataTypeBuilder.length() > 0) {
-					this.datatype = dataTypeBuilder.toString();
+					this.datatype = dataTypeBuilder.toString().intern();
 				}
 
 			}
@@ -154,12 +154,12 @@ public class NodeContainer {
 				   langTagBuilder.append(c);
 				}
 				if (langTagBuilder.length() > 0) {
-					this.langTag = langTagBuilder.toString();
+					this.langTag = langTagBuilder.toString().intern();
 				}
 			}
 		}
 		if (this.langTag != null && this.langTag.contains("-")) {
-			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-'));
+			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-')).intern();
 		} else {
 			this.langTagWithoutReg = this.langTag;
 		}

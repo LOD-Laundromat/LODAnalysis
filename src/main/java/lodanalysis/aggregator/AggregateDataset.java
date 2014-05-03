@@ -115,57 +115,21 @@ public class AggregateDataset implements Runnable  {
 	 * @return
 	 */
 	public static String[] getNodes(String line){
-		StringBuilder sub = null;
-		StringBuilder pred = null;
-		StringBuilder obj = null;
-		int nodePos = 0; //0: sub, 1: pred, 2: obj
-		int lineLength = line.length() - 2;//stop before the end, i.e., we don't want the ' .' part in the object
-		for (int i = 0; i < lineLength; i++) {
-			char curChar = line.charAt(i);
-			
-			if (nodePos < 2) {
-				//in pred or obj
-				if (curChar == ' ') {
-					nodePos++;
-				} else {
-					if (sub == null) {
-						//skip this first char (we know it is a <)
-						sub = new StringBuilder();
-						continue;
-					}
-					if (nodePos == 1 && pred == null) {
-						//skip this first char (we know it is a <)
-						pred = new StringBuilder();
-						
-						//and btw, remove final '>' from sub
-						sub.deleteCharAt(sub.length()-1);
-						continue;
-					}
-					if (nodePos == 0) {
-						sub.append(curChar);
-					} else {
-						pred.append(curChar);
-					}
-					
-				}
-			} else {
-				if (obj == null) {
-					obj = new StringBuilder();
-					
-					//and btw, remove final '>' from sub
-					pred.deleteCharAt(pred.length()-1);
-					
-					if (curChar == '<') {
-						//ah, object is uri. do not read this char, and make sure we don't read the final '>'
-						lineLength--;	
-						continue;
-					}
-				}
-				obj.append(curChar);
-			}
-			
-	    }
-		return new String[]{sub.toString().intern(), pred.toString().intern(), obj.toString().intern()};
+		int offset = 1;
+		String sub = line.substring(offset, line.indexOf("> "));
+		offset += sub.length()+3;
+		String pred = line.substring(offset, line.indexOf("> ", offset));
+		offset += pred.length() + 2;
+		
+		int endOffset = 2; //remove final ' .';
+		if (line.charAt(offset) == '<') {
+			//remove angular brackets
+			offset++;
+			endOffset++;
+		}
+		
+		String obj = line.substring(offset, line.length() - endOffset);
+		return new String[]{sub.intern(), pred.intern(), obj.intern()};
 	}
 
 	private void processLine(String line) {
