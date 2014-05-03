@@ -18,7 +18,6 @@ import lodanalysis.RuneableClass;
 import lodanalysis.backwardChainer.owl.Owl;
 import lodanalysis.backwardChainer.rdf.Rdf;
 import lodanalysis.backwardChainer.rdfs.Rdfs;
-import data.Triple;
 
 public class BkChain extends RuneableClass {
 

@@ -165,7 +165,7 @@ public class AggregateDataset implements Runnable  {
 			}
 			
 	    }
-		return new String[]{sub.toString(), pred.toString(), obj.toString()};
+		return new String[]{sub.toString().intern(), pred.toString().intern(), obj.toString().intern()};
 	}
 
 	private void processLine(String line) {
@@ -190,9 +190,9 @@ public class AggregateDataset implements Runnable  {
 			 * store ns triples
 			 */
 			Set<String> tripleNs = new HashSet<String>();
-			if (sub.ns != null) tripleNs.add(sub.ns.intern());
-			if (pred.ns != null) tripleNs.add(pred.ns.intern());
-			if (obj.ns != null) tripleNs.add(obj.ns.intern());
+			if (sub.ns != null) tripleNs.add(sub.ns);
+			if (pred.ns != null) tripleNs.add(pred.ns);
+			if (obj.ns != null) tripleNs.add(obj.ns);
 			if (!tripleNsCounts.containsKey(tripleNs)) {
 				tripleNsCounts.put(tripleNs, new Counter(1));
 			} else {
@@ -246,7 +246,7 @@ public class AggregateDataset implements Runnable  {
 		Counter counter = map.get(key);
 		if (counter == null) {
 			counter = new Counter(1);
-			map.put(key, counter);
+			map.put(key.intern(), counter);
 		}
 		counter.increase();
 	}
