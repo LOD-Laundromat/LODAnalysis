@@ -45,10 +45,24 @@ public class Entry {
 	}
 
 	public File getDatasetParentDir() {
-		return new File(line.getOptionValue("path"));
+		File parentDir = null;
+		if (line.hasOption("path")) {
+			parentDir = new File(line.getOptionValue("path"));
+		} else {
+			for (File datasetDir: datasetDirs) {
+				parentDir = datasetDir.getParentFile();
+				break;
+			}
+		}
+		return parentDir;
+		 
 	}
 	private void processParameters() {
-		if (line.hasOption("path"))  datasetDirs.addAll(Arrays.asList(new File(line.getOptionValue("path")).listFiles()));
+		if (line.hasOption("path"))  {
+			for (File dataset: new File(line.getOptionValue("path")).listFiles()) {
+				if (dataset.isDirectory()) datasetDirs.add(dataset);
+			}
+		}
 		if (line.hasOption("dataset")) datasetDirs.add(new File(line.getOptionValue("dataset")));
 	}
 	private void parseArgs(String[] args) {

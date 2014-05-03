@@ -1,9 +1,13 @@
 package lodanalysis.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import lodanalysis.Settings;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -35,19 +39,21 @@ public class Utils {
 	public static Map<String, Integer> getCountsInFile(File countFile) throws IOException {
 		Map<String, Integer> counts = new HashMap<String, Integer>();
 		
-		LineIterator it = FileUtils.lineIterator(countFile, null);
-		try {
-			while (it.hasNext()) {
-				String line = it.nextLine();
-				if (line.length() > 0) {
-					String[] cols = line.split("\\t");
-					if (cols.length != 2) throw new IllegalStateException("Tried to get counts from line " + line + ", but coult not split by tab");
-					counts.put(cols[0].intern(), Integer.parseInt(cols[1]));//Use intern!!! We share keys between hashmaps, so this memory optimization is really needed
+		
+		BufferedReader br = new BufferedReader(new FileReader(countFile), 120000);
+		String line;
+		while ((line = br.readLine()) != null) {
+			if (line.length() > 0) {
+				String[] cols = line.split("\\t");
+				if (cols.length != 2) {
+					br.close();
+					throw new IllegalStateException("Tried to get counts from line " + line + ", but coult not split by tab");
 				}
+				counts.put(cols[0].intern(), Integer.parseInt(cols[1]));//Use intern!!! We share keys between hashmaps, so this memory optimization is really needed
 			}
-		} finally {
-			LineIterator.closeQuietly(it);
 		}
+		br.close();
+		
 		if (counts.size() == 0) throw new IllegalStateException("No counts loaded from " + countFile.getAbsolutePath());
 		return counts;
 	}
