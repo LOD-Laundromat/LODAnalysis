@@ -8,13 +8,13 @@ public class NodeContainer {
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
-	private static final String IGNORE_RDF_URI_PREFIX = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
+	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
 	private static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema";
 	private static final String RDF_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
 	private static final String XML_URI = "http://www.w3.org/2001/XMLSchema";
 	private static final String OWL_URI = "http://www.w3.org/2002/07/owl";
-	private static final String W3C_URI_PREFIX = "<http://www.w3.org/";
+	private static final String W3C_URI_PREFIX = "http://www.w3.org/";
 
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
@@ -24,8 +24,8 @@ public class NodeContainer {
 	private boolean isW3cNs = false;//used for pruning some checks
 	public String ns = null;
 	public String datatype = null;
-	public Boolean isLiteral = null;
-	public Boolean isUri = null;
+	public boolean isLiteral = false;
+	public boolean isUri = true; //default: assume the node is a uri
 	public boolean isBnode = false;
 	public boolean isSchema = false;
 	public String langTag = null;
@@ -44,8 +44,10 @@ public class NodeContainer {
 	 * This makes detection of things like lang tags and datatypes very easy and very fast.
 	 */
 	private void calcInfo() {
-		this.isLiteral = stringRepresentation.startsWith("\"");
-		this.isUri = stringRepresentation.startsWith("<");
+		if (stringRepresentation.startsWith("\"")) {
+			this.isLiteral = true;
+			this.isUri = false;
+		}
 		
 		if (isUri) {
 			if (stringRepresentation.startsWith(W3C_URI_PREFIX)) this.isW3cNs = true;
@@ -72,7 +74,7 @@ public class NodeContainer {
 	private void calcIgnoreUri() {
 		//note: ignoreIri's default val is false
 		if (this.isW3cNs && stringRepresentation.startsWith(IGNORE_RDF_URI_PREFIX)) {
-			String postFix = stringRepresentation.substring(IGNORE_RDF_URI_PREFIX.length(), stringRepresentation.length()-1);
+			String postFix = stringRepresentation.substring(IGNORE_RDF_URI_PREFIX.length());
 			this.ignoreIri = NumberUtils.isDigits(postFix);
 		}
 	}
@@ -97,12 +99,12 @@ public class NodeContainer {
 		String ns = null;
 		int hashTagIndex = stringRepresentation.lastIndexOf('#');
 		int slashIndex = stringRepresentation.lastIndexOf('/');
-		if (hashTagIndex > 7 || slashIndex > 7) {
+		if (hashTagIndex > 6 || slashIndex > 6) {
 			//ok, this has a namespace, and not something like http://google.com
 			int nsLength = Math.max(hashTagIndex, slashIndex);
-			ns = stringRepresentation.substring(1, nsLength);
+			ns = stringRepresentation.substring(0, nsLength);
 		} else {
-			ns = stringRepresentation.substring(1, stringRepresentation.length() - 1); //initialize with ns as whole URI
+			ns = stringRepresentation; //initialize with ns as whole URI
 		}
 		return ns;
 	}

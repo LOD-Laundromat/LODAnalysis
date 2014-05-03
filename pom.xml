@@ -30,21 +30,7 @@
 			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.semanticweb.yars</groupId>
-			<artifactId>nxparser</artifactId>
-			<version>1.2.5</version>
-		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>nxparser-repo</id>
-			<url>
-                                http://nxparser.googlecode.com/svn/repository
-                        </url>
-		</repository>
-	</repositories>
-
 
 	<build>
 		<plugins>

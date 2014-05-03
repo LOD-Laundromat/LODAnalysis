@@ -21,8 +21,6 @@ import lodanalysis.utils.Counter;
 import lodanalysis.utils.NodeContainer;
 
 import org.apache.commons.io.FileUtils;
-import org.semanticweb.yars.nx.Node;
-import org.semanticweb.yars.nx.parser.NxParser;
 
 public class AggregateDataset implements Runnable  {
 	private File datasetDir;
@@ -56,17 +54,16 @@ public class AggregateDataset implements Runnable  {
 			if (!inputFile.exists()) inputFile = new File(datasetDir, Settings.FILE_NAME_INPUT);
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
-
-				NxParser nxp = new NxParser(br);
-
-				while (nxp.hasNext())
-				     processLine(nxp.next());
+				String line = null;
+				while((line = br.readLine())!= null) {
+					processLine(line);
+				}
 
 				postProcessAnalysis();
 				store();
 				close();
 			} else {
-				if (entry.isVerbose()) System.out.println("no input file found in dataset " + datasetDir.getName());
+				log("no input file found in dataset " + datasetDir.getName());
 			}
 
 		} catch (Throwable e) {
@@ -74,6 +71,12 @@ public class AggregateDataset implements Runnable  {
 			System.out.println("Exception analyzing " + datasetDir.getName());
 			e.printStackTrace();
 		}
+	}
+	
+	private void log(String msg) throws IOException {
+		if (entry.isVerbose()) System.out.println(msg);
+		Aggregator.writeToLogFile(msg);
+		
 	}
 
 	private void store() throws IOException {
@@ -105,12 +108,73 @@ public class AggregateDataset implements Runnable  {
 			}
 		}
 	}
+	
+	/**
+	 * get nodes. if it is a uri, remove the < and >. For literals, keep quotes. This makes the number of substring operation later on low, and we can still distinguish between URIs and literals
+	 * @param line
+	 * @return
+	 */
+	public static String[] getNodes(String line){
+		StringBuilder sub = null;
+		StringBuilder pred = null;
+		StringBuilder obj = null;
+		int nodePos = 0; //0: sub, 1: pred, 2: obj
+		int lineLength = line.length() - 2;//stop before the end, i.e., we don't want the ' .' part in the object
+		for (int i = 0; i < lineLength; i++) {
+			char curChar = line.charAt(i);
+			
+			if (nodePos < 2) {
+				//in pred or obj
+				if (curChar == ' ') {
+					nodePos++;
+				} else {
+					if (sub == null) {
+						//skip this first char (we know it is a <)
+						sub = new StringBuilder();
+						continue;
+					}
+					if (nodePos == 1 && pred == null) {
+						//skip this first char (we know it is a <)
+						pred = new StringBuilder();
+						
+						//and btw, remove final '>' from sub
+						sub.deleteCharAt(sub.length()-1);
+						continue;
+					}
+					if (nodePos == 0) {
+						sub.append(curChar);
+					} else {
+						pred.append(curChar);
+					}
+					
+				}
+			} else {
+				if (obj == null) {
+					obj = new StringBuilder();
+					
+					//and btw, remove final '>' from sub
+					pred.deleteCharAt(pred.length()-1);
+					
+					if (curChar == '<') {
+						//ah, object is uri. do not read this char, and make sure we don't read the final '>'
+						lineLength--;	
+						continue;
+					}
+				}
+				obj.append(curChar);
+			}
+			
+	    }
+		return new String[]{sub.toString(), pred.toString(), obj.toString()};
+	}
 
-	private void processLine(Node[] nodes) {
+	private void processLine(String line) {
+		
+		String[] nodes = getNodes(line);
 		if (nodes.length == 3) {
-			NodeContainer sub = new NodeContainer(nodes[0].toN3(), NodeContainer.Position.SUB);
-			NodeContainer pred = new NodeContainer(nodes[1].toN3(), NodeContainer.Position.PRED);
-			NodeContainer obj = new NodeContainer(nodes[2].toN3(), NodeContainer.Position.OBJ);
+			NodeContainer sub = new NodeContainer(nodes[0], NodeContainer.Position.SUB);
+			NodeContainer pred = new NodeContainer(nodes[1], NodeContainer.Position.PRED);
+			NodeContainer obj = new NodeContainer(nodes[2], NodeContainer.Position.OBJ);
 
 			/**
 			 * Collecting and counting schema URIs
@@ -126,9 +190,9 @@ public class AggregateDataset implements Runnable  {
 			 * store ns triples
 			 */
 			Set<String> tripleNs = new HashSet<String>();
-			if (sub.ns != null) tripleNs.add(sub.ns);
-			if (pred.ns != null) tripleNs.add(pred.ns);
-			if (obj.ns != null) tripleNs.add(obj.ns);
+			if (sub.ns != null) tripleNs.add(sub.ns.intern());
+			if (pred.ns != null) tripleNs.add(pred.ns.intern());
+			if (obj.ns != null) tripleNs.add(obj.ns.intern());
 			if (!tripleNsCounts.containsKey(tripleNs)) {
 				tripleNsCounts.put(tripleNs, new Counter(1));
 			} else {
@@ -238,7 +302,7 @@ public class AggregateDataset implements Runnable  {
 	public void run() {
 		try {
 			
-			if (entry.isVerbose()) System.out.println(datasetDir.getName());
+			log("aggregating " + datasetDir.getName());
 			delDelta();
 			processDataset();
 			storeDelta();

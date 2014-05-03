@@ -17,4 +17,5 @@ public class Settings {
 	public static final String FILE_NAME_INPUT_GZ = "input.nt.gz";
 	
 	public static final String FILE_NAME_LOG_AUTHORITY = "authority.log";
+	public static final String FILE_NAME_LOG_AGGREGATE = "aggregate.log";
 }

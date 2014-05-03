@@ -54,6 +54,8 @@ public class CalcAuthority extends RuneableClass {
 			printProgress("reading ns counts to memory", totalDirCount, readCount);
 		}
 		System.out.println();
+		System.out.println("" + namespaceCounts.size() + " namespaces to calc authority for");
+		
 		storeAuthorities(calcAuthorities());
 		System.out.println();
 	}
@@ -168,7 +170,7 @@ public class CalcAuthority extends RuneableClass {
 				nsAuthorities.put(namespace, selectBaseOnRelativeNumber(namespace, datasets));
 			}
 			calcCount++;
-			printProgress("calculated authorities", totalNsCounts, calcCount);
+			printProgress("calculating authorities", totalNsCounts, calcCount);
 		}
 		return nsAuthorities;
 	}

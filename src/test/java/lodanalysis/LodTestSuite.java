@@ -5,7 +5,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ NodeContainerTest.class })
+@SuiteClasses({ NodeContainerTest.class, NtReaderTest.class })
 public class LodTestSuite {
 
 }

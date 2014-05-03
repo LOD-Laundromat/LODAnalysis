@@ -22,7 +22,7 @@ public class NodeContainerTest {
 	@Test
 	public void testNodes() {
 		runCase(
-				"<http://google.com_1>", 
+				"http://google.com_1", 
 				Position.OBJ, 
 				"http://google.com_1", //ns
 				null, //datatype
@@ -34,7 +34,7 @@ public class NodeContainerTest {
 				false //ignoreUri
 			);
 		runCase(
-				"<http://google.co/df/fdm_1111>", 
+				"http://google.co/df/fdm_1111", 
 				Position.OBJ, 
 				"http://google.co/df", //ns
 				null, //datatype
@@ -46,7 +46,7 @@ public class NodeContainerTest {
 				false //ignoreUri
 				);
 		runCase(
-				"<http://google.co/df#fdm_>", 
+				"http://google.co/df#fdm_", 
 				Position.OBJ, 
 				"http://google.co/df", //ns
 				null, //datatype
@@ -58,7 +58,7 @@ public class NodeContainerTest {
 				false //ignoreUri
 				);
 		runCase(
-				"<http://google.co/df#_12332>", 
+				"http://google.co/df#_12332", 
 				Position.PRED, 
 				"http://google.co/df", //ns
 				null, //datatype
@@ -70,7 +70,7 @@ public class NodeContainerTest {
 				false //ignoreUri
 				);
 		runCase(
-				"<http://google.co/df/_12332>", 
+				"http://google.co/df/_12332", 
 				Position.SUB, 
 				"http://google.co/df", //ns
 				null, //datatype
@@ -82,7 +82,7 @@ public class NodeContainerTest {
 				false //ignoreUri
 				);
 		runCase(
-				"<http://www.w3.org/1999/02/22-rdf-syntax-ns#_111>", 
+				"http://www.w3.org/1999/02/22-rdf-syntax-ns#_111", 
 				Position.SUB, 
 				null, //ns
 				null, //datatype
@@ -94,7 +94,7 @@ public class NodeContainerTest {
 				true //ignoreUri
 				);
 		runCase(
-				"<http://www.w3.org/1999/02/22-rdf-syntax-ns#_>", 
+				"http://www.w3.org/1999/02/22-rdf-syntax-ns#_", 
 				Position.SUB, 
 				"http://www.w3.org/1999/02/22-rdf-syntax-ns", //ns
 				null, //datatype
