@@ -180,11 +180,11 @@ public class AggregateDataset implements Runnable  {
 			 * Collecting and counting schema URIs
 			 */
 			if (sub.isSchema)
-				upCounter(schemaCounts, sub.ns);
+				upCounter(schemaCounts, sub.stringRepresentation);
 			if (pred.isSchema)
-				upCounter(schemaCounts, pred.ns);
+				upCounter(schemaCounts, pred.stringRepresentation);
 			if (obj.isSchema)
-				upCounter(schemaCounts, obj.ns);
+				upCounter(schemaCounts, obj.stringRepresentation);
 
 			/**
 			 * store ns triples
