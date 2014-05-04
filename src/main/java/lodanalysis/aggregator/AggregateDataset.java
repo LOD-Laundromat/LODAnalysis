@@ -239,7 +239,7 @@ public class AggregateDataset implements Runnable  {
 			 */
 			Set<String> tripleNs = new HashSet<String>();
 			if (sub.ns != null) tripleNs.add(sub.ns);
-			if (pred.ns != null) tripleNs.add(pred.ns.intern());
+			if (pred.ns != null) tripleNs.add(pred.ns);
 			if (obj.ns != null) tripleNs.add(obj.ns);
 			if (!tripleNsCounts.containsKey(tripleNs)) {
 				tripleNsCounts.put(tripleNs, new Counter(1));
@@ -251,14 +251,14 @@ public class AggregateDataset implements Runnable  {
 			 * store ns counters
 			 */
 			if (sub.isUri) upCounter(totalNsCounts, sub.ns);
-			if (pred.isUri) upCounter(totalNsCounts, pred.ns.intern());
+			if (pred.isUri) upCounter(totalNsCounts, pred.ns, true);
 			if (obj.isUri) upCounter(totalNsCounts, obj.ns);
 
 			/**
 			 * store uniq uris
 			 */
 			if (sub.isUri) upCounter(uniqUriCounts, sub.stringRepresentation);
-			if (pred.isUri) upCounter(uniqUriCounts, pred.stringRepresentation.intern());
+			if (pred.isUri) upCounter(uniqUriCounts, pred.stringRepresentation, true);
 			if (obj.isUri) upCounter(uniqUriCounts, obj.stringRepresentation);
 
 			/**
@@ -285,16 +285,23 @@ public class AggregateDataset implements Runnable  {
 		}
 
 	}
-
+	private void upCounter(Map<String, Counter> map, String key) {
+		upCounter(map, key, false);
+	}
 	/**
 	 * just a simple helper method, to update the maps with a string as key, and counter as val
 	 */
-	private void upCounter(Map<String, Counter> map, String key) {
+	private void upCounter(Map<String, Counter> map, String key, boolean internKey) {
 		if (key == null) key = "null";
 		Counter counter = map.get(key);
 		if (counter == null) {
 			counter = new Counter(1);
-			map.put(key, counter);
+			if (internKey) {
+				map.put(key.intern(), counter);
+			} else {
+				
+				map.put(key, counter);
+			}
 		}
 		counter.increase();
 	}
