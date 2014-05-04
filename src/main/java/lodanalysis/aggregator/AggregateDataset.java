@@ -67,9 +67,14 @@ public class AggregateDataset implements Runnable  {
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
+//				int count = 0;
 				while((line = br.readLine())!= null) {
 					processLine(line);
+//					count++;
+//					if (count % 1000000 == 0) System.out.println(count);
 				}
+				
+				
 
 				postProcessAnalysis();
 				store();
@@ -144,7 +149,8 @@ public class AggregateDataset implements Runnable  {
 		}
 		
 		String obj = line.substring(offset, line.length() - endOffset);
-		return new String[]{sub.intern(), pred.intern(), obj.intern()};
+//		return new String[]{sub.intern(), pred.intern(), obj.intern()};//this avoid gc mem cleanup errors, but comes with higher cpu cost as well
+		return new String[]{sub, pred.intern(), obj};//only do intern on pred. compromise between avoiding gc mem cleanup errors, and cpu costs
 	}
 
 	private void processLine(String line) {
@@ -160,21 +166,21 @@ public class AggregateDataset implements Runnable  {
 			NodeContainer sub = new NodeContainer(nodes[0], NodeContainer.Position.SUB);
 			NodeContainer pred = new NodeContainer(nodes[1], NodeContainer.Position.PRED);
 			NodeContainer obj = new NodeContainer(nodes[2], NodeContainer.Position.OBJ);
-
+			
 			/**
 			 * Collecting and counting schema URIs
 			 */
 			if (sub.isSchema)
 				upCounter(schemaCounts, sub.stringRepresentation);
 			if (pred.isSchema) {
-				System.out.println (pred.stringRepresentation);
+//				System.out.println (pred.stringRepresentation);
 				upCounter(schemaCounts, pred.stringRepresentation);
-				if (pred.stringRepresentation.equals (RDFS_SUBCLASSOF) ||
-				    pred.stringRepresentation.equals (OWL_EQUCLASS)) {
-					classSet.add (sub.stringRepresentation);
-					classSet.add (obj.stringRepresentation);
-				} else if (pred.stringRepresentation.equals (OWL_SAMEAS)) {
-				} else if (pred.stringRepresentation.equals (RDFS_RANGE) ||
+				if (pred.stringRepresentation.equals(RDFS_SUBCLASSOF) ||
+				    pred.stringRepresentation.equals(OWL_EQUCLASS)) {
+					classSet.add(sub.stringRepresentation);
+					classSet.add(obj.stringRepresentation);
+				} else if (pred.stringRepresentation.equals(OWL_SAMEAS)) {
+				} else if (pred.stringRepresentation.equals(RDFS_RANGE) ||
 					   pred.stringRepresentation.equals (RDFS_DOMAIN)) {
 					propertySet.add (sub.stringRepresentation);
 					classSet.add (obj.stringRepresentation);
@@ -194,7 +200,7 @@ public class AggregateDataset implements Runnable  {
 			 */
 			Set<String> tripleNs = new HashSet<String>();
 			if (sub.ns != null) tripleNs.add(sub.ns);
-			if (pred.ns != null) tripleNs.add(pred.ns);
+			if (pred.ns != null) tripleNs.add(pred.ns.intern());
 			if (obj.ns != null) tripleNs.add(obj.ns);
 			if (!tripleNsCounts.containsKey(tripleNs)) {
 				tripleNsCounts.put(tripleNs, new Counter(1));
@@ -206,14 +212,14 @@ public class AggregateDataset implements Runnable  {
 			 * store ns counters
 			 */
 			if (sub.isUri) upCounter(totalNsCounts, sub.ns);
-			if (pred.isUri) upCounter(totalNsCounts, pred.ns);
+			if (pred.isUri) upCounter(totalNsCounts, pred.ns.intern());
 			if (obj.isUri) upCounter(totalNsCounts, obj.ns);
 
 			/**
 			 * store uniq uris
 			 */
 			if (sub.isUri) upCounter(uniqUriCounts, sub.stringRepresentation);
-			if (pred.isUri) upCounter(uniqUriCounts, pred.stringRepresentation);
+			if (pred.isUri) upCounter(uniqUriCounts, pred.stringRepresentation.intern());
 			if (obj.isUri) upCounter(uniqUriCounts, obj.stringRepresentation);
 
 			/**
@@ -249,7 +255,7 @@ public class AggregateDataset implements Runnable  {
 		Counter counter = map.get(key);
 		if (counter == null) {
 			counter = new Counter(1);
-			map.put(key.intern(), counter);
+			map.put(key, counter);
 		}
 		counter.increase();
 	}

@@ -17,13 +17,23 @@ public class Debug {
 	public static void main(String[] args) {
 		
 		//java -jar -path <path> lodanalysis.aggregator.Aggregator
+		/**
+		 * aggregator
+		 */
 //		new Entry(new String[]{"-verbose", "-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator"});
 //		new Entry(new String[]{"-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator", "lodanalysis.authority.CalcAuthority"});
-		new Entry(new String[]{"-path", "Output",  "lodanalysis.authority.CalcAuthority"});
-//		new Entry(new String[]{"-dataset", "Output/c36ed6f8977c3aea234adb6d740a3740",  "lodanalysis.authority.CalcAuthority"});
+//		new Entry(new String[]{"-path", "Output",  "lodanalysis.authority.CalcAuthority"});
 //		new Entry(new String[]{"-path", "Output", "lodanalysis.aggregator.Aggregator"});
-//		new Entry(new String[]{"-force", "-dataset", "Output/7dd1ec8a2bb48b509e06af8e8d019ad1", "lodanalysis.aggregator.Aggregator"});
-//		1e5a85569e906d2f0942dd61b098ade4
-//		7dd1ec8a2bb48b509e06af8e8d019ad1
+		new Entry(new String[]{"-force", "-dataset", "Output/f3109903df33520724131afd6b0a6a2e", "lodanalysis.aggregator.Aggregator"});
+		
+		/**
+		 * Authority
+		 */
+//		new Entry(new String[]{"-dataset", "Output/c36ed6f8977c3aea234adb6d740a3740",  "lodanalysis.authority.CalcAuthority"});
+		
+		/**
+		 * links
+		 */
+//		new Entry(new String[]{"-path", "Output",  "lodanalysis.links.CalcLinks"});
 	}
 }

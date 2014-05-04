@@ -32,15 +32,12 @@ public class CalcLinks extends RuneableClass {
 	
 	private Map<String, String> authorities = new HashMap<String, String>();//key: namespace, value: dataset
 	
-	
 	public CalcLinks(Entry entry) throws IOException {
 		super(entry);
 		
 		getAuthorities();
-		
 		calcLinks();
 	}
-	
 	
 	private void calcLinks() throws IOException {
 		Set<File> datasetDirs = entry.getDatasetDirs();
@@ -53,6 +50,7 @@ public class CalcLinks extends RuneableClass {
 			printProgress("calculating links", totalCount, count);
 			count++;
 		}
+		System.out.println();
 	}
 	
 	private void calcSimpleNsLink(File dataset) throws IOException {
@@ -85,6 +83,7 @@ public class CalcLinks extends RuneableClass {
 			printProgress("retrieving authorities", totalCount, count);
 			count++;
 		}
+		System.out.println();
 	}
 	
 	
