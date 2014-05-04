@@ -23,11 +23,23 @@ import lodanalysis.utils.NodeContainer;
 import org.apache.commons.io.FileUtils;
 
 public class AggregateDataset implements Runnable  {
+	private final String RDFS_CLASS = "http://www.w3.org/2000/01/rdf-schema#Class";
+	private final String RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+	private final String RDFS_SUBPROPERTYOF = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
+	private final String RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
+	private final String RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
+	private final String RDFS_DATATYPE = "http://www.w3.org/2000/01/rdf-schema#Datatype";
+	private final String OWL_SAMEAS = "http://www.w3.org/2002/07/owl#sameAs";
+	private final String OWL_EQUCLASS = "http://www.w3.org/2002/07/owl#equivalentClass";
+	private final String OWL_EQUPROPERTY = "http://www.w3.org/2002/07/owl#equivalentProperty";
 	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;
 	private Reader decoder;
 	private BufferedReader reader;
+	Set<String> classSet = new HashSet<String>();
+	Set<String> propertySet = new HashSet<String>();
+	Map<String, Set<String>> sameasSet = new HashMap<String, Set<String>>();
 	Map<Set<String>, Counter> tripleNsCounts = new HashMap<Set<String>, Counter>();
 	Map<String, Counter> dataTypeCounts = new HashMap<String, Counter>();
 	Map<String, Counter> langTagCounts = new HashMap<String, Counter>();
@@ -89,6 +101,9 @@ public class AggregateDataset implements Runnable  {
 		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
 		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_SCHEMA_URI_COUNTS), schemaCounts);
 
+		writeSetToFile(new File(datasetDir, Settings.FILE_NAME_CLASSES), classSet);
+		writeSetToFile(new File(datasetDir, Settings.FILE_NAME_PROPERTIES), propertySet);
+
 		//this one is a bit different (key is a set of strings)
 		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, "namespaceTripleCounts"));
 		for (Set<String> tripleNs: tripleNsCounts.keySet()) {
@@ -114,7 +129,7 @@ public class AggregateDataset implements Runnable  {
 	 * @param line
 	 * @return
 	 */
-	public static String[] getNodes(String line){
+	public static String[] getNodes(String line) throws IndexOutOfBoundsException {
 		int offset = 1;
 		String sub = line.substring(offset, line.indexOf("> "));
 		offset += sub.length()+3;
@@ -133,8 +148,14 @@ public class AggregateDataset implements Runnable  {
 	}
 
 	private void processLine(String line) {
-		
-		String[] nodes = getNodes(line);
+
+		String[] nodes;
+		try {
+			nodes = getNodes(line);
+		} catch (Exception e) {
+			// Invalid triples. In our class it should never happen
+			return;
+		}
 		if (nodes.length == 3) {
 			NodeContainer sub = new NodeContainer(nodes[0], NodeContainer.Position.SUB);
 			NodeContainer pred = new NodeContainer(nodes[1], NodeContainer.Position.PRED);
@@ -145,8 +166,26 @@ public class AggregateDataset implements Runnable  {
 			 */
 			if (sub.isSchema)
 				upCounter(schemaCounts, sub.stringRepresentation);
-			if (pred.isSchema)
+			if (pred.isSchema) {
+				System.out.println (pred.stringRepresentation);
 				upCounter(schemaCounts, pred.stringRepresentation);
+				if (pred.stringRepresentation.equals (RDFS_SUBCLASSOF) ||
+				    pred.stringRepresentation.equals (OWL_EQUCLASS)) {
+					classSet.add (sub.stringRepresentation);
+					classSet.add (obj.stringRepresentation);
+				} else if (pred.stringRepresentation.equals (OWL_SAMEAS)) {
+				} else if (pred.stringRepresentation.equals (RDFS_RANGE) ||
+					   pred.stringRepresentation.equals (RDFS_DOMAIN)) {
+					propertySet.add (sub.stringRepresentation);
+					classSet.add (obj.stringRepresentation);
+				} else if (pred.stringRepresentation.equals (RDFS_SUBPROPERTYOF) ||
+					   pred.stringRepresentation.equals (OWL_EQUPROPERTY))	{
+					propertySet.add (sub.stringRepresentation);
+					classSet.add (obj.stringRepresentation);
+				} else if (pred.stringRepresentation.equals (RDFS_DATATYPE)) {
+					classSet.add (sub.stringRepresentation);
+				}
+			}
 			if (obj.isSchema)
 				upCounter(schemaCounts, obj.stringRepresentation);
 
@@ -222,6 +261,17 @@ public class AggregateDataset implements Runnable  {
 		FileWriter fw = new FileWriter(targetFile);
 		for (String key: map.keySet()) {
 			fw.write(key + "\t" + map.get(key) + System.getProperty("line.separator"));
+		}
+		fw.close();
+	}
+	/**
+	 * just a simple helper method, to store the sets of strings to a file
+	 * @throws IOException
+	 */
+	private void writeSetToFile(File targetFile, Set<String> set) throws IOException {
+		FileWriter fw = new FileWriter(targetFile);
+		for (String str: set) {
+			fw.write(str + System.getProperty("line.separator"));
 		}
 		fw.close();
 	}
