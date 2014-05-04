@@ -20,11 +20,11 @@ public class Debug {
 		/**
 		 * aggregator
 		 */
-//		new Entry(new String[]{"-verbose", "-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator"});
+		new Entry(new String[]{"-verbose", "-threads", "4","-force", "-path", "Output", "lodanalysis.aggregator.Aggregator"});
 //		new Entry(new String[]{"-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator", "lodanalysis.authority.CalcAuthority"});
 //		new Entry(new String[]{"-path", "Output",  "lodanalysis.authority.CalcAuthority"});
 //		new Entry(new String[]{"-path", "Output", "lodanalysis.aggregator.Aggregator"});
-		new Entry(new String[]{"-force", "-dataset", "Output/f3109903df33520724131afd6b0a6a2e", "lodanalysis.aggregator.Aggregator"});
+//		new Entry(new String[]{"-force", "-dataset", "Output/f3109903df33520724131afd6b0a6a2e", "lodanalysis.aggregator.Aggregator"});
 		
 		/**
 		 * Authority

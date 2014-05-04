@@ -130,8 +130,8 @@ public class AggregateDataset implements Runnable  {
 			} else {
 				nsCountsUniq.get(ns).increase();
 			}
-			processSameAsChain (classSet);
-			processSameAsChain (propertySet);
+			processSameAsChain(classSet);
+			processSameAsChain(propertySet);
 		}
 	}
 
