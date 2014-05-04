@@ -242,7 +242,7 @@ public class CalcAuthority extends RuneableClass {
 			printProgress("selecting authorities based on abs ns occurance", totalNsCounts, calcCount);
 		}
 		System.out.println();
-		System.out.println("managed to select " + namespaces.size() + " authorities based on abs ns occurance");
+		System.out.println("managed to select " + namespacesToRemove.size() + " authorities based on abs ns occurance");
 		for (String namespaceToRemove: namespacesToRemove) nsAuthoritiesWithDuplicates.remove(namespaceToRemove);
 		return nsAuthoritiesWithDuplicates;
 	}
