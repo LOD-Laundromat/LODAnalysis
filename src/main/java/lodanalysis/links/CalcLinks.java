@@ -1,10 +1,12 @@
 package lodanalysis.links;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -54,14 +56,18 @@ public class CalcLinks extends RuneableClass {
 	}
 	
 	private void calcSimpleNsLink(File dataset) throws IOException {
-		int totalNsCount = 0;
 		Map<String, Integer> nsCounts = Utils.getCountsInFile(new File(dataset, Settings.FILE_NAME_NS_COUNTS));
+		BufferedWriter out = new BufferedWriter(new FileWriter(new File(dataset, Settings.FILE_NAME_OUTLINK_SIMPLE_NS)), 120768);
 		for (String namespace: nsCounts.keySet()) {
-			int nsCount = nsCounts.get(namespace);
-			totalNsCount++;
 			String nsAuthority = authorities.get(namespace);
-			if (nsAuthority == null) throw new IllegalStateException("Hmmm, could not find authority for namespace " + namespace);
+			if (nsAuthority == null) {
+				out.close();
+				throw new IllegalStateException("Hmmm, could not find authority for namespace " + namespace);
+			}
+			if (nsAuthority.equals(dataset.getName())) continue; //points to itself.
+			out.write(namespace + "\t" + nsAuthority + "\t" + nsCounts.get(namespace) + "\n");
 		}
+		out.close();
 	}
 	
 	private void getAuthorities() throws IOException {

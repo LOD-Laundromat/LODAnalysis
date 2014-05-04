@@ -17,9 +17,9 @@ public class Debug {
 	public static void main(String[] args) {
 		
 		//java -jar -path <path> lodanalysis.aggregator.Aggregator
-//		new Entry(new String[]{"-verbose", "-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator"});
+		new Entry(new String[]{"-verbose", "-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator"});
 //		new Entry(new String[]{"-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator", "lodanalysis.authority.CalcAuthority"});
-		new Entry(new String[]{"-path", "Output",  "lodanalysis.authority.CalcAuthority"});
+//		new Entry(new String[]{"-path", "Output",  "lodanalysis.authority.CalcAuthority"});
 //		new Entry(new String[]{"-dataset", "Output/c36ed6f8977c3aea234adb6d740a3740",  "lodanalysis.authority.CalcAuthority"});
 //		new Entry(new String[]{"-path", "Output", "lodanalysis.aggregator.Aggregator"});
 //		new Entry(new String[]{"-force", "-dataset", "Output/7dd1ec8a2bb48b509e06af8e8d019ad1", "lodanalysis.aggregator.Aggregator"});

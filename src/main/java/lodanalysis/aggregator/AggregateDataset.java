@@ -249,8 +249,12 @@ public class AggregateDataset implements Runnable  {
 	}
 	
 	private void storeDelta() throws IOException {
-		File deltaFile = new File(datasetDir, Aggregator.DELTA_FILENAME);
-		FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
+		//hmpf, when an exception occurs, strangely, we still write the delta, even though we havent written the other results. So check! (I know, a bit hacky, but reproducing this mem exception is annoying)
+		File nsOutputFile = new File(datasetDir, Settings.FILE_NAME_NS_UNIQ_COUNTS);
+		if (nsOutputFile.exists()) {
+			File deltaFile = new File(datasetDir, Aggregator.DELTA_FILENAME);
+			FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
+		}
 	}
 	
 	/**

@@ -18,4 +18,7 @@ public class Settings {
 	
 	public static final String FILE_NAME_LOG_AUTHORITY = "authority.log";
 	public static final String FILE_NAME_LOG_AGGREGATE = "aggregate.log";
+	
+	
+	public static final String FILE_NAME_OUTLINK_SIMPLE_NS = "outlinksSimpleNs";
 }
