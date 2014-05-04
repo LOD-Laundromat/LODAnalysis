@@ -1,25 +1,13 @@
 package lodanalysis.links;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.io.FileUtils;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
@@ -31,12 +19,23 @@ import lodanalysis.utils.Utils;
 public class CalcLinks extends RuneableClass {
 	
 	private Map<String, String> authorities = new HashMap<String, String>();//key: namespace, value: dataset
-	
+	BufferedWriter mainLatticeLinks;
+	BufferedWriter simpleNsLinks;
 	public CalcLinks(Entry entry) throws IOException {
 		super(entry);
+		String currentDir = new File("").getName();
+		System.out.println("generating edge lists per dataset, as well as one big edge list in folder " +  currentDir);
 		
-		getAuthorities();
+		
+		/**
+		 * init writers
+		 */
+		mainLatticeLinks= new BufferedWriter(new FileWriter(new File(Settings.FILE_NAME_OUTLINK_LATTICE_NS)), 120768);
+		simpleNsLinks= new BufferedWriter(new FileWriter(new File(Settings.FILE_NAME_OUTLINK_SIMPLE_NS)), 120768);
+		authorities = Utils.getAuthorities(entry.getDatasetDirs());
 		calcLinks();
+		mainLatticeLinks.close();
+		simpleNsLinks.close();
 	}
 	
 	private void calcLinks() throws IOException {
@@ -46,17 +45,86 @@ public class CalcLinks extends RuneableClass {
 		
 		for (File dataset: datasetDirs) {
 			calcSimpleNsLink(dataset);
-			
-			printProgress("calculating links", totalCount, count);
+			calcLatticeLinks(dataset);
+			Utils.printProgress("calculating links", totalCount, count);
 			count++;
 		}
 		System.out.println();
 	}
 	
+	/**
+	 * per combination of namespaces in triples, we have the counts. (e.g. [:rdf, :foaf, :thisdataset] 10, means that there are 10 triples where the sub, pred and obj (not neccesarily in that order), belong to these three namespaces)
+	 * Here, we use this to count the number of outgoing links, by only taking the triple where the current dataset is authority for.
+	 * The example above would result in two links: ':thisdataset -> :rdf 10' and ':thisdataset -> :foaf 10'
+	 * @param dataset
+	 * @throws IOException
+	 */
+	private void calcLatticeLinks(File dataset) throws IOException {
+		File nsCountFile = new File(dataset, Settings.FILE_NAME_NS_TRIPLE_COUNTS);
+		if (!entry.strict() && !nsCountFile.exists()) return;//fail softly
+		Map<Set<String>, Integer> nsCounts;
+		try {
+			nsCounts = Utils.getTripleCountsInFile(nsCountFile);
+		} catch (IllegalStateException e) {
+			if (!entry.strict()) return;//just ignore
+			if (!Utils.hasInputFileWithContent(dataset)) {
+				return;//no counts, because no input. nothing special
+			} else {
+				throw e;
+			}
+		}
+		BufferedWriter out = new BufferedWriter(new FileWriter(new File(dataset, Settings.FILE_NAME_OUTLINK_LATTICE_NS)), 120768);
+		Map<String, Integer> externalLinks = new HashMap<String, Integer>();
+		for (Set<String> namespaces: nsCounts.keySet()) {
+			
+			Set<String> externalNamespaces = new HashSet<String>();
+			boolean hasOwnNamespace = false;
+			for (String namespace: namespaces) {
+				String nsAuthority = authorities.get(namespace);
+				if (nsAuthority == null) {
+					out.close();
+					throw new IllegalStateException("Hmmm, could not find authority for namespace " + namespaces + " , dataset " + dataset.getName());
+				}
+				if (nsAuthority.equals(dataset.getName())) {
+					hasOwnNamespace = true;
+				} else {
+					externalNamespaces.add(namespace);
+				}
+			}
+			if (hasOwnNamespace && externalNamespaces.size() > 0) {
+				for (String externalNamespace: externalNamespaces) {
+					Integer linkWeight = externalLinks.get(externalNamespace);
+					if (linkWeight == null) {
+						externalLinks.put(externalNamespace, 1);
+					} else {
+						externalLinks.put(externalNamespace, linkWeight + nsCounts.get(namespaces));
+					}
+				}
+			}
+		}
+		for (String externalLink: externalLinks.keySet()) {
+			out.write(externalLink + "\t" + authorities.get(externalLink) + "\t" + externalLinks.get(externalLink) + "\n");
+			mainLatticeLinks.write(dataset.getName() + "\t" + authorities.get(externalLink) + "\t" + externalLinks.get(externalLink) + "\n");
+		}
+		out.close();
+	}
 	private void calcSimpleNsLink(File dataset) throws IOException {
-		Map<String, Integer> nsCounts = Utils.getCountsInFile(new File(dataset, Settings.FILE_NAME_NS_COUNTS));
+		File nsCountFile = new File(dataset, Settings.FILE_NAME_NS_COUNTS);
+		if (!entry.strict() && !nsCountFile.exists()) return;//fail softly
+		Map<String, Integer> nsCounts;
+		try {
+			nsCounts = Utils.getCountsInFile(nsCountFile);
+		} catch (IllegalStateException e) {
+			if (!entry.strict()) return;//just ignore
+			if (!Utils.hasInputFileWithContent(dataset)) {
+				return;//no counts, because no input. nothing special
+			} else {
+				throw e;
+			}
+		}
 		BufferedWriter out = new BufferedWriter(new FileWriter(new File(dataset, Settings.FILE_NAME_OUTLINK_SIMPLE_NS)), 120768);
 		for (String namespace: nsCounts.keySet()) {
+			if (namespace.equals("null")) continue;
 			String nsAuthority = authorities.get(namespace);
 			if (nsAuthority == null) {
 				out.close();
@@ -64,33 +132,15 @@ public class CalcLinks extends RuneableClass {
 			}
 			if (nsAuthority.equals(dataset.getName())) continue; //points to itself.
 			out.write(namespace + "\t" + nsAuthority + "\t" + nsCounts.get(namespace) + "\n");
+			simpleNsLinks.write(dataset.getName() + "\t" + nsAuthority + "\t" + nsCounts.get(namespace) + "\n");
 		}
 		out.close();
 	}
 	
-	private void getAuthorities() throws IOException {
-		
-		Set<File> datasetDirs = entry.getDatasetDirs();
-		int totalCount = datasetDirs.size();
-		int count = 0;
-		for (File dataset: datasetDirs) {
-			BufferedReader br = new BufferedReader(new FileReader(new File(dataset, Settings.FILE_NAME_AUTHORITY)), 120000);
-			String line;
-			while ((line = br.readLine()) != null) {
-				authorities.put(line, dataset.getName());
-			}
-			br.close();
-			printProgress("retrieving authorities", totalCount, count);
-			count++;
-		}
-		System.out.println();
-	}
 	
 	
 	
-	private void printProgress(String msg, int totalCount, int processedCount) {
-		String percentage = (String.format("%.0f%%",(100 * (float)processedCount) / (float) totalCount));
-		System.out.print(msg + " (" + percentage + ")\r");
-	}
+	
+	
 
 }

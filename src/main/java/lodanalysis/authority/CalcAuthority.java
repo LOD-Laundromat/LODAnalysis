@@ -1,12 +1,7 @@
 package lodanalysis.authority;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,15 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.io.FileUtils;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
 import lodanalysis.Settings;
 import lodanalysis.utils.Utils;
+
+import org.apache.commons.io.FileUtils;
 
 
 /**
@@ -86,8 +79,6 @@ public class CalcAuthority extends RuneableClass {
 			authoritiesByDatasets.get(dataset).add(namespace);
 		}
 		
-		
-		
 		//now, for each dataset, write back
 		for (String dataset: authoritiesByDatasets.keySet()) {
 //			System.out.println(dataset + authoritiesByDatasets.get(dataset));
@@ -123,28 +114,7 @@ public class CalcAuthority extends RuneableClass {
 		return hasFile;
 	}
 	
-	private boolean hasInputFileWithContent(File datasetDir) throws IOException{
-		File file = new File(datasetDir, Settings.FILE_NAME_INPUT_GZ);
-		if (!file.exists()) file = new File(datasetDir, Settings.FILE_NAME_INPUT);
-		BufferedReader reader = null;
-		GZIPInputStream gzipStream = null;
-		FileInputStream fileStream = null;
-		if (file.getName().endsWith(".gz")) {
-			fileStream = new FileInputStream(file);
-			gzipStream = new GZIPInputStream(fileStream);//maximize buffer: http://java-performance.com/
-			InputStreamReader decoder = new InputStreamReader(gzipStream, "UTF-8");
-			reader = new BufferedReader(decoder);
-		} else {
-			reader = new BufferedReader(new FileReader(file));
-		}
-		
-		boolean hasContent = reader.readLine() != null;
-		
-		reader.close();
-		if (gzipStream != null) gzipStream.close();
-		if (fileStream != null) fileStream.close();
-		return hasContent;
-	}
+	
 	
 	
 	private void retrieveNsCounts(File datasetDir) throws IOException {
@@ -153,16 +123,13 @@ public class CalcAuthority extends RuneableClass {
 		if (!hasInputFile(datasetDir)) return;
 		File nsUniqCountsFile = new File(datasetDir, Settings.FILE_NAME_NS_UNIQ_COUNTS);
 		if (!nsUniqCountsFile.exists() || nsUniqCountsFile.length() == 0) {
-			if (!hasInputFileWithContent(datasetDir)) return;
-//			throw new IllegalStateException("Could not find file containing ns counts: " + nsUniqCountsFile.getAbsolutePath());
-			return;
-			/**
-			 * 
-			 * 
-			 * TODO: enable exception again! (disabled for debugging purposes, as not all files are aggregated)
-			 * 
-			 * 
-			 */
+			if (!Utils.hasInputFileWithContent(datasetDir)) return;
+			
+			if (entry.strict()) {
+				throw new IllegalStateException("Could not find file containing ns counts: " + nsUniqCountsFile.getAbsolutePath());
+			} else {
+				return;
+			}
 		}
 		
 		Map<String, Integer> nsCountsForDataset = Utils.getCountsInFile(nsUniqCountsFile);

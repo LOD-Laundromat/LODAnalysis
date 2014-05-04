@@ -3,7 +3,6 @@ package lodanalysis;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,6 +18,7 @@ import org.apache.commons.cli.ParseException;
 
 public class Entry {
 //	List<String> possibleAnalysis;
+	private boolean strict = true;
 	private CommandLine line;
 	private Set<File> datasetDirs = new HashSet<File>();
 	public Entry(String[] args)  {
@@ -29,6 +29,9 @@ public class Entry {
 		return datasetDirs;
 	}
 	
+	public boolean strict() {
+		return strict;
+	}
 	public int getNumThreads() {
 		int numThreads = 1;
 		if (line.hasOption("threads")) {
@@ -64,6 +67,7 @@ public class Entry {
 			}
 		}
 		if (line.hasOption("dataset")) datasetDirs.add(new File(line.getOptionValue("dataset")));
+		if (line.hasOption("nostrict")) strict = false;
 	}
 	private void parseArgs(String[] args) {
 		Options options = getOptions();
@@ -142,6 +146,7 @@ public class Entry {
 	private Options getOptions() {
 		Options options = new Options();
 		Option verbose = new Option("verbose", "be extra verbose");
+		Option noStrict = new Option("nostrict", "disable some checking, such as whether certain files exist. useful for debugging");
 		Option force = new Option("force", "force execution (i.e. ignore delta id)");
 		Option path = OptionBuilder.withArgName("path").hasArg().withDescription("Path containing all the dataset directories").create("path");
 		Option threads = OptionBuilder.withArgName("threads").hasArg().withDescription("Number of threats to use").create("threads");
@@ -156,6 +161,7 @@ public class Entry {
 		options.addOption(path);
 		options.addOption(dataset);
 		options.addOption(threads);
+		options.addOption(noStrict);
 		return options;
 	}
 

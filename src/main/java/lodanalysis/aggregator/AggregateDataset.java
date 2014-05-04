@@ -111,7 +111,7 @@ public class AggregateDataset implements Runnable  {
 		writeSetToFile(new File(datasetDir, Settings.FILE_NAME_PROPERTIES), propertySet);
 
 		//this one is a bit different (key is a set of strings)
-		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, "namespaceTripleCounts"));
+		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS));
 		for (Set<String> tripleNs: tripleNsCounts.keySet()) {
 			namespaceTripleCountsOutput.write(tripleNs.toString() + "\t" + tripleNsCounts.get(tripleNs) + System.getProperty("line.separator"));
 		}
@@ -243,6 +243,8 @@ public class AggregateDataset implements Runnable  {
 			if (sub.ns != null) tripleNs.add(sub.ns);
 			if (pred.ns != null) tripleNs.add(pred.ns);
 			if (obj.ns != null) tripleNs.add(obj.ns);
+			if (sub.ns == null && pred.ns == null && obj.ns == null)
+				System.out.println(sub.stringRepresentation + pred.stringRepresentation + obj.stringRepresentation);
 			if (!tripleNsCounts.containsKey(tripleNs)) {
 				tripleNsCounts.put(tripleNs, new Counter(1));
 			} else {
