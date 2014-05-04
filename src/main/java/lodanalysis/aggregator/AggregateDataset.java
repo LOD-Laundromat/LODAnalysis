@@ -26,7 +26,6 @@ import lodanalysis.utils.NodeContainer;
 import org.apache.commons.io.FileUtils;
 
 public class AggregateDataset implements Runnable  {
-	private final String RDFS_CLASS = "http://www.w3.org/2000/01/rdf-schema#Class";
 	private final String RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
 	private final String RDFS_SUBPROPERTYOF = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
 	private final String RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
@@ -77,8 +76,6 @@ public class AggregateDataset implements Runnable  {
 //					count++;
 //					if (count % 1000000 == 0) System.out.println(count);
 				}
-				
-				
 
 				postProcessAnalysis();
 				store();
@@ -135,6 +132,11 @@ public class AggregateDataset implements Runnable  {
 		}
 	}
 
+	/**
+	 * This function basically applies the sameAs transitivity until it finds all the
+	 * transitivity relationships among the items in the given set; since it avoids
+	 * recursion, its not that readable ;-)
+	 */
 	private void processSameAsChain(Set<String> set) {
 		List<String> temp = new ArrayList<String>();
 
@@ -205,30 +207,30 @@ public class AggregateDataset implements Runnable  {
 			NodeContainer sub = new NodeContainer(nodes[0], NodeContainer.Position.SUB);
 			NodeContainer pred = new NodeContainer(nodes[1], NodeContainer.Position.PRED);
 			NodeContainer obj = new NodeContainer(nodes[2], NodeContainer.Position.OBJ);
-			
+
 			/**
 			 * Collecting and counting schema URIs
 			 */
 			if (sub.isSchema)
 				upCounter(schemaCounts, sub.stringRepresentation);
 			if (pred.isSchema) {
-//				System.out.println (pred.stringRepresentation);
 				upCounter(schemaCounts, pred.stringRepresentation);
 				if (pred.stringRepresentation.equals(RDFS_SUBCLASSOF) ||
 				    pred.stringRepresentation.equals(OWL_EQUCLASS)) {
-					classSet.add(sub.stringRepresentation);
-					classSet.add(obj.stringRepresentation);
+					if (!isBlankNode (sub.stringRepresentation)) classSet.add(sub.stringRepresentation);
+					if (!isBlankNode (obj.stringRepresentation)) classSet.add(obj.stringRepresentation);
+
 				} else if (pred.stringRepresentation.equals(OWL_SAMEAS)) {
 				} else if (pred.stringRepresentation.equals(RDFS_RANGE) ||
 					   pred.stringRepresentation.equals (RDFS_DOMAIN)) {
-					propertySet.add (sub.stringRepresentation);
-					classSet.add (obj.stringRepresentation);
+					if (!isBlankNode (sub.stringRepresentation)) propertySet.add (sub.stringRepresentation);
+					if (!isBlankNode (obj.stringRepresentation)) classSet.add (obj.stringRepresentation);
 				} else if (pred.stringRepresentation.equals (RDFS_SUBPROPERTYOF) ||
 					   pred.stringRepresentation.equals (OWL_EQUPROPERTY))	{
-					propertySet.add (sub.stringRepresentation);
-					classSet.add (obj.stringRepresentation);
+					if (!isBlankNode (sub.stringRepresentation)) propertySet.add (sub.stringRepresentation);
+					if (!isBlankNode (obj.stringRepresentation)) classSet.add (obj.stringRepresentation);
 				} else if (pred.stringRepresentation.equals (RDFS_DATATYPE)) {
-					classSet.add (sub.stringRepresentation);
+					if (!isBlankNode (sub.stringRepresentation)) classSet.add (sub.stringRepresentation);
 				}
 			}
 			if (obj.isSchema)
@@ -299,11 +301,14 @@ public class AggregateDataset implements Runnable  {
 			if (internKey) {
 				map.put(key.intern(), counter);
 			} else {
-				
+
 				map.put(key, counter);
 			}
 		}
 		counter.increase();
+	}
+	private boolean isBlankNode (String node) {
+		return node.startsWith ("_:") ? true : false;
 	}
 	/**
 	 * just a simple helper method, to store the maps with a string as key, and counter as val
