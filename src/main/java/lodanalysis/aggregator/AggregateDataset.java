@@ -11,9 +11,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
+import java.util.List;
+
 
 import lodanalysis.Entry;
 import lodanalysis.Settings;
@@ -39,7 +42,8 @@ public class AggregateDataset implements Runnable  {
 	private BufferedReader reader;
 	Set<String> classSet = new HashSet<String>();
 	Set<String> propertySet = new HashSet<String>();
-	Map<String, Set<String>> sameasSet = new HashMap<String, Set<String>>();
+	Map<String, Set<String>> sameAsSubjectSet = new HashMap<String, Set<String>>();
+	Map<String, Set<String>> sameAsObjectSet = new HashMap<String, Set<String>>();
 	Map<Set<String>, Counter> tripleNsCounts = new HashMap<Set<String>, Counter>();
 	Map<String, Counter> dataTypeCounts = new HashMap<String, Counter>();
 	Map<String, Counter> langTagCounts = new HashMap<String, Counter>();
@@ -84,11 +88,11 @@ public class AggregateDataset implements Runnable  {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void log(String msg) throws IOException {
 		if (entry.isVerbose()) System.out.println(msg);
 		Aggregator.writeToLogFile(msg);
-		
+
 	}
 
 	private void store() throws IOException {
@@ -121,9 +125,44 @@ public class AggregateDataset implements Runnable  {
 			} else {
 				nsCountsUniq.get(ns).increase();
 			}
+			processSameAsChain (classSet);
+			processSameAsChain (propertySet);
 		}
 	}
-	
+
+	private void processSameAsChain(Set<String> set) {
+		List<String> temp = new ArrayList<String>();
+
+		do {
+			for (String item : set) {
+				/* ----------------------------------- */
+				if (sameAsSubjectSet.get(item) != null) {
+					for (String s : sameAsSubjectSet.get(item)) {
+						if (!set.contains(s)){
+							temp.add(s);
+						}
+					}
+				}
+				/* ----------------------------------- */
+				if (sameAsObjectSet.get(item) != null) {
+					for (String s : sameAsObjectSet.get(item)) {
+						if (!set.contains(s)){
+							temp.add(s);
+						}
+					}
+				}
+			}
+			/* ----------------------------------- */
+			if (temp.size() > 0) {
+				for (String s : temp) {
+					set.add(s);
+				}
+				temp.clear();
+			} else {
+				break;
+			}
+		} while (true);
+	}
 	/**
 	 * get nodes. if it is a uri, remove the < and >. For literals, keep quotes. This makes the number of substring operation later on low, and we can still distinguish between URIs and literals
 	 * @param line
@@ -135,14 +174,14 @@ public class AggregateDataset implements Runnable  {
 		offset += sub.length()+3;
 		String pred = line.substring(offset, line.indexOf("> ", offset));
 		offset += pred.length() + 2;
-		
+
 		int endOffset = 2; //remove final ' .';
 		if (line.charAt(offset) == '<') {
 			//remove angular brackets
 			offset++;
 			endOffset++;
 		}
-		
+
 		String obj = line.substring(offset, line.length() - endOffset);
 		return new String[]{sub.intern(), pred.intern(), obj.intern()};
 	}
@@ -167,13 +206,26 @@ public class AggregateDataset implements Runnable  {
 			if (sub.isSchema)
 				upCounter(schemaCounts, sub.stringRepresentation);
 			if (pred.isSchema) {
-				System.out.println (pred.stringRepresentation);
 				upCounter(schemaCounts, pred.stringRepresentation);
 				if (pred.stringRepresentation.equals (RDFS_SUBCLASSOF) ||
 				    pred.stringRepresentation.equals (OWL_EQUCLASS)) {
 					classSet.add (sub.stringRepresentation);
 					classSet.add (obj.stringRepresentation);
 				} else if (pred.stringRepresentation.equals (OWL_SAMEAS)) {
+					if (sameAsSubjectSet.containsKey (sub.stringRepresentation)) {
+						sameAsSubjectSet.get(sub.stringRepresentation).add(obj.stringRepresentation);
+					} else {
+						Set<String> objSet = new HashSet<String>();
+						objSet.add (obj.stringRepresentation);
+						sameAsSubjectSet.put (sub.stringRepresentation, objSet);
+					}
+					if (sameAsObjectSet.containsKey (obj.stringRepresentation)) {
+						sameAsObjectSet.get(obj.stringRepresentation).add(sub.stringRepresentation);
+					} else {
+						Set<String> subSet = new HashSet<String>();
+						subSet.add (sub.stringRepresentation);
+						sameAsObjectSet.put (obj.stringRepresentation, subSet);
+					}
 				} else if (pred.stringRepresentation.equals (RDFS_RANGE) ||
 					   pred.stringRepresentation.equals (RDFS_DOMAIN)) {
 					propertySet.add (sub.stringRepresentation);
@@ -297,7 +349,7 @@ public class AggregateDataset implements Runnable  {
 		if (reader != null) reader.close();
 
 	}
-	
+
 	private void storeDelta() throws IOException {
 		//hmpf, when an exception occurs, strangely, we still write the delta, even though we havent written the other results. So check! (I know, a bit hacky, but reproducing this mem exception is annoying)
 		File nsOutputFile = new File(datasetDir, Settings.FILE_NAME_NS_UNIQ_COUNTS);
@@ -306,7 +358,7 @@ public class AggregateDataset implements Runnable  {
 			FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
 		}
 	}
-	
+
 	/**
 	 * del delta. This way, when we re-run (forced) a dataset analysis, but we stop in the middle, we know we have to re-run this dataset again later on
 	 * @throws IOException
@@ -315,11 +367,11 @@ public class AggregateDataset implements Runnable  {
 		File deltaFile = new File(datasetDir, Aggregator.DELTA_FILENAME);
 		if (deltaFile.exists()) deltaFile.delete();
 	}
-	
+
 	@Override
 	public void run() {
 		try {
-			
+
 			log("aggregating " + datasetDir.getName());
 			delDelta();
 			processDataset();
