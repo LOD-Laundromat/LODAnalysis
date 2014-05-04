@@ -217,20 +217,20 @@ public class AggregateDataset implements Runnable  {
 				upCounter(schemaCounts, pred.stringRepresentation);
 				if (pred.stringRepresentation.equals(RDFS_SUBCLASSOF) ||
 				    pred.stringRepresentation.equals(OWL_EQUCLASS)) {
-					if (!isBlankNode (sub.stringRepresentation)) classSet.add(sub.stringRepresentation);
-					if (!isBlankNode (obj.stringRepresentation)) classSet.add(obj.stringRepresentation);
+					classSet.add(sub.stringRepresentation);
+					classSet.add(obj.stringRepresentation);
 
 				} else if (pred.stringRepresentation.equals(OWL_SAMEAS)) {
 				} else if (pred.stringRepresentation.equals(RDFS_RANGE) ||
 					   pred.stringRepresentation.equals (RDFS_DOMAIN)) {
-					if (!isBlankNode (sub.stringRepresentation)) propertySet.add (sub.stringRepresentation);
-					if (!isBlankNode (obj.stringRepresentation)) classSet.add (obj.stringRepresentation);
+					propertySet.add (sub.stringRepresentation);
+					classSet.add (obj.stringRepresentation);
 				} else if (pred.stringRepresentation.equals (RDFS_SUBPROPERTYOF) ||
 					   pred.stringRepresentation.equals (OWL_EQUPROPERTY))	{
-					if (!isBlankNode (sub.stringRepresentation)) propertySet.add (sub.stringRepresentation);
-					if (!isBlankNode (obj.stringRepresentation)) classSet.add (obj.stringRepresentation);
+					propertySet.add (sub.stringRepresentation);
+					classSet.add (obj.stringRepresentation);
 				} else if (pred.stringRepresentation.equals (RDFS_DATATYPE)) {
-					if (!isBlankNode (sub.stringRepresentation)) classSet.add (sub.stringRepresentation);
+					classSet.add (sub.stringRepresentation);
 				}
 			}
 			if (obj.isSchema)
@@ -306,9 +306,6 @@ public class AggregateDataset implements Runnable  {
 			}
 		}
 		counter.increase();
-	}
-	private boolean isBlankNode (String node) {
-		return node.startsWith ("_:") ? true : false;
 	}
 	/**
 	 * just a simple helper method, to store the maps with a string as key, and counter as val
