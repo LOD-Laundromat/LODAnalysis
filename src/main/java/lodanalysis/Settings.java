@@ -12,6 +12,7 @@ public class Settings {
 	public static final String FILE_NAME_SCHEMA_URI_COUNTS = "UsedSchemaURIs";
 	public static final String FILE_NAME_CLASSES = "Classes";
 	public static final String FILE_NAME_PROPERTIES = "Properties";
+	public static final String FILE_NAME_NS_TRIPLE_COUNTS = "namespaceTripleCounts";
 
 	public static final String FILE_NAME_AUTHORITY = "authority";
 
@@ -22,4 +23,5 @@ public class Settings {
 	public static final String FILE_NAME_LOG_AGGREGATE = "aggregate.log";
 
 	public static final String FILE_NAME_OUTLINK_SIMPLE_NS = "outlinksSimpleNs";
+	public static final String FILE_NAME_OUTLINK_LATTICE_NS = "outlinksLatticeNs";
 }
