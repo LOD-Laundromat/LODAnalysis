@@ -61,7 +61,6 @@ public class CalcAuthority extends RuneableClass {
 			printProgress("reading ns counts to memory", totalDirCount, readCount);
 		}
 		System.out.println();
-		System.out.println("" + namespaceCounts.size() + " namespaces to calc authority for");
 		calcAuthorities();
 		storeAuthorities();
 		System.out.println();
@@ -214,7 +213,7 @@ public class CalcAuthority extends RuneableClass {
 			         largestVal = absNsCount;
 			         largestList.clear();
 			         largestList.add(dataset);
-			     }else if (largestVal == absNsCount){
+			     } else if (largestVal == absNsCount){
 			         largestList.add(dataset);
 			     }
 			}
@@ -243,6 +242,7 @@ public class CalcAuthority extends RuneableClass {
 			printProgress("selecting authorities based on abs ns occurance", totalNsCounts, calcCount);
 		}
 		System.out.println();
+		System.out.println("managed to select " + namespaces.size() + " authorities based on abs ns occurance");
 		for (String namespaceToRemove: namespacesToRemove) nsAuthoritiesWithDuplicates.remove(namespaceToRemove);
 		return nsAuthoritiesWithDuplicates;
 	}
