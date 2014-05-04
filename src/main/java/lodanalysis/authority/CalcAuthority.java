@@ -36,7 +36,7 @@ import lodanalysis.utils.Utils;
  */
 
 public class CalcAuthority extends RuneableClass {
-	
+	private Map<String, Integer> progresses = new HashMap<String, Integer>();
 	
 	//key: namespace, values: datasets and counts
 	Map<String, Map<String, Integer>> namespaceCounts = new HashMap<String, Map<String, Integer>>();
@@ -67,7 +67,11 @@ public class CalcAuthority extends RuneableClass {
 	}
 	
 	public void printProgress(String msg, int totalCount, int processedCount) throws IOException {
-		String percentage = (String.format("%.0f%%",(100 * (float)processedCount) / (float) totalCount));
+		int intPercentage = Math.round((100 * (float)processedCount) / (float) totalCount);
+		Integer storedPercentage = 0;
+		if ((storedPercentage = progresses.get(msg)) != null && intPercentage == storedPercentage) return;
+		progresses.put(msg, intPercentage);
+		String percentage = Integer.toString(intPercentage) + "%";
 		System.out.print(msg + " (" + percentage + ")\r");
 	}
 
@@ -174,9 +178,12 @@ public class CalcAuthority extends RuneableClass {
 	 * @throws IOException
 	 */
 	private Map<String, String> calcAuthorities() throws IOException {
-		//key: namespace, value: datasets (might be multiple, when namespacecounts is the same)
+		/**
+		 * First, create map, where key = namespace, and value = datasets. The latter might be multiple when namespace counts is the same
+		 */
 		Map<String, List<String>> nsAuthoritiesWithDuplicates = new HashMap<String, List<String>>();
-		
+		int totalNsCounts = namespaceCounts.size();
+		int calcCount = 0;
 		for(String namespace: namespaceCounts.keySet()) {
 			Map<String, Integer> datasetCounts = namespaceCounts.get(namespace);
 			
@@ -192,6 +199,8 @@ public class CalcAuthority extends RuneableClass {
 			     }
 			}
 			nsAuthoritiesWithDuplicates.put(namespace, largestList);
+			printProgress("creating authorities (first prune step, based on max ns declarations)", totalNsCounts, calcCount);
+			calcCount++;
 		}
 		//No need for namespacecounts anymore. Clean this up
 		namespaceCounts = null;
@@ -199,9 +208,8 @@ public class CalcAuthority extends RuneableClass {
 		//key: namespace, val: dataset
 		
 		Set<String> namespaces = nsAuthoritiesWithDuplicates.keySet();
-		int totalNsCounts = namespaces.size();
-		int calcCount = 0;
-			
+		totalNsCounts = namespaces.size();
+		calcCount = 0;
 		Map<String, String> nsAuthorities = new HashMap<String, String>();
 		for (String namespace: namespaces) {
 			List<String> datasets = nsAuthoritiesWithDuplicates.get(namespace);
@@ -212,7 +220,7 @@ public class CalcAuthority extends RuneableClass {
 				nsAuthorities.put(namespace, selectBaseOnRelativeNumber(namespace, datasets));
 			}
 			calcCount++;
-			printProgress("calculating authorities", totalNsCounts, calcCount);
+			printProgress("calculating authorities (either by selecting the only dataset, or by selection based on rel. number)", totalNsCounts, calcCount);
 		}
 		return nsAuthorities;
 	}
@@ -238,12 +246,7 @@ public class CalcAuthority extends RuneableClass {
 			if (currentNsCount == null) throw new IllegalStateException("Tried to find the namespace count for namespace " + namespace + ", in dataset " + dataset + ", but could not find it! It should be there though..");
 			
 			Double relsize = (double)currentNsCount / (double)totalNsCount;
-			if (relativeNsSize.containsKey(relsize)) {
-//				throw new IllegalStateException("We have a problem. We are ending up with two datasets who are both an authority of one namespace. "
-//						+ "Hoped this wouldnt happen. Namespace: " + namespace + ". Datasets: " + dataset + " and " + relativeNsSize.get(relsize));
-//				System.out.println("multiple authorities, one namespace....");
-			}
-			
+
 			/**
 			 * add this dataset, and the relative size of this ns, to our object
 			 */
