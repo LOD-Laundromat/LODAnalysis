@@ -1,9 +1,7 @@
 package lodanalysis.links;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,12 +19,23 @@ import lodanalysis.utils.Utils;
 public class CalcLinks extends RuneableClass {
 	
 	private Map<String, String> authorities = new HashMap<String, String>();//key: namespace, value: dataset
-	
+	BufferedWriter mainLatticeLinks;
+	BufferedWriter simpleNsLinks;
 	public CalcLinks(Entry entry) throws IOException {
 		super(entry);
+		String currentDir = new File("").getName();
+		System.out.println("generating edge lists per dataset, as well as one big edge list in folder " +  currentDir);
 		
-		getAuthorities();
+		
+		/**
+		 * init writers
+		 */
+		mainLatticeLinks= new BufferedWriter(new FileWriter(new File(Settings.FILE_NAME_OUTLINK_LATTICE_NS)), 120768);
+		simpleNsLinks= new BufferedWriter(new FileWriter(new File(Settings.FILE_NAME_OUTLINK_LATTICE_NS)), 120768);
+		authorities = Utils.getAuthorities(entry.getDatasetDirs());
 		calcLinks();
+		mainLatticeLinks.close();
+		simpleNsLinks.close();
 	}
 	
 	private void calcLinks() throws IOException {
@@ -37,7 +46,7 @@ public class CalcLinks extends RuneableClass {
 		for (File dataset: datasetDirs) {
 			calcSimpleNsLink(dataset);
 			calcLatticeLinks(dataset);
-			printProgress("calculating links", totalCount, count);
+			Utils.printProgress("calculating links", totalCount, count);
 			count++;
 		}
 		System.out.println();
@@ -95,6 +104,7 @@ public class CalcLinks extends RuneableClass {
 		}
 		for (String externalLink: externalLinks.keySet()) {
 			out.write(externalLink + "\t" + authorities.get(externalLink) + "\t" + externalLinks.get(externalLink) + "\n");
+			mainLatticeLinks.write(dataset.getName() + "\t" + authorities.get(externalLink) + "\t" + externalLinks.get(externalLink) + "\n");
 		}
 		out.close();
 	}
@@ -122,33 +132,15 @@ public class CalcLinks extends RuneableClass {
 			}
 			if (nsAuthority.equals(dataset.getName())) continue; //points to itself.
 			out.write(namespace + "\t" + nsAuthority + "\t" + nsCounts.get(namespace) + "\n");
+			simpleNsLinks.write(dataset.getName() + "\t" + nsAuthority + "\t" + nsCounts.get(namespace) + "\n");
 		}
 		out.close();
 	}
 	
-	private void getAuthorities() throws IOException {
-		
-		Set<File> datasetDirs = entry.getDatasetDirs();
-		int totalCount = datasetDirs.size();
-		int count = 0;
-		for (File dataset: datasetDirs) {
-			BufferedReader br = new BufferedReader(new FileReader(new File(dataset, Settings.FILE_NAME_AUTHORITY)), 120000);
-			String line;
-			while ((line = br.readLine()) != null) {
-				authorities.put(line, dataset.getName());
-			}
-			br.close();
-			printProgress("retrieving authorities", totalCount, count);
-			count++;
-		}
-		System.out.println();
-	}
 	
 	
 	
-	private void printProgress(String msg, int totalCount, int processedCount) {
-		String percentage = (String.format("%.0f%%",(100 * (float)processedCount) / (float) totalCount));
-		System.out.print(msg + " (" + percentage + ")\r");
-	}
+	
+	
 
 }

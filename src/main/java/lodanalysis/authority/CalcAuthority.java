@@ -1,12 +1,7 @@
 package lodanalysis.authority;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,15 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.io.FileUtils;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
 import lodanalysis.Settings;
 import lodanalysis.utils.Utils;
+
+import org.apache.commons.io.FileUtils;
 
 
 /**
@@ -85,8 +78,6 @@ public class CalcAuthority extends RuneableClass {
 			
 			authoritiesByDatasets.get(dataset).add(namespace);
 		}
-		
-		
 		
 		//now, for each dataset, write back
 		for (String dataset: authoritiesByDatasets.keySet()) {

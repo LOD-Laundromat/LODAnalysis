@@ -128,4 +128,28 @@ public class Utils {
 		if (fileStream != null) fileStream.close();
 		return hasContent;
 	}
+	
+	public static Map<String, String> getAuthorities(Set<File> datasetDirs) throws IOException {
+		Map<String, String> authorities = new HashMap<String,String>();
+//		Set<File> datasetDirs = entry.getDatasetDirs();
+		int totalCount = datasetDirs.size();
+		int count = 0;
+		for (File dataset: datasetDirs) {
+			BufferedReader br = new BufferedReader(new FileReader(new File(dataset, Settings.FILE_NAME_AUTHORITY)), 120000);
+			String line;
+			while ((line = br.readLine()) != null) {
+				authorities.put(line, dataset.getName());
+			}
+			br.close();
+			printProgress("retrieving authorities", totalCount, count);
+			count++;
+		}
+		System.out.println();
+		return authorities;
+	}
+
+	public static void printProgress(String msg, int totalCount, int processedCount) {
+		String percentage = (String.format("%.0f%%",(100 * (float)processedCount) / (float) totalCount));
+		System.out.print(msg + " (" + percentage + ")\r");
+	}
 }
