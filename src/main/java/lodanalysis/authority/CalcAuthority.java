@@ -222,6 +222,7 @@ public class CalcAuthority extends RuneableClass {
 			printProgress("creating authorities (first prune step, based on max ns declarations)", totalNsCounts, calcCount);
 			calcCount++;
 		}
+		System.out.println();
 		/**
 		 * calculate authority based on abs ns occurance
 		 */
@@ -241,6 +242,7 @@ public class CalcAuthority extends RuneableClass {
 			calcCount++;
 			printProgress("selecting authorities based on abs ns occurance", totalNsCounts, calcCount);
 		}
+		System.out.println();
 		for (String namespaceToRemove: namespacesToRemove) nsAuthoritiesWithDuplicates.remove(namespaceToRemove);
 		return nsAuthoritiesWithDuplicates;
 	}
@@ -272,6 +274,7 @@ public class CalcAuthority extends RuneableClass {
 			printProgress("creating authorities (second prune step, based on relative max ns declarations)", totalNsCounts, calcCount);
 			calcCount++;
 		}
+		System.out.println();
 		/**
 		 * calculate authority based on abs ns occurance
 		 */
@@ -290,6 +293,7 @@ public class CalcAuthority extends RuneableClass {
 			calcCount++;
 			printProgress("selecting authorities based on relative ns occurance", totalNsCounts, calcCount);
 		}
+		System.out.println();
 		for (String namespaceToRemove: namespacesToRemove) nsAuthoritiesWithRelDuplicates.remove(namespaceToRemove);
 		return nsAuthoritiesWithRelDuplicates;
 	}
@@ -321,6 +325,7 @@ public class CalcAuthority extends RuneableClass {
 			calcCount++;
 			printProgress("selecting authority at random", totalNsCounts, calcCount);
 		}
+		System.out.println();
 //		
 //		String dataset = null;
 //		for (Double relSize: relativeNsSize.descendingKeySet()) {
