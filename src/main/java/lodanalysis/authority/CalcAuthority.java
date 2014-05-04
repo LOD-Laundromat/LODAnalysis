@@ -38,9 +38,10 @@ import lodanalysis.utils.Utils;
 public class CalcAuthority extends RuneableClass {
 	private Map<String, Integer> progresses = new HashMap<String, Integer>();
 	
-	//key: namespace, values: datasets and counts
-	Map<String, Map<String, Integer>> namespaceCounts = new HashMap<String, Map<String, Integer>>();
-	Set<String> datasets = new HashSet<String>();
+	//key: namespace, values: datasets and counts (both relative and absolute)
+	private Map<String, Map<String, String>> namespaceCounts = new HashMap<String, Map<String, String>>();
+	private Set<String> datasets = new HashSet<String>();
+	private Map<String, String> authorities = new HashMap<String, String>();
 	private File authorityLogFile;
 	
 	public CalcAuthority(Entry entry) throws IOException {
@@ -60,13 +61,12 @@ public class CalcAuthority extends RuneableClass {
 			printProgress("reading ns counts to memory", totalDirCount, readCount);
 		}
 		System.out.println();
-		System.out.println("" + namespaceCounts.size() + " namespaces to calc authority for");
-		
-		storeAuthorities(calcAuthorities());
+		calcAuthorities();
+		storeAuthorities();
 		System.out.println();
 	}
 	
-	public void printProgress(String msg, int totalCount, int processedCount) throws IOException {
+	public void printProgress(String msg, int totalCount, int processedCount)  {
 		int intPercentage = Math.round((100 * (float)processedCount) / (float) totalCount);
 		Integer storedPercentage = 0;
 		if ((storedPercentage = progresses.get(msg)) != null && intPercentage == storedPercentage) return;
@@ -75,12 +75,12 @@ public class CalcAuthority extends RuneableClass {
 		System.out.print(msg + " (" + percentage + ")\r");
 	}
 
-	private void storeAuthorities(Map<String, String> calcAuthorities) throws IOException {
+	private void storeAuthorities() throws IOException {
 		//in other methods it was useful to have the namespace as key. now, as we are writing back to the dataset dirs, it is better to have the dataset as key.
 		//So... convert!
 		Map<String, Set<String>> authoritiesByDatasets = new HashMap<String, Set<String>>();
-		for (String namespace: calcAuthorities.keySet()) {
-			String dataset = calcAuthorities.get(namespace);
+		for (String namespace: authorities.keySet()) {
+			String dataset = authorities.get(namespace);
 			if (!authoritiesByDatasets.containsKey(dataset)) authoritiesByDatasets.put(dataset, new HashSet<String>());
 			
 			authoritiesByDatasets.get(dataset).add(namespace);
@@ -165,19 +165,37 @@ public class CalcAuthority extends RuneableClass {
 			 */
 		}
 		
-		for (java.util.Map.Entry<String, Integer> entry: Utils.getCountsInFile(nsUniqCountsFile).entrySet()) {
-			String namespace = entry.getKey();
-			if (!namespaceCounts.containsKey(namespace)) namespaceCounts.put(namespace, new HashMap<String, Integer>());
-			namespaceCounts.get(namespace).put(datasetDir.getName(), entry.getValue());
+		Map<String, Integer> nsCountsForDataset = Utils.getCountsInFile(nsUniqCountsFile);
+		int totalNsCount = 0;
+		for (int count : nsCountsForDataset.values()) {
+		    totalNsCount += count;
 		}
+		for (String namespace: nsCountsForDataset.keySet()) {
+			int namespaceCount = nsCountsForDataset.get(namespace);
+			Double relCount = (double)namespaceCount / (double)totalNsCount;
+			
+			if (!namespaceCounts.containsKey(namespace)) namespaceCounts.put(namespace, new HashMap<String, String>());
+			namespaceCounts.get(namespace).put(datasetDir.getName(), getNsCountAsString(namespaceCount, relCount));
+		}
+	}
+	
+	private String getNsCountAsString(int absCount, double relCount) {
+		return Integer.toString(absCount) + "-" + Double.toString(relCount);
+	}
+	
+	private int getAbsCountFromString(String nsCount) {
+		return Integer.parseInt(nsCount.split("-")[0]);
+	}
+	private double getRelCountFromString(String nsCount) {
+		return Double.parseDouble(nsCount.substring(nsCount.indexOf('-')));
 	}
 	
 	/**
 	 * 
-	 * @return Map: key: namespace, value: dataset
+	 * @return mapping of key: namespaces, value: list of datasets, for which we could not determine the authority
 	 * @throws IOException
 	 */
-	private Map<String, String> calcAuthorities() throws IOException {
+	private Map<String, List<String>> calcAuthoritiesAbsolute() throws IOException {
 		/**
 		 * First, create map, where key = namespace, and value = datasets. The latter might be multiple when namespace counts is the same
 		 */
@@ -185,111 +203,188 @@ public class CalcAuthority extends RuneableClass {
 		int totalNsCounts = namespaceCounts.size();
 		int calcCount = 0;
 		for(String namespace: namespaceCounts.keySet()) {
-			Map<String, Integer> datasetCounts = namespaceCounts.get(namespace);
+			Map<String, String> datasetCounts = namespaceCounts.get(namespace);
 			
 			Integer largestVal = null;
 			List<String> largestList = new ArrayList<String>();
-			for (java.util.Map.Entry<String, Integer> i : datasetCounts.entrySet()){
-			     if (largestVal == null || largestVal  < i.getValue()){
-			         largestVal = i.getValue();
+			for (String dataset : datasetCounts.keySet()) {
+				int absNsCount = getAbsCountFromString(datasetCounts.get(dataset));
+			     if (largestVal == null || largestVal  < absNsCount){
+			         largestVal = absNsCount;
 			         largestList.clear();
-			         largestList .add(i.getKey());
-			     }else if (largestVal == i.getValue()){
-			         largestList.add(i.getKey());
+			         largestList.add(dataset);
+			     } else if (largestVal == absNsCount){
+			         largestList.add(dataset);
 			     }
 			}
 			nsAuthoritiesWithDuplicates.put(namespace, largestList);
 			printProgress("creating authorities (first prune step, based on max ns declarations)", totalNsCounts, calcCount);
 			calcCount++;
 		}
-		//No need for namespacecounts anymore. Clean this up
-		namespaceCounts = null;
-		
+		System.out.println();
+		/**
+		 * calculate authority based on abs ns occurance
+		 */
 		//key: namespace, val: dataset
-		
 		Set<String> namespaces = nsAuthoritiesWithDuplicates.keySet();
 		totalNsCounts = namespaces.size();
+		System.out.println("for " + totalNsCounts + " namespaces, selecting the authority using abs ns occurance");
 		calcCount = 0;
-		Map<String, String> nsAuthorities = new HashMap<String, String>();
+		HashSet<String> namespacesToRemove = new HashSet<String>();
 		for (String namespace: namespaces) {
 			List<String> datasets = nsAuthoritiesWithDuplicates.get(namespace);
 			if (datasets.size() == 1) {
-				nsAuthorities.put(namespace, datasets.get(0));
-			} else {
-				//blegh, we need to properly analyze both datasets and hope we can find an autority
-				nsAuthorities.put(namespace, selectBaseOnRelativeNumber(namespace, datasets));
+				authorities.put(namespace, datasets.get(0));
+				namespacesToRemove.add(namespace);
+				
 			}
 			calcCount++;
-			printProgress("calculating authorities (either by selecting the only dataset, or by selection based on rel. number)", totalNsCounts, calcCount);
+			printProgress("selecting authorities based on abs ns occurance", totalNsCounts, calcCount);
 		}
-		return nsAuthorities;
+		System.out.println();
+		System.out.println("managed to select " + namespacesToRemove.size() + " authorities based on abs ns occurance");
+		for (String namespaceToRemove: namespacesToRemove) nsAuthoritiesWithDuplicates.remove(namespaceToRemove);
+		return nsAuthoritiesWithDuplicates;
+	}
+	
+	
+	private Map<String, List<String>> calcAuthoritiesRelative(Map<String, List<String>> nsAuthoritiesWithDuplicates) throws IOException {
+		/**
+		 * First, create map, where key = namespace, and value = datasets. The latter might be multiple when namespace counts is the same
+		 */
+		Map<String, List<String>> nsAuthoritiesWithRelDuplicates = new HashMap<String, List<String>>();
+		int totalNsCounts = nsAuthoritiesWithDuplicates.size();
+		int calcCount = 0;
+		for(String namespace: nsAuthoritiesWithDuplicates.keySet()) {
+			List<String> datasets = nsAuthoritiesWithDuplicates.get(namespace);
+			
+			Double largestVal = null;
+			List<String> largestList = new ArrayList<String>();
+			for (String dataset : datasets) {
+				double relNsCount = getRelCountFromString(namespaceCounts.get(namespace).get(dataset));
+			     if (largestVal == null || largestVal  < relNsCount){
+			         largestVal = relNsCount;
+			         largestList.clear();
+			         largestList.add(dataset);
+			     }else if (largestVal == relNsCount){
+			         largestList.add(dataset);
+			     }
+			}
+			nsAuthoritiesWithRelDuplicates.put(namespace, largestList);
+			printProgress("creating authorities (second prune step, based on relative max ns declarations)", totalNsCounts, calcCount);
+			calcCount++;
+		}
+		System.out.println();
+		/**
+		 * calculate authority based on abs ns occurance
+		 */
+		//key: namespace, val: dataset
+		Set<String> namespaces = nsAuthoritiesWithRelDuplicates.keySet();
+		totalNsCounts = namespaces.size();
+		System.out.println("for " + totalNsCounts + " namespaces, selecting the authority using relative ns occurance");
+		calcCount = 0;
+		HashSet<String> namespacesToRemove = new HashSet<String>();
+		for (String namespace: namespaces) {
+			List<String> datasets = nsAuthoritiesWithRelDuplicates.get(namespace);
+			if (datasets.size() == 1) {
+				authorities.put(namespace, datasets.get(0));
+				namespacesToRemove.add(namespace);
+			}
+			calcCount++;
+			printProgress("selecting authorities based on relative ns occurance", totalNsCounts, calcCount);
+		}
+		System.out.println();
+		for (String namespaceToRemove: namespacesToRemove) nsAuthoritiesWithRelDuplicates.remove(namespaceToRemove);
+		return nsAuthoritiesWithRelDuplicates;
+	}
+
+	private void selectRandomAuthorities(Map<String, List<String>> nsAuthoritiesWithDuplicates) throws IOException {
+		Set<String> namespaces = nsAuthoritiesWithDuplicates.keySet();
+		int totalNsCounts = namespaces.size();
+		System.out.println("for " + totalNsCounts + " namespaces, selecting the authority at random");
+		int calcCount = 0;
+		for (String namespace: namespaces) {
+			List<String> datasets = nsAuthoritiesWithDuplicates.get(namespace);
+//			System.out.println("multiple datasets as authority for one namespace.... Picking at random");
+//			
+			int size = datasets.size();
+			int item = new Random().nextInt(size); // In real life, the Random object should be rather more shared than this
+			authorities.put(namespace, datasets.get(item));
+//			int i = 0;
+//			for(String datasetWithRelSize: datasetsWithRelSize)	{
+//			    if (i == item) {
+//			    	dataset = datasetWithRelSize;
+//			    	String msg = "outcome: dataset " + dataset + " is authority for " + namespace;
+//			    	System.out.println("outcome: dataset " + dataset + " is authority for " + namespace);
+//			    	FileUtils.writeStringToFile(authorityLogFile, "duplicate auth. " + msg, "UTF-8", true);
+//			    	break;
+//			    }
+//			    i++;
+//			}
+			
+			calcCount++;
+			printProgress("selecting authority at random", totalNsCounts, calcCount);
+		}
+		System.out.println();
+//		
+//		String dataset = null;
+//		for (Double relSize: relativeNsSize.descendingKeySet()) {
+//			//get firs val
+//			Set<String> datasetsWithRelSize = relativeNsSize.get(relSize);
+//			if (datasetsWithRelSize.size() > 1) {
+//				System.out.println("multiple datasets as authority for one namespace.... Picking at random");
+//				
+//				int size = datasetsWithRelSize.size();
+//				int item = new Random().nextInt(size); // In real life, the Random object should be rather more shared than this
+//				int i = 0;
+//				for(String datasetWithRelSize: datasetsWithRelSize)	{
+//				    if (i == item) {
+//				    	dataset = datasetWithRelSize;
+//				    	String msg = "outcome: dataset " + dataset + " is authority for " + namespace;
+//				    	System.out.println("outcome: dataset " + dataset + " is authority for " + namespace);
+//				    	FileUtils.writeStringToFile(authorityLogFile, "duplicate auth. " + msg, "UTF-8", true);
+//				    	break;
+//				    }
+//				    i++;
+//				}
+//			} else {
+//				for(String datasetWithRelSize: datasetsWithRelSize)	{
+//			    	dataset = datasetWithRelSize;
+//			    	break;
+//				}
+//			}
+//		}
 	}
 	
 	/**
-	 * Calculate the total number of namespaces. The dataset where the relative size of this particular namespace is the largest, 'wins' (i.e. is the authority)
+	 * 
+	 * @return Map: key: namespace, value: dataset
+	 * @throws IOException
 	 */
-	private String selectBaseOnRelativeNumber(String namespace, List<String> datasets) throws IOException {
-		
-		TreeMap<Double, Set<String>> relativeNsSize = new TreeMap<Double, Set<String>>();
-		for (String dataset: datasets) {
-			File nsUniqCountFile = new File(entry.getDatasetParentDir(), dataset + "/" + Settings.FILE_NAME_NS_UNIQ_COUNTS);
-			if (!nsUniqCountFile.exists()) throw new IllegalStateException("Could not find dir containing ns counts: " + nsUniqCountFile.getAbsolutePath());
-			
-			Integer totalNsCount = 0;
-			Integer currentNsCount = null;
-			for (java.util.Map.Entry<String, Integer> entry: Utils.getCountsInFile(nsUniqCountFile).entrySet()) {
-				totalNsCount += entry.getValue();
-				if (entry.getKey().equals(namespace)) {
-					currentNsCount = entry.getValue();
-				}
-			}
-			if (currentNsCount == null) throw new IllegalStateException("Tried to find the namespace count for namespace " + namespace + ", in dataset " + dataset + ", but could not find it! It should be there though..");
-			
-			Double relsize = (double)currentNsCount / (double)totalNsCount;
-
-			/**
-			 * add this dataset, and the relative size of this ns, to our object
-			 */
-			Double relSize = (double)currentNsCount / (double)totalNsCount;
-			Set<String> datasetsWithRelSize = relativeNsSize.get(relsize);
-			if (datasetsWithRelSize != null) {
-				datasetsWithRelSize.add(dataset);
-			} else {
-				datasetsWithRelSize = new HashSet<String>();
-				datasetsWithRelSize.add(dataset);
-				relativeNsSize.put(relSize, datasetsWithRelSize);
-			}
-		}
+	private void calcAuthorities() throws IOException {
 		
 		
+		Map<String, List<String>> nsAuthoritiesWithDuplicates = calcAuthoritiesAbsolute();
+		nsAuthoritiesWithDuplicates = calcAuthoritiesRelative(nsAuthoritiesWithDuplicates);
+		selectRandomAuthorities(nsAuthoritiesWithDuplicates);
 		
-		String dataset = null;
-		for (Double relSize: relativeNsSize.descendingKeySet()) {
-			//get firs val
-			Set<String> datasetsWithRelSize = relativeNsSize.get(relSize);
-			if (datasetsWithRelSize.size() > 1) {
-				System.out.println("multiple datasets as authority for one namespace.... Picking at random");
-				
-				int size = datasetsWithRelSize.size();
-				int item = new Random().nextInt(size); // In real life, the Random object should be rather more shared than this
-				int i = 0;
-				for(String datasetWithRelSize: datasetsWithRelSize)	{
-				    if (i == item) {
-				    	dataset = datasetWithRelSize;
-				    	String msg = "outcome: dataset " + dataset + " is authority for " + namespace;
-				    	System.out.println("outcome: dataset " + dataset + " is authority for " + namespace);
-				    	FileUtils.writeStringToFile(authorityLogFile, "duplicate auth. " + msg, "UTF-8", true);
-				    	break;
-				    }
-				    i++;
-				}
-			} else {
-				for(String datasetWithRelSize: datasetsWithRelSize)	{
-			    	dataset = datasetWithRelSize;
-			    	break;
-				}
-			}
-		}
-		return dataset;
+//		
+//		/**
+//		 * calculate authority: diffult
+//		 * We have to load these dataset AGAIN, for every namespace... 
+//		 * Load each dataset, one by one. Store the relative occurance of the NS in an object. Using this object, we can figure out the authority
+//		 */
+//		//we already remove the ones for which we could calc authority from the namespace object
+//		namespaces = nsAuthoritiesWithDuplicates.keySet();
+//		totalNsCounts = namespaces.size();
+//		calcCount = 0;
+//		for (String namespace: namespaces) {
+//			List<String> datasets = nsAuthoritiesWithDuplicates.get(namespace);
+//			nsAuthorities.put(namespace, selectBaseOnRelativeNumber(namespace, datasets));
+//			calcCount++;
+//			printProgress("selecting authorities (hard part, calculating relative occurance of ns in datasets)", totalNsCounts, calcCount);
+//		}
+		
 	}
+
 }
