@@ -31,7 +31,7 @@ public class CalcLinks extends RuneableClass {
 		 * init writers
 		 */
 		mainLatticeLinks= new BufferedWriter(new FileWriter(new File(Settings.FILE_NAME_OUTLINK_LATTICE_NS)), 120768);
-		simpleNsLinks= new BufferedWriter(new FileWriter(new File(Settings.FILE_NAME_OUTLINK_LATTICE_NS)), 120768);
+		simpleNsLinks= new BufferedWriter(new FileWriter(new File(Settings.FILE_NAME_OUTLINK_SIMPLE_NS)), 120768);
 		authorities = Utils.getAuthorities(entry.getDatasetDirs());
 		calcLinks();
 		mainLatticeLinks.close();
