@@ -241,8 +241,6 @@ public class AggregateDataset implements Runnable  {
 			if (sub.ns != null) tripleNs.add(sub.ns);
 			if (pred.ns != null) tripleNs.add(pred.ns);
 			if (obj.ns != null) tripleNs.add(obj.ns);
-			if (sub.ns == null && pred.ns == null && obj.ns == null)
-				System.out.println(sub.stringRepresentation + pred.stringRepresentation + obj.stringRepresentation);
 			if (!tripleNsCounts.containsKey(tripleNs)) {
 				tripleNsCounts.put(tripleNs, new Counter(1));
 			} else {
