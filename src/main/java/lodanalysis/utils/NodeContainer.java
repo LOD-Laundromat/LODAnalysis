@@ -104,7 +104,7 @@ public class NodeContainer {
 		if (hashTagIndex > 6 || slashIndex > 6) {
 			//ok, this has a namespace, and not something like http://google.com
 			int nsLength = Math.max(hashTagIndex, slashIndex);
-			ns = stringRepresentation.substring(0, nsLength);
+			ns = stringRepresentation.substring(0, nsLength).intern(); //this one should be very common. use intern
 		} else {
 			ns = stringRepresentation; //initialize with ns as whole URI
 		}
