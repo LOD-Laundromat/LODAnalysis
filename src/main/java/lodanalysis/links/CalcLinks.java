@@ -65,12 +65,12 @@ public class CalcLinks extends RuneableClass {
 		Map<Set<String>, Integer> nsCounts;
 		try {
 			nsCounts = Utils.getTripleCountsInFile(nsCountFile);
-		} catch (IllegalStateException e) {
+		} catch (Exception e) {
 			if (!entry.strict()) return;//just ignore
 			if (!Utils.hasInputFileWithContent(dataset)) {
 				return;//no counts, because no input. nothing special
 			} else {
-				throw e;
+				throw new IllegalStateException(e);
 			}
 		}
 		BufferedWriter out = new BufferedWriter(new FileWriter(new File(dataset, Settings.FILE_NAME_OUTLINK_LATTICE_NS)), 120768);
