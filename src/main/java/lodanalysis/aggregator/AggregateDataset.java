@@ -19,12 +19,11 @@ import lodanalysis.Entry;
 import lodanalysis.Settings;
 import lodanalysis.utils.Counter;
 import lodanalysis.utils.NodeContainer;
-import lodanalysis.utils.Utils;
 
 import org.apache.commons.io.FileUtils;
 
 public class AggregateDataset implements Runnable  {
-
+//	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;

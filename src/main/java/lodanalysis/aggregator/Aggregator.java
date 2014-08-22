@@ -23,7 +23,6 @@ public class Aggregator  extends RuneableClass {
 	public static int TOTAL_DIR_COUNT;
 	public static int PROCESSED_COUNT = 0;
 	public static File PROVENANCE_FILE = new File(Settings.DIR_NAME_TMP + "/" + Settings.FILE_NAME_PROVENANCE);
-//	Utils.writeSystemInfoToFile(null);
 	
 	private static BufferedWriter LOG_FILE_WRITER;
 	public Aggregator(Entry entry) throws IOException, InterruptedException {
@@ -77,7 +76,8 @@ public class Aggregator  extends RuneableClass {
 	
 	private int getDelta(File datasetDir) throws IOException {
 		int delta = -1;
-		File deltaFile = new File(datasetDir, DELTA_FILENAME);
+		
+		File deltaFile = new File(entry.getOutputDir() + "/" + datasetDir.getName(), DELTA_FILENAME);
 		if (deltaFile.exists()) {
 			delta = Integer.parseInt(FileUtils.readFileToString(deltaFile).trim());
 		}

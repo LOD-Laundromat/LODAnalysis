@@ -2,13 +2,11 @@ package lodanalysis.utils;
 
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.math.NumberUtils;
-
 public class NodeContainer {
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
-	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
+	
 	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
 
 	private final String RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
@@ -25,7 +23,6 @@ public class NodeContainer {
 	public String stringRepresentation;
 	//calculated stuff:
 	
-	private boolean isW3cNs = false;//used for pruning some checks
 	public String ns = null;
 	public String datatype = null;
 	public boolean isLiteral = false;
@@ -60,7 +57,6 @@ public class NodeContainer {
 		}
 		
 		if (isUri) {
-			if (stringRepresentation.startsWith(W3C_URI_PREFIX)) this.isW3cNs = true;
 			if (stringRepresentation.contains(BNODE_SUBSTRING)) {
 				//we rewrite each bnode to uri. check whether this is one of these uris
 				this.isBnode = true;
