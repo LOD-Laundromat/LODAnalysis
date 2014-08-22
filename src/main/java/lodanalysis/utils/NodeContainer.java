@@ -11,10 +11,12 @@ public class NodeContainer {
 	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
 
-	private static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema";
-	private static final String RDF_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
-	private static final String XML_URI = "http://www.w3.org/2001/XMLSchema";
-	private static final String OWL_URI = "http://www.w3.org/2002/07/owl";
+	private final String RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+	private final String RDFS_SUBPROPERTYOF = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
+	private final String RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
+	private final String RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
+	private final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+	
 	private static final String W3C_URI_PREFIX = "http://www.w3.org/";
 
 
@@ -29,10 +31,16 @@ public class NodeContainer {
 	public boolean isLiteral = false;
 	public boolean isUri = true; //default: assume the node is a uri
 	public boolean isBnode = false;
-	public boolean isSchema = false;
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
+	
+	
+	public boolean isRdf_type = false;
+	public boolean isRdfs_domain = false;
+	public boolean isRdfs_range = false;
+	public boolean isRdfs_subClassOf = false;
+	public boolean isRdfs_subPropertyOf = false;
 
 	public NodeContainer(String stringRepresentation, Position position) {
 		this.stringRepresentation = stringRepresentation;
@@ -60,10 +68,12 @@ public class NodeContainer {
 			}
 		}
 		
-		calcIgnoreUri();
-		if (!ignoreIri && this.isUri) this.ns = getNs(stringRepresentation);
+		this.ns = getNs(stringRepresentation);
 		
-		if (this.ns != null) getSchemaInfo();
+		/**
+		 * get info used for calculating whether other nodes are a class or property
+		 */
+		getSchemaInfo();
 
 		if (position == Position.OBJ && isLiteral) {
 			//only for literals
@@ -73,42 +83,33 @@ public class NodeContainer {
 
 	}
 
-	private void calcIgnoreUri() {
-		//note: ignoreIri's default val is false
-		if (this.isW3cNs && stringRepresentation.startsWith(IGNORE_RDF_URI_PREFIX)) {
-			String postFix = stringRepresentation.substring(IGNORE_RDF_URI_PREFIX.length());
-			this.ignoreIri = NumberUtils.isDigits(postFix);
+	private void getSchemaInfo() {
+		if (position == Position.PRED && this.ns.equals(W3C_URI_PREFIX)) {
+			//ok, now do the expensive checks after pruning
+			if (stringRepresentation.equals(RDF_TYPE)) {
+				isRdf_type = true;
+			} else if (stringRepresentation.equals(RDFS_DOMAIN)) {
+				isRdfs_domain = true;
+			} else if (stringRepresentation.equals(RDFS_RANGE)) {
+				isRdfs_range = true;
+			} else if (stringRepresentation.equals(RDFS_SUBCLASSOF)) {
+				isRdfs_subClassOf = true;
+			} else if (stringRepresentation.equals(RDFS_SUBPROPERTYOF)) {
+				isRdfs_subPropertyOf = true;
+			}
 		}
 	}
 
-	/**
-	 * Checks to see if current node belongs to any of RDF, RDFS, OWL, or XML
-	 * vocabularies or not?
-	 * 
-	 * TODO: depending on the backward chaining, remove this option, and only execute it later on. 
-	 * After all, we already retrieve all the namespace, and the calc below is a subset of these counts. We can just use these aggregate counts, and get the keys for the uris below
-	 * This way, we don't need to execute this function for every URI, but we can run this function once on the NS-count map
-	 */
-	private void getSchemaInfo() {
-		//prune following check using 'startsWith' (i.e., we don't have to run all four string-equals)
-		if (this.isW3cNs &&
-				(this.ns.equals(RDF_URI) || this.ns.equals(RDFS_URI) || this.ns.equals(OWL_URI) || this.ns.equals(XML_URI))) {
-			this.isSchema = true;
-		}
-	}
 
 	public static String getNs(String stringRepresentation) {
-		String ns = null;
 		int hashTagIndex = stringRepresentation.lastIndexOf('#');
 		int slashIndex = stringRepresentation.lastIndexOf('/');
 		if (hashTagIndex > 6 || slashIndex > 6) {
 			//ok, this has a namespace, and not something like http://google.com
-			int nsLength = Math.max(hashTagIndex, slashIndex);
-			ns = stringRepresentation.substring(0, nsLength).intern(); //this one should be very common. use intern
+			return stringRepresentation.substring(0, Math.max(hashTagIndex, slashIndex));
 		} else {
-			ns = stringRepresentation; //initialize with ns as whole URI
+			return stringRepresentation; //initialize with ns as whole URI
 		}
-		return ns;
 	}
 
 	private void getDataType() {
@@ -129,7 +130,7 @@ public class NodeContainer {
 				   dataTypeBuilder.append(c);
 				}
 				if (dataTypeBuilder.length() > 0) {
-					this.datatype = dataTypeBuilder.toString().intern();
+					this.datatype = dataTypeBuilder.toString();
 				}
 
 			}
@@ -154,12 +155,12 @@ public class NodeContainer {
 				   langTagBuilder.append(c);
 				}
 				if (langTagBuilder.length() > 0) {
-					this.langTag = langTagBuilder.toString().intern();
+					this.langTag = langTagBuilder.toString();
 				}
 			}
 		}
 		if (this.langTag != null && this.langTag.contains("-")) {
-			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-')).intern();
+			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-'));
 		} else {
 			this.langTagWithoutReg = this.langTag;
 		}

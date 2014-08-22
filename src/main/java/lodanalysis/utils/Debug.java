@@ -13,6 +13,8 @@ public class Debug {
 	
 	
 	public static void main(String[] args) {
+
+		
 		
 		//java -jar -path <path> lodanalysis.aggregator.Aggregator
 		/**
@@ -23,16 +25,7 @@ public class Debug {
 		new Entry(new String[]{"-nostrict", "-threads", "1","-path", "datasets", "-output", "output", "lodanalysis.aggregator.Aggregator"});
 //		new Entry(new String[]{"-nostrict", "-force", "-dataset", "Output/5239ef6b90841c8d65efd311610458c4", "lodanalysis.aggregator.Aggregator"});
 		
-		/**
-		 * Authority
-		 */
-//		new Entry(new String[]{"-nostrict", "-path", "Output",  "lodanalysis.authority.CalcAuthority"});
-//		new Entry(new String[]{"-nostrict", "-dataset", "Output/c36ed6f8977c3aea234adb6d740a3740",  "lodanalysis.authority.CalcAuthority"});
 		
-		/**
-		 * links
-		 */
-//		new Entry(new String[]{"-nostrict", "-path", "Output",  "lodanalysis.links.CalcLinks"});
 		
 	}
 }

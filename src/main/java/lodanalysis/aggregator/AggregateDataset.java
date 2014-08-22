@@ -15,36 +15,32 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-
 import lodanalysis.Entry;
 import lodanalysis.Settings;
 import lodanalysis.utils.Counter;
 import lodanalysis.utils.NodeContainer;
+import lodanalysis.utils.Utils;
 
 import org.apache.commons.io.FileUtils;
 
 public class AggregateDataset implements Runnable  {
-	private final String RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-	private final String RDFS_SUBPROPERTYOF = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
-	private final String RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
-	private final String RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
-	private final String RDFS_DATATYPE = "http://www.w3.org/2000/01/rdf-schema#Datatype";
+
 	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;
 	private Reader decoder;
 	private BufferedReader reader;
-//	Set<String> classSet = new HashSet<String>();
-//	Set<String> propertySet = new HashSet<String>();
+	int literalCount = 0;
 	Map<Set<String>, Counter> tripleNsCounts = new HashMap<Set<String>, Counter>();
 	Map<String, Counter> dataTypeCounts = new HashMap<String, Counter>();
 	Map<String, Counter> langTagCounts = new HashMap<String, Counter>();
 	Map<String, Counter> langTagWithoutRegCounts = new HashMap<String, Counter>();
 	Map<String, Counter> totalNsCounts = new HashMap<String, Counter>();
 	Map<String, Counter> nsCountsUniq = new HashMap<String, Counter>();
-	Map<String, Counter> uniqUriCounts = new HashMap<String, Counter>();
 	Map<String, Counter> uniqBnodeCounts = new HashMap<String, Counter>();
-//	Map<String, Counter> schemaCounts = new HashMap<String, Counter>();
+	Map<String, Counter> propertyCounts = new HashMap<String, Counter>();
+	Map<String, Counter> classCounts = new HashMap<String, Counter>();
+	Map<String, Counter> predicateCounts = new HashMap<String, Counter>();
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
@@ -66,8 +62,8 @@ public class AggregateDataset implements Runnable  {
 				while((line = br.readLine())!= null) {
 					processLine(line);
 				}
-				postProcessAnalysis();
 				store();
+				
 				close();
 			} else {
 				log("no input file found in dataset " + datasetDir.getName());
@@ -95,32 +91,33 @@ public class AggregateDataset implements Runnable  {
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_URIS_COUNTS), uniqUriCounts);
+//		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_URIS_COUNTS), uniqUriCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
-//		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_SCHEMA_URI_COUNTS), schemaCounts);
-
-//		writeSetToFile(new File(datasetOutputDir, Settings.FILE_NAME_CLASSES), classSet);
-//		writeSetToFile(new File(datasetOutputDir, Settings.FILE_NAME_PROPERTIES), propertySet);
-
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_PROPERTY_COUNTS), propertyCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_PREDICATE_COUNTS), predicateCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_CLASS_COUNTS), classCounts);
+		
+		
+		File literalCountFile = new File(datasetOutputDir, Settings.FILE_NAME_LITERAL_COUNT);
+		FileUtils.writeStringToFile(literalCountFile, Integer.toString(literalCount));
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(literalCountFile.getAbsolutePath() + ".sysinfo"));
+		
 		//this one is a bit different (key is a set of strings)
-		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS));
+		File nsTripleCountsFile = new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS);
+		FileWriter namespaceTripleCountsOutput = new FileWriter(nsTripleCountsFile);
 		for (Set<String> tripleNs: tripleNsCounts.keySet()) {
 			namespaceTripleCountsOutput.write(tripleNs.toString() + "\t" + tripleNsCounts.get(tripleNs) + System.getProperty("line.separator"));
 		}
 		namespaceTripleCountsOutput.close();
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
+		
+		/**
+		 * Finally, store the delta of this run
+		 */
+		File deltaFile = new File(datasetOutputDir, Aggregator.DELTA_FILENAME);
+		FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
 	}
 
-	private void postProcessAnalysis() {
-		//we've got all the unique uris. Use these to count how diverse each namespace is used (i.e., the 'namespaceUniqCounts'
-		for (String uri: uniqUriCounts.keySet()) {
-			String ns = NodeContainer.getNs(uri);
-			if (!nsCountsUniq.containsKey(ns)) {
-				nsCountsUniq.put(ns, new Counter(1));
-			} else {
-				nsCountsUniq.get(ns).increase();
-			}
-		}
-	}
 
 
 	/**
@@ -182,12 +179,13 @@ public class AggregateDataset implements Runnable  {
 			if (pred.isUri) upCounter(totalNsCounts, pred.ns, true);
 			if (obj.isUri) upCounter(totalNsCounts, obj.ns);
 
+			
 			/**
-			 * store uniq uris
+			 * store uniq namespaces
 			 */
-			if (sub.isUri) upCounter(uniqUriCounts, sub.stringRepresentation);
-			if (pred.isUri) upCounter(uniqUriCounts, pred.stringRepresentation, true);
-			if (obj.isUri) upCounter(uniqUriCounts, obj.stringRepresentation);
+			if (sub.isUri) upCounter(nsCountsUniq, sub.ns);
+			if (pred.isUri) upCounter(nsCountsUniq, pred.ns);
+			if (obj.isUri) upCounter(nsCountsUniq, obj.ns);
 
 			/**
 			 * store uniq bnodes
@@ -208,6 +206,28 @@ public class AggregateDataset implements Runnable  {
 					upCounter(langTagWithoutRegCounts, obj.langTagWithoutReg);
 				}
 			}
+			
+			/**
+			 * Store classes and props
+			 */
+			if (pred.isRdf_type) {
+				upCounter(classCounts, obj.stringRepresentation);
+			} else if (pred.isRdfs_domain || pred.isRdfs_range) {
+				upCounter(propertyCounts, sub.stringRepresentation);
+				upCounter(classCounts, obj.stringRepresentation);
+			} else if (pred.isRdfs_subClassOf) {
+				upCounter(classCounts, sub.stringRepresentation);
+				upCounter(classCounts, obj.stringRepresentation);
+			} else if (pred.isRdfs_subPropertyOf) {
+				upCounter(propertyCounts, sub.stringRepresentation);
+				upCounter(propertyCounts, obj.stringRepresentation);
+			}
+			
+			//store predicate info
+			upCounter(predicateCounts, pred.stringRepresentation);
+			
+			//storeLiteralInfo
+			if (obj.isLiteral) literalCount++;
 		} else {
 			System.out.println("Could not get triple from line. " + nodes.toString());
 		}
@@ -243,6 +263,8 @@ public class AggregateDataset implements Runnable  {
 			fw.write(key + "\t" + map.get(key) + System.getProperty("line.separator"));
 		}
 		fw.close();
+		//also store provenance
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 
 
@@ -268,14 +290,6 @@ public class AggregateDataset implements Runnable  {
 
 	}
 
-	private void storeDelta() throws IOException {
-		//hmpf, when an exception occurs, strangely, we still write the delta, even though we havent written the other results. So check! (I know, a bit hacky, but reproducing this mem exception is annoying)
-		File nsOutputFile = new File(datasetDir, Settings.FILE_NAME_NS_UNIQ_COUNTS);
-		if (nsOutputFile.exists()) {
-			File deltaFile = new File(datasetDir, Aggregator.DELTA_FILENAME);
-			FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
-		}
-	}
 
 	/**
 	 * del delta. This way, when we re-run (forced) a dataset analysis, but we stop in the middle, we know we have to re-run this dataset again later on
@@ -293,7 +307,6 @@ public class AggregateDataset implements Runnable  {
 			log("aggregating " + datasetDir.getName());
 			delDelta();
 			processDataset();
-			storeDelta();
 			Aggregator.PROCESSED_COUNT++;
 			Aggregator.printProgress(datasetDir);
 		} catch (IOException e) {

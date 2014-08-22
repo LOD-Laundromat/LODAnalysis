@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,7 +20,18 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
 public class Utils {
-
+	private static final String[] RELEVANT_SYS_PROPS = new String[]{
+		"java.runtime.name",
+		"java.vm.version",
+		"java.vm.vendor",
+		"java.runtime.version",
+		"os.arch",
+		"os.name",
+		"sun.jnu.encoding",
+		"java.specification.version",
+		"java.vm.specification.version",
+		"java.version"
+	};
 	public static Map<String, Integer> getCountsInDir(File dir) throws IOException {
 		Map<String, Integer> counts = new HashMap<String, Integer>();
 
@@ -129,33 +141,22 @@ public class Utils {
 		return hasContent;
 	}
 	
-	public static Map<String, String> getAuthorities(Set<File> datasetDirs) throws IOException {
-		Map<String, String> authorities = new HashMap<String,String>();
-//		Set<File> datasetDirs = entry.getDatasetDirs();
-		int totalCount = datasetDirs.size();
-		int count = 0;
-		for (File dataset: datasetDirs) {
-			BufferedReader br = new BufferedReader(new FileReader(new File(dataset, Settings.FILE_NAME_AUTHORITY)), 120000);
-			String line;
-			while ((line = br.readLine()) != null) {
-				authorities.put(line, dataset.getName());
-			}
-			br.close();
-			printProgress("retrieving authorities", totalCount, count);
-			count++;
-		}
-		System.out.println();
-		return authorities;
-	}
+	
 
 	public static void printProgress(String msg, int totalCount, int processedCount) {
 		String percentage = (String.format("%.0f%%",(100 * (float)processedCount) / (float) totalCount));
 		System.out.print(msg + " (" + percentage + ")\r");
 	}
 	
-//	public static String getBaseName(File dataset) {
-//		
-//		
-//		
-//	}
+	
+	public static void writeSystemInfoToFile(File file) throws IOException {
+		ArrayList<String> lines = new ArrayList<String>();
+		//add hash of current git version
+		lines.add(FileUtils.readFileToString(new File(Settings.PATH_GIT_VERSION_FILE)));
+		for (String key: RELEVANT_SYS_PROPS) {
+			String prop = System.getProperty(key);
+			lines.add(key + ": " + (prop != null? prop: "null"));
+		}
+		FileUtils.writeLines(file, lines);
+	}
 }

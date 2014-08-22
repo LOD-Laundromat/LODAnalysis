@@ -19,13 +19,20 @@ import org.apache.commons.io.FileUtils;
 public class Aggregator  extends RuneableClass {
 	public static int DELTA_ID = 2;//useful when we re-run code. We store this id in each directory. When we re-run a (possibly newer) dataset dir, we can check whether we should re-analyze this dir, or skip it
 	public static String DELTA_FILENAME = "aggregator_delta";
+	
 	public static int TOTAL_DIR_COUNT;
 	public static int PROCESSED_COUNT = 0;
-	
+	public static File PROVENANCE_FILE = new File(Settings.DIR_NAME_TMP + "/" + Settings.FILE_NAME_PROVENANCE);
+//	Utils.writeSystemInfoToFile(null);
 	
 	private static BufferedWriter LOG_FILE_WRITER;
 	public Aggregator(Entry entry) throws IOException, InterruptedException {
 		super(entry);
+		/**
+		 * initialize temp file containing all provenance. We'll copy this file next to every statistic file we generate (for provenance reasons)
+		 */
+		Utils.writeSystemInfoToFile(PROVENANCE_FILE);
+		
 		File logFile = new File(Settings.FILE_NAME_LOG_AGGREGATE);
 		if (logFile.exists()) logFile.delete();
 		LOG_FILE_WRITER = new BufferedWriter(new FileWriter(Settings.FILE_NAME_LOG_AGGREGATE));
