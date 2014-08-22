@@ -21,6 +21,7 @@ public class Entry {
 	private boolean strict = true;
 	private CommandLine line;
 	private Set<File> datasetDirs = new HashSet<File>();
+	private File outputDir;
 	public Entry(String[] args)  {
 		parseArgs(args);
 	}
@@ -58,7 +59,9 @@ public class Entry {
 			}
 		}
 		return parentDir;
-		 
+	}
+	public File getOutputDir() {
+		return outputDir;
 	}
 	private void processParameters() {
 		if (line.hasOption("path"))  {
@@ -66,6 +69,7 @@ public class Entry {
 				if (dataset.isDirectory()) datasetDirs.add(dataset);
 			}
 		}
+		outputDir = new File(line.getOptionValue("output"));
 		if (line.hasOption("dataset")) datasetDirs.add(new File(line.getOptionValue("dataset")));
 		if (line.hasOption("nostrict")) strict = false;
 	}
@@ -123,7 +127,13 @@ public class Entry {
 		if (line.hasOption("help")) throw new ParseException("");
 		if (line.getArgList().size() == 0) throw new ParseException("You forgot to tell me what class(es) you want to run!");
 		if (!line.hasOption("path") && !line.hasOption("dataset")) throw new ParseException("Please specify the path where we can find the dataset directories");
-
+		if (!line.hasOption("output")) {
+			throw new ParseException("No output directory specified");
+		} else {
+			if (!new File(line.getOptionValue("output")).exists()) {
+				throw new ParseException("Output directory " + line.getOptionValue("output") + " does not exist");
+			}
+		}
 		if (line.hasOption("path")) {
 			if (!new File(line.getOptionValue("path")).exists()) throw new ParseException("The datasets path you specified does not exist");
 			if (!new File(line.getOptionValue("path")).isDirectory()) throw new ParseException("The datasets path you specified is not a directory");
@@ -149,6 +159,7 @@ public class Entry {
 		Option noStrict = new Option("nostrict", "disable some checking, such as whether certain files exist. useful for debugging");
 		Option force = new Option("force", "force execution (i.e. ignore delta id)");
 		Option path = OptionBuilder.withArgName("path").hasArg().withDescription("Path containing all the dataset directories").create("path");
+		Option output = OptionBuilder.withArgName("output").hasArg().withDescription("Directory to write the output to").create("output");
 		Option threads = OptionBuilder.withArgName("threads").hasArg().withDescription("Number of threats to use").create("threads");
 		Option dataset = OptionBuilder.withArgName("dataset").hasArg()
 				.withDescription("Dataset directory. Useful for debugging, when you only want to analyze 1 dataset").create("dataset");
@@ -159,6 +170,7 @@ public class Entry {
 		options.addOption(verbose);
 		options.addOption(force);
 		options.addOption(path);
+		options.addOption(output);
 		options.addOption(dataset);
 		options.addOption(threads);
 		options.addOption(noStrict);

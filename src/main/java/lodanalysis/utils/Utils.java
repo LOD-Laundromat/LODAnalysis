@@ -109,7 +109,6 @@ public class Utils {
 	
 	public static boolean hasInputFileWithContent(File datasetDir) throws IOException{
 		File file = new File(datasetDir, Settings.FILE_NAME_INPUT_GZ);
-		if (!file.exists()) file = new File(datasetDir, Settings.FILE_NAME_INPUT);
 		if (!file.exists()) return false;
 		BufferedReader reader = null;
 		GZIPInputStream gzipStream = null;
@@ -153,4 +152,10 @@ public class Utils {
 		String percentage = (String.format("%.0f%%",(100 * (float)processedCount) / (float) totalCount));
 		System.out.print(msg + " (" + percentage + ")\r");
 	}
+	
+//	public static String getBaseName(File dataset) {
+//		
+//		
+//		
+//	}
 }

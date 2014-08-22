@@ -11,11 +11,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
-import java.util.List;
 
 
 import lodanalysis.Entry;
@@ -31,18 +29,13 @@ public class AggregateDataset implements Runnable  {
 	private final String RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
 	private final String RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
 	private final String RDFS_DATATYPE = "http://www.w3.org/2000/01/rdf-schema#Datatype";
-	private final String OWL_SAMEAS = "http://www.w3.org/2002/07/owl#sameAs";
-	private final String OWL_EQUCLASS = "http://www.w3.org/2002/07/owl#equivalentClass";
-	private final String OWL_EQUPROPERTY = "http://www.w3.org/2002/07/owl#equivalentProperty";
 	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;
 	private Reader decoder;
 	private BufferedReader reader;
-	Set<String> classSet = new HashSet<String>();
-	Set<String> propertySet = new HashSet<String>();
-	Map<String, Set<String>> sameAsSubjectSet = new HashMap<String, Set<String>>();
-	Map<String, Set<String>> sameAsObjectSet = new HashMap<String, Set<String>>();
+//	Set<String> classSet = new HashSet<String>();
+//	Set<String> propertySet = new HashSet<String>();
 	Map<Set<String>, Counter> tripleNsCounts = new HashMap<Set<String>, Counter>();
 	Map<String, Counter> dataTypeCounts = new HashMap<String, Counter>();
 	Map<String, Counter> langTagCounts = new HashMap<String, Counter>();
@@ -51,7 +44,8 @@ public class AggregateDataset implements Runnable  {
 	Map<String, Counter> nsCountsUniq = new HashMap<String, Counter>();
 	Map<String, Counter> uniqUriCounts = new HashMap<String, Counter>();
 	Map<String, Counter> uniqBnodeCounts = new HashMap<String, Counter>();
-	Map<String, Counter> schemaCounts = new HashMap<String, Counter>();
+//	Map<String, Counter> schemaCounts = new HashMap<String, Counter>();
+	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
 		AggregateDataset aggr = new AggregateDataset(entry, datasetDir);
@@ -66,17 +60,12 @@ public class AggregateDataset implements Runnable  {
 	private void processDataset() throws IOException {
 		try {
 			File inputFile = new File(datasetDir, Settings.FILE_NAME_INPUT_GZ);
-			if (!inputFile.exists()) inputFile = new File(datasetDir, Settings.FILE_NAME_INPUT);
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
-//				int count = 0;
 				while((line = br.readLine())!= null) {
 					processLine(line);
-//					count++;
-//					if (count % 1000000 == 0) System.out.println(count);
 				}
-
 				postProcessAnalysis();
 				store();
 				close();
@@ -98,20 +87,23 @@ public class AggregateDataset implements Runnable  {
 	}
 
 	private void store() throws IOException {
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_NS_COUNTS), totalNsCounts);
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_NS_UNIQ_COUNTS), nsCountsUniq);
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_UNIQ_URIS_COUNTS), uniqUriCounts);
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
-		writeCountersToFile(new File(datasetDir, Settings.FILE_NAME_SCHEMA_URI_COUNTS), schemaCounts);
+		String datasetMd5 = datasetDir.getName();
+		File datasetOutputDir = new File(entry.getOutputDir(), datasetMd5);
+		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_NS_COUNTS), totalNsCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_NS_UNIQ_COUNTS), nsCountsUniq);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_URIS_COUNTS), uniqUriCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
+//		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_SCHEMA_URI_COUNTS), schemaCounts);
 
-		writeSetToFile(new File(datasetDir, Settings.FILE_NAME_CLASSES), classSet);
-		writeSetToFile(new File(datasetDir, Settings.FILE_NAME_PROPERTIES), propertySet);
+//		writeSetToFile(new File(datasetOutputDir, Settings.FILE_NAME_CLASSES), classSet);
+//		writeSetToFile(new File(datasetOutputDir, Settings.FILE_NAME_PROPERTIES), propertySet);
 
 		//this one is a bit different (key is a set of strings)
-		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS));
+		FileWriter namespaceTripleCountsOutput = new FileWriter(new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS));
 		for (Set<String> tripleNs: tripleNsCounts.keySet()) {
 			namespaceTripleCountsOutput.write(tripleNs.toString() + "\t" + tripleNsCounts.get(tripleNs) + System.getProperty("line.separator"));
 		}
@@ -127,49 +119,10 @@ public class AggregateDataset implements Runnable  {
 			} else {
 				nsCountsUniq.get(ns).increase();
 			}
-			processSameAsChain(classSet);
-			processSameAsChain(propertySet);
 		}
 	}
 
-	/**
-	 * This function basically applies the sameAs transitivity until it finds all the
-	 * transitivity relationships among the items in the given set; since it avoids
-	 * recursion, its not that readable ;-)
-	 */
-	private void processSameAsChain(Set<String> set) {
-		List<String> temp = new ArrayList<String>();
 
-		do {
-			for (String item : set) {
-				/* ----------------------------------- */
-				if (sameAsSubjectSet.get(item) != null) {
-					for (String s : sameAsSubjectSet.get(item)) {
-						if (!set.contains(s)){
-							temp.add(s);
-						}
-					}
-				}
-				/* ----------------------------------- */
-				if (sameAsObjectSet.get(item) != null) {
-					for (String s : sameAsObjectSet.get(item)) {
-						if (!set.contains(s)){
-							temp.add(s);
-						}
-					}
-				}
-			}
-			/* ----------------------------------- */
-			if (temp.size() > 0) {
-				for (String s : temp) {
-					set.add(s);
-				}
-				temp.clear();
-			} else {
-				break;
-			}
-		} while (true);
-	}
 	/**
 	 * get nodes. if it is a uri, remove the < and >. For literals, keep quotes. This makes the number of substring operation later on low, and we can still distinguish between URIs and literals
 	 * @param line
@@ -191,7 +144,7 @@ public class AggregateDataset implements Runnable  {
 
 		String obj = line.substring(offset, line.length() - endOffset);
 //		return new String[]{sub.intern(), pred.intern(), obj.intern()};//this avoid gc mem cleanup errors, but comes with higher cpu cost as well
-		return new String[]{sub, pred.intern(), obj};//only do intern on pred. compromise between avoiding gc mem cleanup errors, and cpu costs
+		return new String[]{sub, pred, obj};//only do intern on pred. compromise between avoiding gc mem cleanup errors, and cpu costs
 	}
 
 	private void processLine(String line) {
@@ -208,33 +161,6 @@ public class AggregateDataset implements Runnable  {
 			NodeContainer pred = new NodeContainer(nodes[1], NodeContainer.Position.PRED);
 			NodeContainer obj = new NodeContainer(nodes[2], NodeContainer.Position.OBJ);
 
-			/**
-			 * Collecting and counting schema URIs
-			 */
-			if (sub.isSchema)
-				upCounter(schemaCounts, sub.stringRepresentation);
-			if (pred.isSchema) {
-				upCounter(schemaCounts, pred.stringRepresentation);
-				if (pred.stringRepresentation.equals(RDFS_SUBCLASSOF) ||
-				    pred.stringRepresentation.equals(OWL_EQUCLASS)) {
-					classSet.add(sub.stringRepresentation);
-					classSet.add(obj.stringRepresentation);
-
-				} else if (pred.stringRepresentation.equals(OWL_SAMEAS)) {
-				} else if (pred.stringRepresentation.equals(RDFS_RANGE) ||
-					   pred.stringRepresentation.equals (RDFS_DOMAIN)) {
-					propertySet.add (sub.stringRepresentation);
-					classSet.add (obj.stringRepresentation);
-				} else if (pred.stringRepresentation.equals (RDFS_SUBPROPERTYOF) ||
-					   pred.stringRepresentation.equals (OWL_EQUPROPERTY))	{
-					propertySet.add (sub.stringRepresentation);
-					classSet.add (obj.stringRepresentation);
-				} else if (pred.stringRepresentation.equals (RDFS_DATATYPE)) {
-					classSet.add (sub.stringRepresentation);
-				}
-			}
-			if (obj.isSchema)
-				upCounter(schemaCounts, obj.stringRepresentation);
 
 			/**
 			 * store ns triples
@@ -318,17 +244,7 @@ public class AggregateDataset implements Runnable  {
 		}
 		fw.close();
 	}
-	/**
-	 * just a simple helper method, to store the sets of strings to a file
-	 * @throws IOException
-	 */
-	private void writeSetToFile(File targetFile, Set<String> set) throws IOException {
-		FileWriter fw = new FileWriter(targetFile);
-		for (String str: set) {
-			fw.write(str + System.getProperty("line.separator"));
-		}
-		fw.close();
-	}
+
 
 	private BufferedReader getNtripleInputStream(File file) throws IOException {
 		reader = null;
