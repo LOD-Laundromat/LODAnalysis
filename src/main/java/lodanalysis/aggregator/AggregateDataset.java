@@ -17,10 +17,11 @@ import java.util.zip.GZIPInputStream;
 
 import lodanalysis.Entry;
 import lodanalysis.Settings;
-import lodanalysis.utils.Counter;
 import lodanalysis.utils.NodeContainer;
 
 import org.apache.commons.io.FileUtils;
+
+import com.google.common.collect.HashMultiset;
 
 public class AggregateDataset implements Runnable  {
 //	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
@@ -30,16 +31,19 @@ public class AggregateDataset implements Runnable  {
 	private Reader decoder;
 	private BufferedReader reader;
 	int literalCount = 0;
-	Map<Set<String>, Counter> tripleNsCounts = new HashMap<Set<String>, Counter>();
-	Map<String, Counter> dataTypeCounts = new HashMap<String, Counter>();
-	Map<String, Counter> langTagCounts = new HashMap<String, Counter>();
-	Map<String, Counter> langTagWithoutRegCounts = new HashMap<String, Counter>();
-	Map<String, Counter> totalNsCounts = new HashMap<String, Counter>();
-	Map<String, Counter> nsCountsUniq = new HashMap<String, Counter>();
-	Map<String, Counter> uniqBnodeCounts = new HashMap<String, Counter>();
-	Map<String, Counter> propertyCounts = new HashMap<String, Counter>();
-	Map<String, Counter> classCounts = new HashMap<String, Counter>();
-	Map<String, Counter> predicateCounts = new HashMap<String, Counter>();
+	int tripleCount = 0;
+	HashMultiset<Set<String>> tripleNsCounts = HashMultiset.create();
+	HashMultiset<String> dataTypeCounts = HashMultiset.create();
+	HashMultiset<String> langTagCounts = HashMultiset.create();
+	HashMultiset<String> langTagWithoutRegCounts = HashMultiset.create();
+	HashMultiset<String> totalNsCounts = HashMultiset.create();
+	HashMultiset<String> nsCountsUniq = HashMultiset.create();
+	HashMultiset<String> uniqBnodeCounts = HashMultiset.create();
+	HashMultiset<String> propertyCounts = HashMultiset.create();
+	HashMultiset<String> classCounts = HashMultiset.create();
+	HashMultiset<String> predicateCounts = HashMultiset.create();
+	Set<Integer> distinctSubjects = new HashSet<Integer>();
+	Set<Integer> distinctObjects = new HashSet<Integer>();
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
@@ -96,16 +100,16 @@ public class AggregateDataset implements Runnable  {
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_PREDICATE_COUNTS), predicateCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_CLASS_COUNTS), classCounts);
 		
-		
-		File literalCountFile = new File(datasetOutputDir, Settings.FILE_NAME_LITERAL_COUNT);
-		FileUtils.writeStringToFile(literalCountFile, Integer.toString(literalCount));
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(literalCountFile.getAbsolutePath() + ".sysinfo"));
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_LITERAL_COUNT), literalCount);
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_TRIPLE_COUNT), tripleCount);
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), distinctSubjects.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), distinctObjects.size());
 		
 		//this one is a bit different (key is a set of strings)
 		File nsTripleCountsFile = new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS);
 		FileWriter namespaceTripleCountsOutput = new FileWriter(nsTripleCountsFile);
-		for (Set<String> tripleNs: tripleNsCounts.keySet()) {
-			namespaceTripleCountsOutput.write(tripleNs.toString() + "\t" + tripleNsCounts.get(tripleNs) + System.getProperty("line.separator"));
+		for (com.google.common.collect.Multiset.Entry<Set<String>> entry: tripleNsCounts.entrySet()) {
+			namespaceTripleCountsOutput.write(entry.getElement().toString() + "\t" + entry.getCount() + System.getProperty("line.separator"));
 		}
 		namespaceTripleCountsOutput.close();
 		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
@@ -144,7 +148,6 @@ public class AggregateDataset implements Runnable  {
 	}
 
 	private void processLine(String line) {
-
 		String[] nodes;
 		try {
 			nodes = getNodes(line);
@@ -156,8 +159,15 @@ public class AggregateDataset implements Runnable  {
 			NodeContainer sub = new NodeContainer(nodes[0], NodeContainer.Position.SUB);
 			NodeContainer pred = new NodeContainer(nodes[1], NodeContainer.Position.PRED);
 			NodeContainer obj = new NodeContainer(nodes[2], NodeContainer.Position.OBJ);
-
-
+			
+			
+			/**
+			 * Some generic counters
+			 */
+			tripleCount++;
+			distinctSubjects.add(sub.stringRepresentation.hashCode());
+			distinctObjects.add(obj.stringRepresentation.hashCode());
+			
 			/**
 			 * store ns triples
 			 */
@@ -165,44 +175,40 @@ public class AggregateDataset implements Runnable  {
 			if (sub.ns != null) tripleNs.add(sub.ns);
 			if (pred.ns != null) tripleNs.add(pred.ns);
 			if (obj.ns != null) tripleNs.add(obj.ns);
-			if (!tripleNsCounts.containsKey(tripleNs)) {
-				tripleNsCounts.put(tripleNs, new Counter(1));
-			} else {
-				tripleNsCounts.get(tripleNs).increase();
-			}
+			tripleNsCounts.add(tripleNs);
 
 			/**
 			 * store ns counters
 			 */
-			if (sub.isUri) upCounter(totalNsCounts, sub.ns);
-			if (pred.isUri) upCounter(totalNsCounts, pred.ns, true);
-			if (obj.isUri) upCounter(totalNsCounts, obj.ns);
+			if (sub.isUri) totalNsCounts.add(sub.ns);
+			if (pred.isUri) totalNsCounts.add(pred.ns);
+			if (obj.isUri) totalNsCounts.add(obj.ns);
 
 			
 			/**
 			 * store uniq namespaces
 			 */
-			if (sub.isUri) upCounter(nsCountsUniq, sub.ns);
-			if (pred.isUri) upCounter(nsCountsUniq, pred.ns);
-			if (obj.isUri) upCounter(nsCountsUniq, obj.ns);
+			if (sub.isUri) nsCountsUniq.add(sub.ns);
+			if (pred.isUri) nsCountsUniq.add(pred.ns);
+			if (obj.isUri) nsCountsUniq.add(obj.ns);
 
 			/**
 			 * store uniq bnodes
 			 */
-			if (sub.isBnode) upCounter(uniqBnodeCounts, sub.stringRepresentation);
-			if (pred.isBnode) upCounter(uniqBnodeCounts, pred.stringRepresentation);
-			if (obj.isBnode) upCounter(uniqBnodeCounts, obj.stringRepresentation);
+			if (sub.isBnode) uniqBnodeCounts.add(sub.stringRepresentation);
+			if (pred.isBnode) uniqBnodeCounts.add(pred.stringRepresentation);
+			if (obj.isBnode) uniqBnodeCounts.add(obj.stringRepresentation);
 
 
 			if (obj.isLiteral) {
 				if (obj.datatype != null) {
-					upCounter(dataTypeCounts, obj.datatype);
+					dataTypeCounts.add(obj.datatype);
 				}
 				if (obj.langTag != null) {
-					upCounter(langTagCounts, obj.langTag);
+					langTagCounts.add(obj.langTag);
 				}
 				if (obj.langTagWithoutReg!= null) {
-					upCounter(langTagWithoutRegCounts, obj.langTagWithoutReg);
+					langTagWithoutRegCounts.add(obj.langTagWithoutReg);
 				}
 			}
 			
@@ -210,20 +216,20 @@ public class AggregateDataset implements Runnable  {
 			 * Store classes and props
 			 */
 			if (pred.isRdf_type) {
-				upCounter(classCounts, obj.stringRepresentation);
+				classCounts.add(obj.stringRepresentation);
 			} else if (pred.isRdfs_domain || pred.isRdfs_range) {
-				upCounter(propertyCounts, sub.stringRepresentation);
-				upCounter(classCounts, obj.stringRepresentation);
+				propertyCounts.add(sub.stringRepresentation);
+				classCounts.add(obj.stringRepresentation);
 			} else if (pred.isRdfs_subClassOf) {
-				upCounter(classCounts, sub.stringRepresentation);
-				upCounter(classCounts, obj.stringRepresentation);
+				classCounts.add(sub.stringRepresentation);
+				classCounts.add(obj.stringRepresentation);
 			} else if (pred.isRdfs_subPropertyOf) {
-				upCounter(propertyCounts, sub.stringRepresentation);
-				upCounter(propertyCounts, obj.stringRepresentation);
+				propertyCounts.add(sub.stringRepresentation);
+				propertyCounts.add(obj.stringRepresentation);
 			}
 			
 			//store predicate info
-			upCounter(predicateCounts, pred.stringRepresentation);
+			predicateCounts.add(pred.stringRepresentation);
 			
 			//storeLiteralInfo
 			if (obj.isLiteral) literalCount++;
@@ -232,37 +238,21 @@ public class AggregateDataset implements Runnable  {
 		}
 
 	}
-	private void upCounter(Map<String, Counter> map, String key) {
-		upCounter(map, key, false);
-	}
-	/**
-	 * just a simple helper method, to update the maps with a string as key, and counter as val
-	 */
-	private void upCounter(Map<String, Counter> map, String key, boolean internKey) {
-		if (key == null) key = "null";
-		Counter counter = map.get(key);
-		if (counter == null) {
-			counter = new Counter(1);
-			if (internKey) {
-				map.put(key.intern(), counter);
-			} else {
-
-				map.put(key, counter);
-			}
-		}
-		counter.increase();
-	}
 	/**
 	 * just a simple helper method, to store the maps with a string as key, and counter as val
 	 * @throws IOException 
 	 */
-	private void writeCountersToFile(File targetFile, Map<String, Counter> map) throws IOException {
+	private void writeCountersToFile(File targetFile, HashMultiset<String> multiset) throws IOException {
 		FileWriter fw = new FileWriter(targetFile);
-		for (String key: map.keySet()) {
-			fw.write(key + "\t" + map.get(key) + System.getProperty("line.separator"));
+		for (com.google.common.collect.Multiset.Entry<String> entry: multiset.entrySet()) {
+			fw.write(entry.getElement() + "\t" + entry.getCount() + System.getProperty("line.separator"));
 		}
 		fw.close();
 		//also store provenance
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
+	}
+	private void writeSingleCountToFile(File targetFile, int val) throws IOException {
+		FileUtils.writeStringToFile(targetFile, Integer.toString(val));
 		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 
