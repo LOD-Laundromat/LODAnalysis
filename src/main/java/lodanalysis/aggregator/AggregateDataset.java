@@ -9,9 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -39,11 +37,11 @@ public class AggregateDataset implements Runnable  {
 	HashMultiset<String> totalNsCounts = HashMultiset.create();
 	HashMultiset<String> nsCountsUniq = HashMultiset.create();
 	HashMultiset<String> uniqBnodeCounts = HashMultiset.create();
-	HashMultiset<String> propertyCounts = HashMultiset.create();
 	HashMultiset<String> classCounts = HashMultiset.create();
 	HashMultiset<String> predicateCounts = HashMultiset.create();
 	Set<Integer> distinctSubjects = new HashSet<Integer>();
 	Set<Integer> distinctObjects = new HashSet<Integer>();
+	Set<Integer> distinctUris = new HashSet<Integer>();
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
@@ -94,9 +92,7 @@ public class AggregateDataset implements Runnable  {
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
-//		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_URIS_COUNTS), uniqUriCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_PROPERTY_COUNTS), propertyCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_PREDICATE_COUNTS), predicateCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_CLASS_COUNTS), classCounts);
 		
@@ -104,6 +100,7 @@ public class AggregateDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_TRIPLE_COUNT), tripleCount);
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), distinctSubjects.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), distinctObjects.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_URI_COUNT), distinctUris.size());
 		
 		//this one is a bit different (key is a set of strings)
 		File nsTripleCountsFile = new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS);
@@ -218,14 +215,14 @@ public class AggregateDataset implements Runnable  {
 			if (pred.isRdf_type) {
 				classCounts.add(obj.stringRepresentation);
 			} else if (pred.isRdfs_domain || pred.isRdfs_range) {
-				propertyCounts.add(sub.stringRepresentation);
+//				propertyCounts.add(sub.stringRepresentation);
 				classCounts.add(obj.stringRepresentation);
 			} else if (pred.isRdfs_subClassOf) {
 				classCounts.add(sub.stringRepresentation);
 				classCounts.add(obj.stringRepresentation);
-			} else if (pred.isRdfs_subPropertyOf) {
-				propertyCounts.add(sub.stringRepresentation);
-				propertyCounts.add(obj.stringRepresentation);
+//			} else if (pred.isRdfs_subPropertyOf) {
+//				propertyCounts.add(sub.stringRepresentation);
+//				propertyCounts.add(obj.stringRepresentation);
 			}
 			
 			//store predicate info
@@ -233,6 +230,11 @@ public class AggregateDataset implements Runnable  {
 			
 			//storeLiteralInfo
 			if (obj.isLiteral) literalCount++;
+			
+			//store URI info
+			if (sub.isUri) distinctUris.add(sub.stringRepresentation.hashCode());
+			if (pred.isUri) distinctUris.add(pred.stringRepresentation.hashCode());
+			if (obj.isUri) distinctUris.add(obj.stringRepresentation.hashCode());
 		} else {
 			System.out.println("Could not get triple from line. " + nodes.toString());
 		}

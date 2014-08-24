@@ -10,7 +10,7 @@ public class NodeContainer {
 	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
 
 	private final String RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-	private final String RDFS_SUBPROPERTYOF = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
+//	private final String RDFS_SUBPROPERTYOF = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
 	private final String RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
 	private final String RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
 	private final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -37,7 +37,7 @@ public class NodeContainer {
 	public boolean isRdfs_domain = false;
 	public boolean isRdfs_range = false;
 	public boolean isRdfs_subClassOf = false;
-	public boolean isRdfs_subPropertyOf = false;
+//	public boolean isRdfs_subPropertyOf = false;
 
 	public NodeContainer(String stringRepresentation, Position position) {
 		this.stringRepresentation = stringRepresentation;
@@ -90,8 +90,9 @@ public class NodeContainer {
 				isRdfs_range = true;
 			} else if (stringRepresentation.equals(RDFS_SUBCLASSOF)) {
 				isRdfs_subClassOf = true;
-			} else if (stringRepresentation.equals(RDFS_SUBPROPERTYOF)) {
-				isRdfs_subPropertyOf = true;
+				//ignore: we now use the void definition of a property, which is something which occurs in pred position
+//			} else if (stringRepresentation.equals(RDFS_SUBPROPERTYOF)) {
+//				isRdfs_subPropertyOf = true;
 			}
 		}
 	}
