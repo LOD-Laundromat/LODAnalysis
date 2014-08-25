@@ -10,13 +10,16 @@ public class Settings {
 	public static final String FILE_NAME_UNIQ_URIS_COUNTS = "urisUniq";
 	public static final String FILE_NAME_UNIQ_BNODES_COUNTS = "bnodesUniq";
 	public static final String FILE_NAME_NS_TRIPLE_COUNTS = "namespaceTripleCounts";
-	public static final String FILE_NAME_CLASS_COUNTS = "classCounts";
+	public static final String FILE_NAME_TYPE_COUNTS = "typeCounts";
 	public static final String FILE_NAME_INPUT_GZ = "clean.nt.gz";
 	public static final String FILE_NAME_LOG_AGGREGATE = "aggregate.log";
 	public static final String FILE_NAME_LITERAL_COUNT = "literalCount";
 	public static final String FILE_NAME_TRIPLE_COUNT = "tripleCount";
 	public static final String FILE_NAME_SUBJECT_COUNT = "subjectCount";
 	public static final String FILE_NAME_PREDICATE_COUNTS = "predicateCounts";
+	public static final String FILE_NAME_PREDICATE_LITERAL_COUNTS = "predicateLiteralCounts";
+	public static final String FILE_NAME_PREDICATE_NON_LIT_COUNTS = "predicateNonLitCounts";
+	
 	public static final String FILE_NAME_OBJECT_COUNT = "objectCount";
 	public static final String FILE_NAME_URI_COUNT = "uriCount";
 	

@@ -28,6 +28,6 @@ public class Debug {
 		/**
 		 * create void descriptions
 		 */
-		new Entry(new String[]{"-nostrict", "-threads", "1","-path", "datasets", "-output", "output", "lodanalysis.description.CreateDescriptions"});
+		new Entry(new String[]{"-nostrict", "-threads", "1","-path", "datasets", "-output", "output", "lodanalysis.metrics.CreateDescriptions"});
 	}
 }

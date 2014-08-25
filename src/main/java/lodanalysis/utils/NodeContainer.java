@@ -34,9 +34,9 @@ public class NodeContainer {
 	
 	
 	public boolean isRdf_type = false;
-	public boolean isRdfs_domain = false;
-	public boolean isRdfs_range = false;
-	public boolean isRdfs_subClassOf = false;
+//	public boolean isRdfs_domain = false;
+//	public boolean isRdfs_range = false;
+//	public boolean isRdfs_subClassOf = false;
 //	public boolean isRdfs_subPropertyOf = false;
 
 	public NodeContainer(String stringRepresentation, Position position) {
@@ -84,12 +84,12 @@ public class NodeContainer {
 			//ok, now do the expensive checks after pruning
 			if (stringRepresentation.equals(RDF_TYPE)) {
 				isRdf_type = true;
-			} else if (stringRepresentation.equals(RDFS_DOMAIN)) {
-				isRdfs_domain = true;
-			} else if (stringRepresentation.equals(RDFS_RANGE)) {
-				isRdfs_range = true;
-			} else if (stringRepresentation.equals(RDFS_SUBCLASSOF)) {
-				isRdfs_subClassOf = true;
+//			} else if (stringRepresentation.equals(RDFS_DOMAIN)) {
+//				isRdfs_domain = true;
+//			} else if (stringRepresentation.equals(RDFS_RANGE)) {
+//				isRdfs_range = true;
+//			} else if (stringRepresentation.equals(RDFS_SUBCLASSOF)) {
+//				isRdfs_subClassOf = true;
 				//ignore: we now use the void definition of a property, which is something which occurs in pred position
 //			} else if (stringRepresentation.equals(RDFS_SUBPROPERTYOF)) {
 //				isRdfs_subPropertyOf = true;

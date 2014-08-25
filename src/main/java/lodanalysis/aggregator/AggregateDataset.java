@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -22,13 +23,20 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.collect.HashMultiset;
 
 public class AggregateDataset implements Runnable  {
+	public class PredicateCounter {
+		int count = 1;//how often does this predicate occur. (initialize with 1)
+		int hasLiteralCount = 0;//how many literals does it co-occur with
+		int hasNonLiteralCount = 0;//how many uris does it co-occur with
+		HashSet<Integer> distinctLiteralCount = new HashSet<Integer>();
+		HashSet<Integer> distinctNonLiteralCount = new HashSet<Integer>();
+	}
+
 //	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;
 	private Reader decoder;
 	private BufferedReader reader;
-	int literalCount = 0;
 	int tripleCount = 0;
 	HashMultiset<Set<String>> tripleNsCounts = HashMultiset.create();
 	HashMultiset<String> dataTypeCounts = HashMultiset.create();
@@ -37,11 +45,15 @@ public class AggregateDataset implements Runnable  {
 	HashMultiset<String> totalNsCounts = HashMultiset.create();
 	HashMultiset<String> nsCountsUniq = HashMultiset.create();
 	HashMultiset<String> uniqBnodeCounts = HashMultiset.create();
-	HashMultiset<String> classCounts = HashMultiset.create();
-	HashMultiset<String> predicateCounts = HashMultiset.create();
+	HashMultiset<String> typeCounts = HashMultiset.create();
+	HashMap<String, PredicateCounter> predicateCounts = new HashMap<String, PredicateCounter>();
+//	HashMultiset<String> predicateCounts = HashMultiset.create();
+//	HashMultiset<String> predicateLiteralCounts = HashMultiset.create();
+//	HashMultiset<String> predicateUriCounts = HashMultiset.create();
 	Set<Integer> distinctSubjects = new HashSet<Integer>();
 	Set<Integer> distinctObjects = new HashSet<Integer>();
 	Set<Integer> distinctUris = new HashSet<Integer>();
+	Set<Integer> distinctLiterals = new HashSet<Integer>();
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
@@ -93,10 +105,10 @@ public class AggregateDataset implements Runnable  {
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_PREDICATE_COUNTS), predicateCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_CLASS_COUNTS), classCounts);
+		writePredCountersToFile(datasetOutputDir, predicateCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_TYPE_COUNTS), typeCounts);
 		
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_LITERAL_COUNT), literalCount);
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_LITERAL_COUNT), distinctLiterals.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_TRIPLE_COUNT), tripleCount);
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), distinctSubjects.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), distinctObjects.size());
@@ -164,6 +176,14 @@ public class AggregateDataset implements Runnable  {
 			tripleCount++;
 			distinctSubjects.add(sub.stringRepresentation.hashCode());
 			distinctObjects.add(obj.stringRepresentation.hashCode());
+			PredicateCounter predCounter = null;
+			if (!predicateCounts.containsKey(pred.stringRepresentation)) {
+				predCounter = new PredicateCounter();
+				predicateCounts.put(pred.stringRepresentation, predCounter);
+			} else {
+				predCounter = predicateCounts.get(pred.stringRepresentation);
+			}
+			
 			
 			/**
 			 * store ns triples
@@ -198,6 +218,7 @@ public class AggregateDataset implements Runnable  {
 
 
 			if (obj.isLiteral) {
+				distinctLiterals.add(obj.hashCode());
 				if (obj.datatype != null) {
 					dataTypeCounts.add(obj.datatype);
 				}
@@ -207,29 +228,31 @@ public class AggregateDataset implements Runnable  {
 				if (obj.langTagWithoutReg!= null) {
 					langTagWithoutRegCounts.add(obj.langTagWithoutReg);
 				}
+				predCounter.hasLiteralCount++;
+				predCounter.distinctLiteralCount.add(obj.stringRepresentation.hashCode());
+			} else {
+				predCounter.hasNonLiteralCount++;
+				predCounter.distinctNonLiteralCount.add(obj.stringRepresentation.hashCode());
 			}
 			
 			/**
 			 * Store classes and props
 			 */
 			if (pred.isRdf_type) {
-				classCounts.add(obj.stringRepresentation);
-			} else if (pred.isRdfs_domain || pred.isRdfs_range) {
+				typeCounts.add(obj.stringRepresentation);
+//			} else if (pred.isRdfs_domain || pred.isRdfs_range) {
 //				propertyCounts.add(sub.stringRepresentation);
-				classCounts.add(obj.stringRepresentation);
-			} else if (pred.isRdfs_subClassOf) {
-				classCounts.add(sub.stringRepresentation);
-				classCounts.add(obj.stringRepresentation);
+//				classCounts.add(obj.stringRepresentation);
+//			} else if (pred.isRdfs_subClassOf) {
+//				classCounts.add(sub.stringRepresentation);
+//				classCounts.add(obj.stringRepresentation);
 //			} else if (pred.isRdfs_subPropertyOf) {
 //				propertyCounts.add(sub.stringRepresentation);
 //				propertyCounts.add(obj.stringRepresentation);
 			}
 			
-			//store predicate info
-			predicateCounts.add(pred.stringRepresentation);
 			
-			//storeLiteralInfo
-			if (obj.isLiteral) literalCount++;
+			
 			
 			//store URI info
 			if (sub.isUri) distinctUris.add(sub.stringRepresentation.hashCode());
@@ -252,6 +275,27 @@ public class AggregateDataset implements Runnable  {
 		fw.close();
 		//also store provenance
 		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
+	}
+
+	private void writePredCountersToFile(File targetDir, HashMap<String, PredicateCounter> predCounters) throws IOException {
+		File predCountsFile = new File(targetDir, Settings.FILE_NAME_PREDICATE_COUNTS);
+		FileWriter fwPredCounts = new FileWriter(predCountsFile);
+		File predLitCountFiles = new File(targetDir, Settings.FILE_NAME_PREDICATE_LITERAL_COUNTS);
+		FileWriter fwPredLitCounts = new FileWriter(predLitCountFiles);
+		File predUriCountsFile = new File(targetDir, Settings.FILE_NAME_PREDICATE_NON_LIT_COUNTS);
+		FileWriter fwPredNonLitCounts = new FileWriter(predUriCountsFile);
+		for (java.util.Map.Entry<String, PredicateCounter> entry: predCounters.entrySet()) {
+			fwPredCounts.write(entry.getKey() + "\t" + entry.getValue().count + System.getProperty("line.separator"));
+			fwPredLitCounts.write(entry.getKey() + "\t" + entry.getValue().hasLiteralCount + "\t" + entry.getValue().distinctLiteralCount.size() + "\t" + System.getProperty("line.separator"));
+			fwPredNonLitCounts.write(entry.getKey() + "\t" + entry.getValue().hasNonLiteralCount + "\t" + entry.getValue().distinctNonLiteralCount.size() + "\t" + System.getProperty("line.separator"));
+		}
+		fwPredCounts.close();
+		fwPredLitCounts.close();
+		fwPredNonLitCounts.close();
+		//also store provenance
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(predCountsFile.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(predLitCountFiles.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(predUriCountsFile.getAbsolutePath() + ".sysinfo"));
 	}
 	private void writeSingleCountToFile(File targetFile, int val) throws IOException {
 		FileUtils.writeStringToFile(targetFile, Integer.toString(val));
