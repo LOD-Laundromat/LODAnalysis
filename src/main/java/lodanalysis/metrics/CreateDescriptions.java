@@ -52,17 +52,6 @@ public class CreateDescriptions  extends RuneableClass{
 	private Property provUsed;
 	private Property gitCommit;
 	private Property foafHomePage;
-	private Property bio2RdfTripleCount;
-	private Property bio22RdfUniqueSubjectCount;
-	private Property bio22RdfUniquePredicateCount;
-	private Property bio22RdfUniqueObjectCount;
-	private Property bio22RdfTypeCount;
-	private Property bio22RdfHasCount;
-	private Property bio22RdfHasType;
-	private Property bio22RdfPredicateObjectCount;
-	private Property bio22RdfHasPredicate;
-	private Property bio22RdfPredicateLiteralCount;
-	
 	
 	private Resource doc;
 	private Resource voidDoc;
@@ -106,16 +95,6 @@ public class CreateDescriptions  extends RuneableClass{
 			provUsed = model.createProperty(NS_PROV, "used");
 			gitCommit = model.createProperty(NS_GIT, "commit");
 			foafHomePage = model.createProperty(NS_FOAF, "homePage");
-			bio2RdfTripleCount= model.createProperty(NS_DS, "has_triple_count");
-			bio22RdfUniqueSubjectCount = model.createProperty(NS_DS, "has_unique_subject_count");
-			bio22RdfUniquePredicateCount = model.createProperty(NS_DS, "has_unique_predicate_count");
-			bio22RdfUniqueObjectCount = model.createProperty(NS_DS, "has_unique_object_count");
-			bio22RdfTypeCount = model.createProperty(NS_DS, "has_type_count");
-			bio22RdfHasCount = model.createProperty(NS_DS, "has_count");
-			bio22RdfHasType = model.createProperty(NS_DS, "has_type");
-			bio22RdfPredicateObjectCount = model.createProperty(NS_DS, "has_predicate_object_count");
-			bio22RdfHasPredicate = model.createProperty(NS_DS, "has_predicate");
-			bio22RdfPredicateLiteralCount = model.createProperty(NS_DS, "has_predicate_literal_count");
 
 			/**
 			 * Make links
@@ -123,7 +102,7 @@ public class CreateDescriptions  extends RuneableClass{
 			doc = model.createResource(NS_LL + datasetDir.getName());
 			voidDoc = model.createResource(NS_LL + datasetDir.getName() + "-metrics");
 			doc.addProperty(model.createProperty(NS_LL, "description"), voidDoc);
-			voidDoc.addProperty(voidSubset, doc);
+//			voidDoc.addProperty(voidSubset, doc);
 			dsDescriptor = model.createResource(NS_DS + "Dataset-Descriptor");
 			
 			
@@ -132,7 +111,7 @@ public class CreateDescriptions  extends RuneableClass{
 			voidDoc.addProperty(voidTriples, tripleCount, XSDDatatype.XSDlong);
 			addBio2RdfSubsetProp(model.createResource(NS_DS + "Dataset-Triples"), tripleCount);
 			
-			voidDoc.addProperty(voidClasses, Integer.toString(countLines(new File(datasetDir, Settings.FILE_NAME_TYPE_COUNTS))), XSDDatatype.XSDinteger);
+			voidDoc.addProperty(voidClasses, Integer.toString(countLines(new File(datasetDir, Settings.FILE_NAME_TYPE_COUNTS))), XSDDatatype.XSDlong);
 			
 			String distinctPredicates = Integer.toString(countLines(new File(datasetDir, Settings.FILE_NAME_PREDICATE_COUNTS)));
 			voidDoc.addProperty(voidProperties, distinctPredicates, XSDDatatype.XSDlong);
@@ -160,7 +139,7 @@ public class CreateDescriptions  extends RuneableClass{
 				if (propLineSplit.length != 2) throw new IllegalStateException("Unexpected input. Cannot split: " + propLine);
 				Resource bnode = model.createResource();
 				bnode.addProperty(voidProperty, model.createResource(propLineSplit[0]));
-				bnode.addProperty(voidEntities, propLineSplit[1], XSDDatatype.XSDinteger);
+				bnode.addProperty(voidEntities, propLineSplit[1], XSDDatatype.XSDlong);
 				voidDoc.addProperty(voidPropertyPartition, bnode);
 			}
 			/**
@@ -171,7 +150,7 @@ public class CreateDescriptions  extends RuneableClass{
 				if (classLineSplit.length != 2) throw new IllegalStateException("Unexpected input. Cannot split: " + classLine);
 				Resource bnode = model.createResource();
 				bnode.addProperty(voidClass, model.createResource(classLineSplit[0]));
-				bnode.addProperty(voidEntities, classLineSplit[1], XSDDatatype.XSDinteger);
+				bnode.addProperty(voidEntities, classLineSplit[1], XSDDatatype.XSDlong);
 				voidDoc.addProperty(voidClassPartition, bnode);
 			}
 			/**
