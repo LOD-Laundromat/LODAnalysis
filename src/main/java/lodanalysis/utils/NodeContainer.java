@@ -2,17 +2,16 @@ package lodanalysis.utils;
 
 import java.util.regex.Pattern;
 
+import org.data2semantics.vault.PatriciaVault.PatriciaNode;
+import org.data2semantics.vault.Vault;
+
 public class NodeContainer {
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
-	
+	//TODO: make complete string (starts with)
 	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
 
-	private final String RDFS_SUBCLASSOF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-//	private final String RDFS_SUBPROPERTYOF = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
-	private final String RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
-	private final String RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
 	private final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 	
 	private static final String W3C_URI_PREFIX = "http://www.w3.org/";
@@ -20,10 +19,9 @@ public class NodeContainer {
 
 	public enum Position {SUB, PRED, OBJ};
 	private Position position;
-	public String stringRepresentation;
 	//calculated stuff:
 	
-	public String ns = null;
+	public PatriciaNode nsTicket = null;
 	public String datatype = null;
 	public boolean isLiteral = false;
 	public boolean isUri = true; //default: assume the node is a uri
@@ -31,18 +29,19 @@ public class NodeContainer {
 	public String langTag = null;
 	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
-	
+	public PatriciaNode ticket;
 	
 	public boolean isRdf_type = false;
 //	public boolean isRdfs_domain = false;
 //	public boolean isRdfs_range = false;
 //	public boolean isRdfs_subClassOf = false;
 //	public boolean isRdfs_subPropertyOf = false;
-
-	public NodeContainer(String stringRepresentation, Position position) {
-		this.stringRepresentation = stringRepresentation;
+	private Vault<String, PatriciaNode> vault;
+	public NodeContainer(Vault<String, PatriciaNode> vault, String stringRepresentation, Position position) {
 		this.position = position;
-		calcInfo();
+		this.vault = vault;
+		calcInfo(stringRepresentation);
+		this.ticket = vault.store(stringRepresentation);
 	}
 
 	/**
@@ -50,7 +49,7 @@ public class NodeContainer {
 	 * NOTE: we can afford to optimize these calculations (i.e. avoid regex), because we know how exactly we serialize the ntriples.
 	 * This makes detection of things like lang tags and datatypes very easy and very fast.
 	 */
-	private void calcInfo() {
+	private void calcInfo(String stringRepresentation) {
 		if (stringRepresentation.startsWith("\"")) {
 			this.isLiteral = true;
 			this.isUri = false;
@@ -61,26 +60,27 @@ public class NodeContainer {
 				//we rewrite each bnode to uri. check whether this is one of these uris
 				this.isBnode = true;
 				this.isUri = false;
+			} else {
+				String ns = getNs(stringRepresentation);
+				this.nsTicket = vault.store(ns);
+				getSchemaInfo(stringRepresentation, ns);
 			}
+			
 		}
 		
-		this.ns = getNs(stringRepresentation);
 		
-		/**
-		 * get info used for calculating whether other nodes are a class or property
-		 */
-		getSchemaInfo();
+		
 
 		if (position == Position.OBJ && isLiteral) {
 			//only for literals
-			getDataType();
-			getLangTagInfo();
+			getDataType(stringRepresentation);
+			getLangTagInfo(stringRepresentation);
 		}
 
 	}
 
-	private void getSchemaInfo() {
-		if (position == Position.PRED && this.ns.equals(W3C_URI_PREFIX)) {
+	private void getSchemaInfo(String stringRepresentation, String ns) {
+		if (position == Position.PRED && ns.equals(W3C_URI_PREFIX)) {
 			//ok, now do the expensive checks after pruning
 			if (stringRepresentation.equals(RDF_TYPE)) {
 				isRdf_type = true;
@@ -109,7 +109,7 @@ public class NodeContainer {
 		}
 	}
 
-	private void getDataType() {
+	private void getDataType(String stringRepresentation) {
 		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("^^")) {
 			int closingQuote = stringRepresentation.lastIndexOf("\"");
 
@@ -134,7 +134,7 @@ public class NodeContainer {
 		}
 	}
 
-	private void getLangTagInfo() {
+	private void getLangTagInfo(String stringRepresentation) {
 		this.langTag = null;
 
 		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("@")) {
@@ -167,8 +167,7 @@ public class NodeContainer {
 
 	public String toString() {
 		return
-			"orig string: " + stringRepresentation + "\n" +
-			"ns: " + ns + "\n" +
+//			"ns: " + ns + "\n" +
 			"datatype: " + datatype + "\n" +
 			"lang tag: " + langTag + "\n" +
 			"lang tag (without reg): " + langTagWithoutReg + "\n" +
@@ -182,7 +181,7 @@ public class NodeContainer {
 //		System.out.println(new NodeContainer("<http://google.co/df#fdm_>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("<http://google.co/df#_12332>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("<http://google.co/df/_12332>", Position.OBJ).toString());
-		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_111>", Position.OBJ).toString());
+//		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_111>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("\"That Seventies Show\"", Position.OBJ).toString());

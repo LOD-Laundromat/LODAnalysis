@@ -19,6 +19,9 @@ import lodanalysis.Settings;
 import lodanalysis.utils.NodeContainer;
 
 import org.apache.commons.io.FileUtils;
+import org.data2semantics.vault.PatriciaVault;
+import org.data2semantics.vault.PatriciaVault.PatriciaNode;
+import org.data2semantics.vault.Vault;
 
 import com.google.common.collect.HashMultiset;
 
@@ -27,8 +30,8 @@ public class AggregateDataset implements Runnable  {
 		int count = 1;//how often does this predicate occur. (initialize with 1)
 		int hasLiteralCount = 0;//how many literals does it co-occur with
 		int hasNonLiteralCount = 0;//how many uris does it co-occur with
-		HashSet<Integer> distinctLiteralCount = new HashSet<Integer>();
-		HashSet<Integer> distinctNonLiteralCount = new HashSet<Integer>();
+		HashSet<PatriciaNode> distinctLiteralCount = new HashSet<PatriciaNode>();
+		HashSet<PatriciaNode> distinctNonLiteralCount = new HashSet<PatriciaNode>();
 	}
 
 //	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
@@ -37,23 +40,23 @@ public class AggregateDataset implements Runnable  {
 	private InputStream fileStream;
 	private Reader decoder;
 	private BufferedReader reader;
+	private Vault<String, PatriciaNode> vault =  new PatriciaVault();
 	int tripleCount = 0;
-	HashMultiset<Set<String>> tripleNsCounts = HashMultiset.create();
+	HashMultiset<Set<PatriciaNode>> tripleNsCounts = HashMultiset.create();
 	HashMultiset<String> dataTypeCounts = HashMultiset.create();
 	HashMultiset<String> langTagCounts = HashMultiset.create();
 	HashMultiset<String> langTagWithoutRegCounts = HashMultiset.create();
-	HashMultiset<String> totalNsCounts = HashMultiset.create();
-	HashMultiset<String> nsCountsUniq = HashMultiset.create();
-	HashMultiset<String> uniqBnodeCounts = HashMultiset.create();
-	HashMultiset<String> typeCounts = HashMultiset.create();
-	HashMap<String, PredicateCounter> predicateCounts = new HashMap<String, PredicateCounter>();
+	HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
+	HashMultiset<PatriciaNode> uniqBnodeCounts = HashMultiset.create();
+	HashMultiset<PatriciaNode> typeCounts = HashMultiset.create();
+	HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
 //	HashMultiset<String> predicateCounts = HashMultiset.create();
 //	HashMultiset<String> predicateLiteralCounts = HashMultiset.create();
 //	HashMultiset<String> predicateUriCounts = HashMultiset.create();
-	Set<Integer> distinctSubjects = new HashSet<Integer>();
-	Set<Integer> distinctObjects = new HashSet<Integer>();
-	Set<Integer> distinctUris = new HashSet<Integer>();
-	Set<Integer> distinctLiterals = new HashSet<Integer>();
+	Set<PatriciaNode> distinctSubjects = new HashSet<PatriciaNode>();
+	Set<PatriciaNode> distinctObjects = new HashSet<PatriciaNode>();
+	Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
+	Set<PatriciaNode> distinctLiterals = new HashSet<PatriciaNode>();
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
@@ -99,11 +102,10 @@ public class AggregateDataset implements Runnable  {
 		String datasetMd5 = datasetDir.getName();
 		File datasetOutputDir = new File(entry.getOutputDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_NS_COUNTS), totalNsCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_NS_UNIQ_COUNTS), nsCountsUniq);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_NS_COUNTS), nsCounts);
+		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
+		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
+		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
 		writePredCountersToFile(datasetOutputDir, predicateCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_TYPE_COUNTS), typeCounts);
@@ -117,8 +119,11 @@ public class AggregateDataset implements Runnable  {
 		//this one is a bit different (key is a set of strings)
 		File nsTripleCountsFile = new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS);
 		FileWriter namespaceTripleCountsOutput = new FileWriter(nsTripleCountsFile);
-		for (com.google.common.collect.Multiset.Entry<Set<String>> entry: tripleNsCounts.entrySet()) {
-			namespaceTripleCountsOutput.write(entry.getElement().toString() + "\t" + entry.getCount() + System.getProperty("line.separator"));
+		for (com.google.common.collect.Multiset.Entry<Set<PatriciaNode>> entry: tripleNsCounts.entrySet()) {
+			for (PatriciaNode pNode: entry.getElement()) {
+				namespaceTripleCountsOutput.write(vault.redeem(pNode) + " ");
+			}
+			namespaceTripleCountsOutput.write("\t" + entry.getCount() + System.getProperty("line.separator"));
 		}
 		namespaceTripleCountsOutput.close();
 		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
@@ -165,60 +170,53 @@ public class AggregateDataset implements Runnable  {
 			return;
 		}
 		if (nodes.length == 3) {
-			NodeContainer sub = new NodeContainer(nodes[0], NodeContainer.Position.SUB);
-			NodeContainer pred = new NodeContainer(nodes[1], NodeContainer.Position.PRED);
-			NodeContainer obj = new NodeContainer(nodes[2], NodeContainer.Position.OBJ);
+			NodeContainer sub = new NodeContainer(vault, nodes[0], NodeContainer.Position.SUB);
+			NodeContainer pred = new NodeContainer(vault, nodes[1], NodeContainer.Position.PRED);
+			NodeContainer obj = new NodeContainer(vault, nodes[2], NodeContainer.Position.OBJ);
 			
 			
 			/**
 			 * Some generic counters
 			 */
 			tripleCount++;
-			distinctSubjects.add(sub.stringRepresentation.hashCode());
-			distinctObjects.add(obj.stringRepresentation.hashCode());
+			distinctSubjects.add(sub.ticket);
+			distinctObjects.add(obj.ticket);
 			PredicateCounter predCounter = null;
-			if (!predicateCounts.containsKey(pred.stringRepresentation)) {
+			if (!predicateCounts.containsKey(pred.ticket)) {
 				predCounter = new PredicateCounter();
-				predicateCounts.put(pred.stringRepresentation, predCounter);
+				predicateCounts.put(pred.ticket, predCounter);
 			} else {
-				predCounter = predicateCounts.get(pred.stringRepresentation);
+				predCounter = predicateCounts.get(pred.ticket);
 			}
 			
 			
 			/**
 			 * store ns triples
 			 */
-			Set<String> tripleNs = new HashSet<String>();
-			if (sub.ns != null) tripleNs.add(sub.ns);
-			if (pred.ns != null) tripleNs.add(pred.ns);
-			if (obj.ns != null) tripleNs.add(obj.ns);
+			Set<PatriciaNode> tripleNs = new HashSet<PatriciaNode>();
+			if (sub.nsTicket != null) tripleNs.add(sub.nsTicket);
+			if (pred.nsTicket != null) tripleNs.add(pred.nsTicket);
+			if (obj.nsTicket != null) tripleNs.add(obj.nsTicket);
 			tripleNsCounts.add(tripleNs);
 
 			/**
 			 * store ns counters
 			 */
-			if (sub.isUri) totalNsCounts.add(sub.ns);
-			if (pred.isUri) totalNsCounts.add(pred.ns);
-			if (obj.isUri) totalNsCounts.add(obj.ns);
+			if (sub.isUri) nsCounts.add(sub.nsTicket);
+			if (pred.isUri) nsCounts.add(pred.nsTicket);
+			if (obj.isUri) nsCounts.add(obj.nsTicket);
 
 			
 			/**
-			 * store uniq namespaces
-			 */
-			if (sub.isUri) nsCountsUniq.add(sub.ns);
-			if (pred.isUri) nsCountsUniq.add(pred.ns);
-			if (obj.isUri) nsCountsUniq.add(obj.ns);
-
-			/**
 			 * store uniq bnodes
 			 */
-			if (sub.isBnode) uniqBnodeCounts.add(sub.stringRepresentation);
-			if (pred.isBnode) uniqBnodeCounts.add(pred.stringRepresentation);
-			if (obj.isBnode) uniqBnodeCounts.add(obj.stringRepresentation);
+			if (sub.isBnode) uniqBnodeCounts.add(sub.ticket);
+			if (pred.isBnode) uniqBnodeCounts.add(pred.ticket);
+			if (obj.isBnode) uniqBnodeCounts.add(obj.ticket);
 
 
 			if (obj.isLiteral) {
-				distinctLiterals.add(obj.hashCode());
+				distinctLiterals.add(obj.ticket);
 				if (obj.datatype != null) {
 					dataTypeCounts.add(obj.datatype);
 				}
@@ -229,17 +227,17 @@ public class AggregateDataset implements Runnable  {
 					langTagWithoutRegCounts.add(obj.langTagWithoutReg);
 				}
 				predCounter.hasLiteralCount++;
-				predCounter.distinctLiteralCount.add(obj.stringRepresentation.hashCode());
+				predCounter.distinctLiteralCount.add(obj.ticket);
 			} else {
 				predCounter.hasNonLiteralCount++;
-				predCounter.distinctNonLiteralCount.add(obj.stringRepresentation.hashCode());
+				predCounter.distinctNonLiteralCount.add(obj.ticket);
 			}
 			
 			/**
 			 * Store classes and props
 			 */
 			if (pred.isRdf_type) {
-				typeCounts.add(obj.stringRepresentation);
+				typeCounts.add(obj.ticket);
 //			} else if (pred.isRdfs_domain || pred.isRdfs_range) {
 //				propertyCounts.add(sub.stringRepresentation);
 //				classCounts.add(obj.stringRepresentation);
@@ -255,9 +253,9 @@ public class AggregateDataset implements Runnable  {
 			
 			
 			//store URI info
-			if (sub.isUri) distinctUris.add(sub.stringRepresentation.hashCode());
-			if (pred.isUri) distinctUris.add(pred.stringRepresentation.hashCode());
-			if (obj.isUri) distinctUris.add(obj.stringRepresentation.hashCode());
+			if (sub.isUri) distinctUris.add(sub.ticket);
+			if (pred.isUri) distinctUris.add(pred.ticket);
+			if (obj.isUri) distinctUris.add(obj.ticket);
 		} else {
 			System.out.println("Could not get triple from line. " + nodes.toString());
 		}
@@ -267,27 +265,43 @@ public class AggregateDataset implements Runnable  {
 	 * just a simple helper method, to store the maps with a string as key, and counter as val
 	 * @throws IOException 
 	 */
-	private void writeCountersToFile(File targetFile, HashMultiset<String> multiset) throws IOException {
+	private void writeCountersToFile(File targetFile, HashMultiset<PatriciaNode> multiset) throws IOException {
+		FileWriter fw = new FileWriter(targetFile);
+		for (com.google.common.collect.Multiset.Entry<PatriciaNode> entry: multiset.entrySet()) {
+			fw.write(vault.redeem((PatriciaNode)entry.getElement()) + "\t" + entry.getCount() + System.getProperty("line.separator"));
+			
+		}
+		fw.close();
+		//also store provenance
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
+	}
+	/**
+	 * just a simple helper method, to store the maps with a string as key, and counter as val
+	 * @throws IOException 
+	 */
+	private void writeStringCountersToFile(File targetFile, HashMultiset<String> multiset) throws IOException {
 		FileWriter fw = new FileWriter(targetFile);
 		for (com.google.common.collect.Multiset.Entry<String> entry: multiset.entrySet()) {
-			fw.write(entry.getElement() + "\t" + entry.getCount() + System.getProperty("line.separator"));
+			fw.write(entry.getElement().toString() + "\t" + entry.getCount() + System.getProperty("line.separator"));
+			
 		}
 		fw.close();
 		//also store provenance
 		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 
-	private void writePredCountersToFile(File targetDir, HashMap<String, PredicateCounter> predCounters) throws IOException {
+	private void writePredCountersToFile(File targetDir, HashMap<PatriciaNode, PredicateCounter> predCounters) throws IOException {
 		File predCountsFile = new File(targetDir, Settings.FILE_NAME_PREDICATE_COUNTS);
 		FileWriter fwPredCounts = new FileWriter(predCountsFile);
 		File predLitCountFiles = new File(targetDir, Settings.FILE_NAME_PREDICATE_LITERAL_COUNTS);
 		FileWriter fwPredLitCounts = new FileWriter(predLitCountFiles);
 		File predUriCountsFile = new File(targetDir, Settings.FILE_NAME_PREDICATE_NON_LIT_COUNTS);
 		FileWriter fwPredNonLitCounts = new FileWriter(predUriCountsFile);
-		for (java.util.Map.Entry<String, PredicateCounter> entry: predCounters.entrySet()) {
-			fwPredCounts.write(entry.getKey() + "\t" + entry.getValue().count + System.getProperty("line.separator"));
-			fwPredLitCounts.write(entry.getKey() + "\t" + entry.getValue().hasLiteralCount + "\t" + entry.getValue().distinctLiteralCount.size() + "\t" + System.getProperty("line.separator"));
-			fwPredNonLitCounts.write(entry.getKey() + "\t" + entry.getValue().hasNonLiteralCount + "\t" + entry.getValue().distinctNonLiteralCount.size() + "\t" + System.getProperty("line.separator"));
+		for (java.util.Map.Entry<PatriciaNode, PredicateCounter> entry: predCounters.entrySet()) {
+			String pred = vault.redeem(entry.getKey());
+			fwPredCounts.write(pred + "\t" + entry.getValue().count + System.getProperty("line.separator"));
+			fwPredLitCounts.write(pred + "\t" + entry.getValue().hasLiteralCount + "\t" + entry.getValue().distinctLiteralCount.size() + "\t" + System.getProperty("line.separator"));
+			fwPredNonLitCounts.write(pred + "\t" + entry.getValue().hasNonLiteralCount + "\t" + entry.getValue().distinctNonLiteralCount.size() + "\t" + System.getProperty("line.separator"));
 		}
 		fwPredCounts.close();
 		fwPredLitCounts.close();
