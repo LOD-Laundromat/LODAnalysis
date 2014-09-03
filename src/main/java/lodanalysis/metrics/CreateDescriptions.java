@@ -6,10 +6,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Properties;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
 import lodanalysis.Settings;
+import lodanalysis.utils.Utils;
 
 import org.apache.commons.io.FileUtils;
 
@@ -20,13 +23,13 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 public class CreateDescriptions  extends RuneableClass{
-	
-	public static final String NS_LL = "http://lodlaundromat.org/vocab#";
+	private static Properties GIT_PROPS = null;
+	public static final String NS_LL = "http://lodlaundromat.org/resource/";
+	public static final String NS_LLO = "http://lodlaundromat.org/ontology/";
 	public static final String NS_VOID = "http://rdfs.org/ns/void#";
 	public static final String NS_RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 	public static final String NS_RDFS = "http://www.w3.org/2000/01/rdf-schema#";
 	public static final String NS_PROV = "http://www.w3.org/ns/prov#";
-	public static final String NS_GIT = "http://todooooooo#";
 	public static final String NS_FOAF = "http://xmlns.com/foaf/0.1/";
 	public static final String NS_DS = "http://bio2rdf.org/bio2rdf.dataset_vocabulary:";
 	
@@ -50,7 +53,15 @@ public class CreateDescriptions  extends RuneableClass{
 	private Property provDerivedFrom;
 	private Property provGeneratedBy;
 	private Property provUsed;
-	private Property gitCommit;
+	private Property llGitId;
+	private Property llGitBranch;
+	private Property llOutDegree;
+	private Property llInDegree;
+	private Property llDegree;
+	private Property llMean;
+	private Property llStd;
+	private Property llMedian;
+	private Property llRange;
 	private Property foafHomePage;
 	
 	private Resource doc;
@@ -66,6 +77,7 @@ public class CreateDescriptions  extends RuneableClass{
 			 */
 			model = ModelFactory.createDefaultModel();
 			model.setNsPrefix("ll", NS_LL);
+			model.setNsPrefix("llo", NS_LLO);
 			model.setNsPrefix("void", NS_VOID);
 			model.setNsPrefix("rdf", NS_RDF);
 			model.setNsPrefix("prov", NS_PROV);
@@ -93,16 +105,23 @@ public class CreateDescriptions  extends RuneableClass{
 			provDerivedFrom = model.createProperty(NS_PROV, "wasDerivedFrom");
 			provGeneratedBy = model.createProperty(NS_PROV, "wasGeneratedBy");
 			provUsed = model.createProperty(NS_PROV, "used");
-			gitCommit = model.createProperty(NS_GIT, "commit");
+			llGitId = model.createProperty(NS_LLO, "gitId");
+			llGitBranch = model.createProperty(NS_LLO, "branch");
+			llOutDegree = model.createProperty(NS_LLO, "outDegree");
+			llInDegree = model.createProperty(NS_LLO, "inDegree");
+			llDegree = model.createProperty(NS_LLO, "degree");
+			llMean = model.createProperty(NS_LLO, "mean");
+			llStd = model.createProperty(NS_LLO, "standardDeviation");
+			llRange = model.createProperty(NS_LLO, "range");
+			llMedian = model.createProperty(NS_LLO, "median");
 			foafHomePage = model.createProperty(NS_FOAF, "homePage");
 
 			/**
 			 * Make links
 			 */
 			doc = model.createResource(NS_LL + datasetDir.getName());
-			voidDoc = model.createResource(NS_LL + datasetDir.getName() + "-metrics");
-			doc.addProperty(model.createProperty(NS_LL, "description"), voidDoc);
-//			voidDoc.addProperty(voidSubset, doc);
+			voidDoc = model.createResource(NS_LL + datasetDir.getName() + "/metrics");
+			doc.addProperty(model.createProperty(NS_LLO, "metrics"), voidDoc);
 			dsDescriptor = model.createResource(NS_DS + "Dataset-Descriptor");
 			
 			
@@ -131,6 +150,31 @@ public class CreateDescriptions  extends RuneableClass{
 			
 			addBio2RdfSubsetProp(model.createResource(NS_DS + "Dataset-Distinct-Literals"), FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_LITERAL_COUNT)));
 			
+			
+			/**
+			 * add degree information
+			 */
+			Resource inDegreeBnode = model.createResource();
+			inDegreeBnode.addProperty(llMean, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_INDEGREE_AVG)), XSDDatatype.XSDdouble);
+			inDegreeBnode.addProperty(llMedian, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_INDEGREE_MEDIAN)), XSDDatatype.XSDlong);
+			inDegreeBnode.addProperty(llRange, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_INDEGREE_RANGE)), XSDDatatype.XSDlong);
+			inDegreeBnode.addProperty(llStd, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_INDEGREE_STD)), XSDDatatype.XSDdouble);
+			voidDoc.addProperty(llInDegree, inDegreeBnode);
+			Resource outDegreeBnode = model.createResource();
+			outDegreeBnode.addProperty(llMean, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_OUTDEGREE_AVG)), XSDDatatype.XSDdouble);
+			outDegreeBnode.addProperty(llMedian, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_OUTDEGREE_MEDIAN)), XSDDatatype.XSDlong);
+			outDegreeBnode.addProperty(llRange, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_OUTDEGREE_RANGE)), XSDDatatype.XSDlong);
+			outDegreeBnode.addProperty(llStd, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_OUTDEGREE_STD)), XSDDatatype.XSDdouble);
+			voidDoc.addProperty(llOutDegree, outDegreeBnode);
+			Resource degreeBnode = model.createResource();
+			degreeBnode.addProperty(llMean, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_DEGREE_AVG)), XSDDatatype.XSDdouble);
+			degreeBnode.addProperty(llMedian, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_DEGREE_MEDIAN)), XSDDatatype.XSDlong);
+			degreeBnode.addProperty(llRange, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_DEGREE_RANGE)), XSDDatatype.XSDlong);
+			degreeBnode.addProperty(llStd, FileUtils.readFileToString(new File(datasetDir, Settings.FILE_NAME_DEGREE_STD)), XSDDatatype.XSDdouble);
+			voidDoc.addProperty(llDegree, degreeBnode);
+			
+			
+			
 			/**
 			 * create prop partitions
 			 */
@@ -153,12 +197,16 @@ public class CreateDescriptions  extends RuneableClass{
 				bnode.addProperty(voidEntities, classLineSplit[1], XSDDatatype.XSDlong);
 				voidDoc.addProperty(voidClassPartition, bnode);
 			}
+			
+			
 			/**
 			 * Add provenance
 			 */
-			//set git entity
-			Resource provGitEntity = model.createResource("https://github.com/LODLaundry/LODAnalysis.git");
-			provGitEntity.addProperty(gitCommit, "some long hash", XSDDatatype.XSDstring);
+			String gitUrl = getGitProp("git.remote.origin.url").replace("git@", "https://");
+			Resource provGitEntity = model.createResource(gitUrl + "#" + getGitProp("git.commit.id"));
+			provGitEntity.addProperty(rdfType, model.createResource(NS_PROV + "Entity"));
+			provGitEntity.addProperty(llGitId, getGitProp("git.commit.id"), XSDDatatype.XSDstring);
+			provGitEntity.addProperty(llGitBranch, getGitProp("git.branch"), XSDDatatype.XSDstring);
 			provGitEntity.addProperty(foafHomePage, "http://github.com/LODLaundromat/LODAnalysis", XSDDatatype.XSDstring);
 			
 			//define activity
@@ -267,6 +315,15 @@ public class CreateDescriptions  extends RuneableClass{
 		bio2rdfMetricType.addProperty(rdfsSubclassOf, dsDescriptor);
 		return bnode;
 	}
+	
+	private String getGitProp(String prop) throws IOException {
+		if (GIT_PROPS == null) {
+			GIT_PROPS = new Properties();
+			GIT_PROPS.load(getClass().getClassLoader().getResourceAsStream("git.properties"));
+		}
+		return GIT_PROPS.get(prop).toString();
+	}
+	
 }
 
 

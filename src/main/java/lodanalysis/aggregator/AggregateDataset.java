@@ -19,6 +19,7 @@ import lodanalysis.Settings;
 import lodanalysis.utils.NodeContainer;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.data2semantics.vault.PatriciaVault;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
 import org.data2semantics.vault.Vault;
@@ -42,21 +43,18 @@ public class AggregateDataset implements Runnable  {
 	private BufferedReader reader;
 	private Vault<String, PatriciaNode> vault =  new PatriciaVault();
 	int tripleCount = 0;
-	HashMultiset<Set<PatriciaNode>> tripleNsCounts = HashMultiset.create();
-	HashMultiset<String> dataTypeCounts = HashMultiset.create();
-	HashMultiset<String> langTagCounts = HashMultiset.create();
-	HashMultiset<String> langTagWithoutRegCounts = HashMultiset.create();
-	HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
-	HashMultiset<PatriciaNode> uniqBnodeCounts = HashMultiset.create();
-	HashMultiset<PatriciaNode> typeCounts = HashMultiset.create();
-	HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
-//	HashMultiset<String> predicateCounts = HashMultiset.create();
-//	HashMultiset<String> predicateLiteralCounts = HashMultiset.create();
-//	HashMultiset<String> predicateUriCounts = HashMultiset.create();
-	Set<PatriciaNode> distinctSubjects = new HashSet<PatriciaNode>();
-	Set<PatriciaNode> distinctObjects = new HashSet<PatriciaNode>();
-	Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
-	Set<PatriciaNode> distinctLiterals = new HashSet<PatriciaNode>();
+	private HashMultiset<Set<PatriciaNode>> tripleNsCounts = HashMultiset.create();
+	private HashMultiset<String> dataTypeCounts = HashMultiset.create();
+	private HashMultiset<String> langTagCounts = HashMultiset.create();
+	private HashMultiset<String> langTagWithoutRegCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> uniqBnodeCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> typeCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> outdegreeCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> indegreeCounts = HashMultiset.create();
+	private HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
+	private Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> distinctLiterals = new HashSet<PatriciaNode>();
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
@@ -112,9 +110,45 @@ public class AggregateDataset implements Runnable  {
 		
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_LITERAL_COUNT), distinctLiterals.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_TRIPLE_COUNT), tripleCount);
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), distinctSubjects.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), distinctObjects.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), outdegreeCounts.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), indegreeCounts.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_URI_COUNT), distinctUris.size());
+		
+		
+		
+		/**
+		 * Write degree info
+		 */
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		//outdegree (media/median/mode/range)
+		
+		for (PatriciaNode pNode: outdegreeCounts.elementSet()) stats.addValue(outdegreeCounts.count(pNode));
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), stats.getSum());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_AVG), stats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_MEDIAN), stats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_STD), stats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_RANGE), stats.getMax() - stats.getMin());
+		//indegree (media/median/mode/range)
+		stats.clear();
+		for (PatriciaNode pNode: indegreeCounts.elementSet()) stats.addValue(indegreeCounts.count(pNode));
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), stats.getSum());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_AVG), stats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_MEDIAN), stats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_STD), stats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_RANGE), stats.getMax() - stats.getMin());
+		//degree (media/median/mode/range)
+		HashMultiset<PatriciaNode> degrees = HashMultiset.create();
+		degrees.addAll(indegreeCounts);
+		degrees.addAll(outdegreeCounts);
+		stats.clear();
+		for (PatriciaNode pNode: outdegreeCounts.elementSet()) stats.addValue(degrees.count(pNode));
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_AVG), stats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_MEDIAN), stats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_STD), stats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_RANGE), stats.getMax() - stats.getMin());
+		
+		
+		
 		
 		//this one is a bit different (key is a set of strings)
 		File nsTripleCountsFile = new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS);
@@ -179,8 +213,10 @@ public class AggregateDataset implements Runnable  {
 			 * Some generic counters
 			 */
 			tripleCount++;
-			distinctSubjects.add(sub.ticket);
-			distinctObjects.add(obj.ticket);
+			outdegreeCounts.add(sub.ticket);
+			indegreeCounts.add(sub.ticket);
+//			distinctSubjects.add(sub.ticket);
+//			distinctObjects.add(obj.ticket);
 			PredicateCounter predCounter = null;
 			if (!predicateCounts.containsKey(pred.ticket)) {
 				predCounter = new PredicateCounter();
@@ -313,6 +349,10 @@ public class AggregateDataset implements Runnable  {
 	}
 	private void writeSingleCountToFile(File targetFile, int val) throws IOException {
 		FileUtils.writeStringToFile(targetFile, Integer.toString(val));
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
+	}
+	private void writeSingleCountToFile(File targetFile, double val) throws IOException {
+		FileUtils.writeStringToFile(targetFile, Double.toString(val));
 		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 

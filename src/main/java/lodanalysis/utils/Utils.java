@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -150,13 +151,22 @@ public class Utils {
 	
 	
 	public static void writeSystemInfoToFile(File file) throws IOException {
-		ArrayList<String> lines = new ArrayList<String>();
-		//add hash of current git version
-		lines.add(FileUtils.readFileToString(new File(Settings.PATH_GIT_VERSION_FILE)));
+		ArrayList<String> lines = getGitInfoLines();
+		
 		for (String key: RELEVANT_SYS_PROPS) {
 			String prop = System.getProperty(key);
 			lines.add(key + ": " + (prop != null? prop: "null"));
 		}
 		FileUtils.writeLines(file, lines);
+	}
+	public static ArrayList<String> getGitInfoLines() throws IOException
+	{
+		ArrayList<String> lines = new ArrayList<String>();
+		Properties props = new Properties();
+		props.load(Utils.class.getClassLoader().getResourceAsStream("git.properties"));
+		lines.add(props.get("git.remote.origin.url").toString().replace("git@", "https://"));
+		lines.add(props.get("git.branch").toString());
+		lines.add(props.get("git.commit.id").toString());
+		return lines;
 	}
 }

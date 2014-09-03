@@ -46,6 +46,11 @@
 			<artifactId>guava</artifactId>
 			<version>17.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.3</version>
+		</dependency>
 
 	</dependencies>
 
@@ -79,6 +84,25 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>pl.project13.maven</groupId>
+				<artifactId>git-commit-id-plugin</artifactId>
+				<version>2.1.10</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<configuration>
+					<generateGitPropertiesFile>true</generateGitPropertiesFile>
+					<!-- The path for the to be generated properties file, it's relative 
+						to ${project.basedir} -->
+					<generateGitPropertiesFilename>src/main/resources/git.properties</generateGitPropertiesFilename>
 				</configuration>
 			</plugin>
 		</plugins>

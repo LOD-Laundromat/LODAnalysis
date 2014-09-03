@@ -18,13 +18,24 @@ public class Settings {
 	public static final String FILE_NAME_PREDICATE_COUNTS = "predicateCounts";
 	public static final String FILE_NAME_PREDICATE_LITERAL_COUNTS = "predicateLiteralCounts";
 	public static final String FILE_NAME_PREDICATE_NON_LIT_COUNTS = "predicateNonLitCounts";
+	public static final String FILE_NAME_DEGREE_AVG = "degreeAvg";
+	public static final String FILE_NAME_DEGREE_STD = "degreeStd";
+	public static final String FILE_NAME_DEGREE_MEDIAN = "degreeMedian";
+	public static final String FILE_NAME_DEGREE_RANGE = "degreeRange";
+	public static final String FILE_NAME_INDEGREE_AVG = "indegreeAvg";
+	public static final String FILE_NAME_INDEGREE_STD = "indegreeStd";
+	public static final String FILE_NAME_INDEGREE_MEDIAN = "indegreeMedian";
+	public static final String FILE_NAME_INDEGREE_RANGE = "indegreeRange";
+	public static final String FILE_NAME_OUTDEGREE_AVG = "outdegreeAvg";
+	public static final String FILE_NAME_OUTDEGREE_STD = "outdegreeStd";
+	public static final String FILE_NAME_OUTDEGREE_MEDIAN = "outdegreeMedian";
+	public static final String FILE_NAME_OUTDEGREE_RANGE = "outdegreeRange";
 	
 	public static final String FILE_NAME_OBJECT_COUNT = "objectCount";
 	public static final String FILE_NAME_URI_COUNT = "uriCount";
 	
 	public static final String FILE_NAME_DESCRIPTION_TTL = "description.ttl";
 	public static final String FILE_NAME_PROVENANCE = "provenance";
-	public static final String PATH_GIT_VERSION_FILE = "./.git/FETCH_HEAD";
 	public static final String DIR_NAME_TMP = "tmp";
 	
 	
