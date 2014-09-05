@@ -20,14 +20,13 @@ public class Debug {
 		/**
 		 * aggregator
 		 */
-//		new Entry(new String[]{"-nostrict", "-verbose", "-threads", "4","-force", "-path", "Output", "lodanalysis.aggregator.Aggregator"});
-//		new Entry(new String[]{"-nostrict", "-threads", "4", "-path", "Output", "lodanalysis.aggregator.Aggregator", "lodanalysis.authority.CalcAuthority"});
-//		new Entry(new String[]{"-nostrict", "-force", "-threads", "1","-path", "datasets", "-output", "output", "lodanalysis.aggregator.Aggregator"});
+//		new Entry(new String[]{"-nostrict", "-force", "-threads", "1","-datasets", "datasets", "-output", "output", "lodanalysis.aggregator.Aggregator"});
 //		new Entry(new String[]{"-nostrict", "-force", "-dataset", "Output/5239ef6b90841c8d65efd311610458c4", "lodanalysis.aggregator.Aggregator"});
-		
+		//java -jar -nostrict -threads 8 -path /path -output /output lodanalysis.aggregator.Aggregator
+		//java -jar -path /datasests -output /output lodanalysis.metrics.CreateDescriptions
 		/**
 		 * create void descriptions
 		 */
-		new Entry(new String[]{"-nostrict", "-threads", "1","-path", "datasets", "-output", "output", "lodanalysis.metrics.CreateDescriptions"});
+		new Entry(new String[]{"-nostrict", "-threads", "1","-datasets", "datasets", "-output", "output", "lodanalysis.metrics.CreateDescriptions"});
 	}
 }

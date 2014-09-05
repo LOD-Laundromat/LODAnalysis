@@ -50,8 +50,8 @@ public class Entry {
 
 	public File getDatasetParentDir() {
 		File parentDir = null;
-		if (line.hasOption("path")) {
-			parentDir = new File(line.getOptionValue("path"));
+		if (line.hasOption("datasets")) {
+			parentDir = new File(line.getOptionValue("datasets"));
 		} else {
 			for (File datasetDir: datasetDirs) {
 				parentDir = datasetDir.getParentFile();
@@ -64,8 +64,8 @@ public class Entry {
 		return outputDir;
 	}
 	private void processParameters() {
-		if (line.hasOption("path"))  {
-			for (File dataset: new File(line.getOptionValue("path")).listFiles()) {
+		if (line.hasOption("datasets"))  {
+			for (File dataset: new File(line.getOptionValue("datasets")).listFiles()) {
 				if (dataset.isDirectory()) datasetDirs.add(dataset);
 			}
 		}
@@ -126,7 +126,7 @@ public class Entry {
 	private void validateParameters() throws ParseException{
 		if (line.hasOption("help")) throw new ParseException("");
 		if (line.getArgList().size() == 0) throw new ParseException("You forgot to tell me what class(es) you want to run!");
-		if (!line.hasOption("path") && !line.hasOption("dataset")) throw new ParseException("Please specify the path where we can find the dataset directories");
+		if (!line.hasOption("datasets") && !line.hasOption("dataset")) throw new ParseException("Please specify the path where we can find the dataset directories");
 		if (!line.hasOption("output")) {
 			throw new ParseException("No output directory specified");
 		} else {
@@ -134,9 +134,9 @@ public class Entry {
 				throw new ParseException("Output directory " + line.getOptionValue("output") + " does not exist");
 			}
 		}
-		if (line.hasOption("path")) {
-			if (!new File(line.getOptionValue("path")).exists()) throw new ParseException("The datasets path you specified does not exist");
-			if (!new File(line.getOptionValue("path")).isDirectory()) throw new ParseException("The datasets path you specified is not a directory");
+		if (line.hasOption("datasets")) {
+			if (!new File(line.getOptionValue("datasets")).exists()) throw new ParseException("The datasets path you specified does not exist");
+			if (!new File(line.getOptionValue("datasets")).isDirectory()) throw new ParseException("The datasets path you specified is not a directory");
 		}
 		if (line.hasOption("dataset")) {
 			if (!new File(line.getOptionValue("dataset")).exists()) throw new ParseException("The dataset you specified does not exist");
@@ -158,7 +158,7 @@ public class Entry {
 		Option verbose = new Option("verbose", "be extra verbose");
 		Option noStrict = new Option("nostrict", "disable some checking, such as whether certain files exist. useful for debugging");
 		Option force = new Option("force", "force execution (i.e. ignore delta id)");
-		Option path = OptionBuilder.withArgName("path").hasArg().withDescription("Path containing all the dataset directories").create("path");
+		Option datasets = OptionBuilder.withArgName("datasets").hasArg().withDescription("Path containing all the dataset directories").create("datasets");
 		Option output = OptionBuilder.withArgName("output").hasArg().withDescription("Directory to write the output to").create("output");
 		Option threads = OptionBuilder.withArgName("threads").hasArg().withDescription("Number of threats to use").create("threads");
 		Option dataset = OptionBuilder.withArgName("dataset").hasArg()
@@ -169,7 +169,7 @@ public class Entry {
 		options.addOption(help);
 		options.addOption(verbose);
 		options.addOption(force);
-		options.addOption(path);
+		options.addOption(datasets);
 		options.addOption(output);
 		options.addOption(dataset);
 		options.addOption(threads);
