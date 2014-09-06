@@ -98,7 +98,7 @@ public class AggregateDataset implements Runnable  {
 
 	private void store() throws IOException {
 		String datasetMd5 = datasetDir.getName();
-		File datasetOutputDir = new File(entry.getOutputDir(), datasetMd5);
+		File datasetOutputDir = new File(entry.getMetricsDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_NS_COUNTS), nsCounts);
 		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);

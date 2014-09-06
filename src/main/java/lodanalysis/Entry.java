@@ -21,7 +21,7 @@ public class Entry {
 	private boolean strict = true;
 	private CommandLine line;
 	private Set<File> datasetDirs = new HashSet<File>();
-	private File outputDir;
+	private File metricsDir;
 	public Entry(String[] args)  {
 		parseArgs(args);
 	}
@@ -60,8 +60,8 @@ public class Entry {
 		}
 		return parentDir;
 	}
-	public File getOutputDir() {
-		return outputDir;
+	public File getMetricsDir() {
+		return metricsDir;
 	}
 	private void processParameters() {
 		if (line.hasOption("datasets"))  {
@@ -69,7 +69,7 @@ public class Entry {
 				if (dataset.isDirectory()) datasetDirs.add(dataset);
 			}
 		}
-		outputDir = new File(line.getOptionValue("output"));
+		metricsDir = new File(line.getOptionValue("metrics"));
 		if (line.hasOption("dataset")) datasetDirs.add(new File(line.getOptionValue("dataset")));
 		if (line.hasOption("nostrict")) strict = false;
 	}
@@ -127,11 +127,11 @@ public class Entry {
 		if (line.hasOption("help")) throw new ParseException("");
 		if (line.getArgList().size() == 0) throw new ParseException("You forgot to tell me what class(es) you want to run!");
 		if (!line.hasOption("datasets") && !line.hasOption("dataset")) throw new ParseException("Please specify the path where we can find the dataset directories");
-		if (!line.hasOption("output")) {
-			throw new ParseException("No output directory specified");
+		if (!line.hasOption("metrics")) {
+			throw new ParseException("No metrics directory specified");
 		} else {
-			if (!new File(line.getOptionValue("output")).exists()) {
-				throw new ParseException("Output directory " + line.getOptionValue("output") + " does not exist");
+			if (!new File(line.getOptionValue("metrics")).exists()) {
+				throw new ParseException("Metrics directory " + line.getOptionValue("metrics") + " does not exist");
 			}
 		}
 		if (line.hasOption("datasets")) {
@@ -159,7 +159,7 @@ public class Entry {
 		Option noStrict = new Option("nostrict", "disable some checking, such as whether certain files exist. useful for debugging");
 		Option force = new Option("force", "force execution (i.e. ignore delta id)");
 		Option datasets = OptionBuilder.withArgName("datasets").hasArg().withDescription("Path containing all the dataset directories").create("datasets");
-		Option output = OptionBuilder.withArgName("output").hasArg().withDescription("Directory to write the output to").create("output");
+		Option metrics = OptionBuilder.withArgName("metrics").hasArg().withDescription("Directory to write metrics").create("metrics");
 		Option threads = OptionBuilder.withArgName("threads").hasArg().withDescription("Number of threats to use").create("threads");
 		Option dataset = OptionBuilder.withArgName("dataset").hasArg()
 				.withDescription("Dataset directory. Useful for debugging, when you only want to analyze 1 dataset").create("dataset");
@@ -170,7 +170,7 @@ public class Entry {
 		options.addOption(verbose);
 		options.addOption(force);
 		options.addOption(datasets);
-		options.addOption(output);
+		options.addOption(metrics);
 		options.addOption(dataset);
 		options.addOption(threads);
 		options.addOption(noStrict);

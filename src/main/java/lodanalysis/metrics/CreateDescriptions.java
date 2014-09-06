@@ -71,7 +71,12 @@ public class CreateDescriptions  extends RuneableClass{
 	public CreateDescriptions(Entry entry) throws IOException {
 		super(entry);
 		
-		for (File datasetDir: entry.getOutputDir().listFiles()) {
+		File[] metricDirs = entry.getMetricsDir().listFiles();
+		int totalCount = metricDirs.length;
+		int processed = 0;
+		for (File datasetDir: metricDirs) {
+			Utils.printProgress("creating descriptions", totalCount, processed);
+			processed++;
 			/**
 			 * Set Namespaces
 			 */
@@ -273,9 +278,8 @@ public class CreateDescriptions  extends RuneableClass{
 			}
 			
 			
-			model.write(System.out, "TTL");
+//			model.write(System.out, "TTL");
 			model.write(new FileOutputStream(new File(datasetDir, Settings.FILE_NAME_DESCRIPTION_TTL)), "TTL");
-			System.exit(1);
 		}
 	}
 	
@@ -327,10 +331,3 @@ public class CreateDescriptions  extends RuneableClass{
 }
 
 
-//https://github.com/bio2rdf/bio2rdf-scripts/blob/master/statistics/bio2rdf_stats_virtuoso.php
-//type counts (cheap)
-//predicate literal count (cheap)
-//predicate object (uri) count (cheap)
-//get number of unique subjects and object literals for each predicate (expensive)
-//get number of unique subjects and object IRIs for each predicate
-//get the number of distinct subject and object types for each predicate (very expensive)

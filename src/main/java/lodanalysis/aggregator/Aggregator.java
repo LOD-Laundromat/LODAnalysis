@@ -65,8 +65,7 @@ public class Aggregator  extends RuneableClass {
 	}
 	
 	public static void printProgress(File datasetDir) throws IOException {
-		String percentage = (String.format("%.0f%%",(100 * (float)PROCESSED_COUNT) / (float) TOTAL_DIR_COUNT));
-		System.out.print("aggregating (" + percentage + ") " + Utils.getDatasetName(datasetDir) + "\r");
+		Utils.printProgress("aggregating", TOTAL_DIR_COUNT, PROCESSED_COUNT);
 	}
 	
 	public static void writeToLogFile(String msg) throws IOException {
@@ -77,7 +76,7 @@ public class Aggregator  extends RuneableClass {
 	private int getDelta(File datasetDir) throws IOException {
 		int delta = -1;
 		
-		File deltaFile = new File(entry.getOutputDir() + "/" + datasetDir.getName(), DELTA_FILENAME);
+		File deltaFile = new File(entry.getMetricsDir() + "/" + datasetDir.getName(), DELTA_FILENAME);
 		if (deltaFile.exists()) {
 			delta = Integer.parseInt(FileUtils.readFileToString(deltaFile).trim());
 		}
