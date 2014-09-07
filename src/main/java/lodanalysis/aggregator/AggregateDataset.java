@@ -35,7 +35,6 @@ public class AggregateDataset implements Runnable  {
 		HashSet<PatriciaNode> distinctNonLiteralCount = new HashSet<PatriciaNode>();
 	}
 
-//	private static final String IGNORE_RDF_URI_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
 	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;
@@ -165,8 +164,7 @@ public class AggregateDataset implements Runnable  {
 		/**
 		 * Finally, store the delta of this run
 		 */
-		File deltaFile = new File(datasetOutputDir, Aggregator.DELTA_FILENAME);
-		FileUtils.write(deltaFile, Integer.toString(Aggregator.DELTA_ID));
+		FileUtils.write(new File(datasetOutputDir, Aggregator.DELTA_FILENAME), Integer.toString(Aggregator.DELTA_ID));
 	}
 
 

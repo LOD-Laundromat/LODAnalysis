@@ -1,5 +1,7 @@
 package lodanalysis.utils;
 
+import java.io.IOException;
+
 import lodanalysis.Entry;
 
 
@@ -12,7 +14,7 @@ public class Debug {
 	
 	
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		
 		
@@ -27,6 +29,6 @@ public class Debug {
 		/**
 		 * create void descriptions
 		 */
-		new Entry(new String[]{"-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
+		new Entry(new String[]{"-force" , "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
 	}
 }

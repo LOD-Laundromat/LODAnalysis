@@ -169,4 +169,15 @@ public class Utils {
 		lines.add(props.get("git.commit.id").toString());
 		return lines;
 	}
+	
+	
+	public static int getDelta(File dir, String deltaFileName) throws IOException {
+		int delta = -1;
+		
+		File deltaFile = new File(dir, deltaFileName);
+		if (deltaFile.exists()) {
+			delta = Integer.parseInt(FileUtils.readFileToString(deltaFile).trim());
+		}
+		return delta;
+	}
 }

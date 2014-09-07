@@ -42,7 +42,7 @@ public class Aggregator  extends RuneableClass {
 		
 		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 		for (File datasetDir : datasetDirs) {
-			if (entry.forceExec() || getDelta(datasetDir) < DELTA_ID) {
+			if (entry.forceExec() || Utils.getDelta(new File(entry.getMetricsDir(), datasetDir.getName()), DELTA_FILENAME) < DELTA_ID) {
 				Runnable worker = new AggregateDataset(entry, datasetDir);
 				executor.execute(worker);
 			} else {
@@ -73,17 +73,5 @@ public class Aggregator  extends RuneableClass {
 		LOG_FILE_WRITER.flush();
 	}
 	
-	private int getDelta(File datasetDir) throws IOException {
-		int delta = -1;
-		
-		File deltaFile = new File(entry.getMetricsDir() + "/" + datasetDir.getName(), DELTA_FILENAME);
-		if (deltaFile.exists()) {
-			delta = Integer.parseInt(FileUtils.readFileToString(deltaFile).trim());
-		}
-		return delta;
-	}
-
-
-
 
 }
