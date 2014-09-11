@@ -35,6 +35,7 @@ public class Settings {
 	public static final String FILE_NAME_URI_COUNT = "uriCount";
 	
 	public static final String FILE_NAME_DESCRIPTION_TTL = "description.ttl";
+	public static final String FILE_NAME_DESCRIPTION_NT = "description.nt";
 	public static final String FILE_NAME_PROVENANCE = "provenance";
 	public static final String DIR_NAME_TMP = "tmp";
 	

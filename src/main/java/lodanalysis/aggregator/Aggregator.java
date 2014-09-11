@@ -14,8 +14,6 @@ import lodanalysis.RuneableClass;
 import lodanalysis.Settings;
 import lodanalysis.utils.Utils;
 
-import org.apache.commons.io.FileUtils;
-
 public class Aggregator  extends RuneableClass {
 	public static int DELTA_ID = 2;//useful when we re-run code. We store this id in each directory. When we re-run a (possibly newer) dataset dir, we can check whether we should re-analyze this dir, or skip it
 	public static String DELTA_FILENAME = "aggregator_delta";

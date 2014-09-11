@@ -29,6 +29,7 @@ public class Debug {
 		/**
 		 * create void descriptions
 		 */
-		new Entry(new String[]{"-force" , "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
+//		new Entry(new String[]{"-force" , "-graph_update", "http://localhost:8890/sparql-graph-crud", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
+		new Entry(new String[]{"-ng_prefix", "http://testtt-", "-data_version", "11", "-graph_update", "http://localhost:8890/sparql-graph-crud", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
 	}
 }
