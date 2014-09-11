@@ -267,7 +267,7 @@ public class CreateModelFile {
 		}
 		
 		
-//		model.write(System.out, "TTL");
+		model.write(System.out, "NT");
 		model.write(new FileOutputStream(new File(metricDir, Settings.FILE_NAME_DESCRIPTION_NT)), "NT");
 	}
 	
