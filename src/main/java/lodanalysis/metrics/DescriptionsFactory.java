@@ -44,23 +44,7 @@ public class DescriptionsFactory {
 	public Resource voidDoc;
 	public File metricDir;
 	
-	DescriptionCreator[] descriptions = new DescriptionCreator[] {
-			new NumDistinctTriples(this),
-			new NumDistinctBnodes(this),
-			new NumDistinctClasses(this),
-			new NumDistinctEntities(this),
-			new NumDistinctLiterals(this),
-			new NumDistinctObjects(this),
-			new NumDistinctProperties(this),
-			new NumDistinctSubjects(this),
-			new PartitionPropsVoid(this),
-			new PartitionTypesDs(this),
-			new PartitionTypesVoid(this),
-			new Degree(this),
-			new DegreeIn(this),
-			new DegreeOut(this),
-	};
-	Set<Property> properties = new HashSet<Property>();
+	
 
 	
 
@@ -75,6 +59,22 @@ public class DescriptionsFactory {
 		model.createResource(Namespace.LL.getUrl() + metricDir.getName()).addProperty(model.createProperty(Namespace.LLO.getUrl(), "metrics"), voidDoc);
 		voidDoc.addProperty(model.createProperty(Namespace.RDF.getUrl(), "type"), model.createResource(Namespace.DS + "Dataset"));
 		
+		DescriptionCreator[] descriptions = new DescriptionCreator[] {
+				new NumDistinctTriples(this),
+				new NumDistinctBnodes(this),
+				new NumDistinctClasses(this),
+				new NumDistinctEntities(this),
+				new NumDistinctLiterals(this),
+				new NumDistinctObjects(this),
+				new NumDistinctProperties(this),
+				new NumDistinctSubjects(this),
+				new PartitionPropsVoid(this),
+				new PartitionTypesDs(this),
+				new PartitionTypesVoid(this),
+				new Degree(this),
+				new DegreeIn(this),
+				new DegreeOut(this),
+		};
 		for (DescriptionCreator description: descriptions) {
 			description.createDescription();
 		}

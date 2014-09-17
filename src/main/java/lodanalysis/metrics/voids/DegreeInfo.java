@@ -35,12 +35,6 @@ public abstract class DegreeInfo extends DescriptionCreator {
 		inDegreeBnode.addProperty(getProp(Namespace.LL, "min"), FileUtils.readFileToString(new File(dir, getMinFilename())), XSDDatatype.XSDlong);
 		inDegreeBnode.addProperty(getProp(Namespace.LL, "max"), FileUtils.readFileToString(new File(dir, getMaxFilename())), XSDDatatype.XSDlong);
 		inDegreeBnode.addProperty(getProp(Namespace.LL, "std"), FileUtils.readFileToString(new File(dir, getStdFilename())), XSDDatatype.XSDdouble);
-//		inDegreeBnode.addProperty(getProp(Namespace.LL, "mean"), FileUtils.readFileToString(new File(dir, Settings.FILE_NAME_INDEGREE_AVG)), XSDDatatype.XSDdouble);
-//		inDegreeBnode.addProperty(getProp(Namespace.LL, "median"), FileUtils.readFileToString(new File(dir, Settings.FILE_NAME_INDEGREE_MEDIAN)), XSDDatatype.XSDlong);
-//		inDegreeBnode.addProperty(getProp(Namespace.LL, "min"), FileUtils.readFileToString(new File(dir, Settings.FILE_NAME_INDEGREE_MIN)), XSDDatatype.XSDlong);
-//		inDegreeBnode.addProperty(getProp(Namespace.LL, "max"), FileUtils.readFileToString(new File(dir, Settings.FILE_NAME_INDEGREE_MAX)), XSDDatatype.XSDlong);
-//		inDegreeBnode.addProperty(getProp(Namespace.LL, "std"), FileUtils.readFileToString(new File(dir, Settings.FILE_NAME_INDEGREE_STD)), XSDDatatype.XSDdouble);
-//		doc.addProperty(getProp(Namespace.LL, "indegree"), inDegreeBnode);
 		doc.addProperty(getDegreeProp(), inDegreeBnode);
 	}
 	
