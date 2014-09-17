@@ -22,19 +22,14 @@ public class Debug {
 		/**
 		 * aggregator
 		 */
-//		new Entry(new String[]{"-nostrict", "-force", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
-//		new Entry(new String[]{"-nostrict", "-force", "-dataset", "encodingTest", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
-//		java -jar -nostrict -threads 8 -datasets /path -output /output lodanalysis.aggregator.Aggregator
-		//java -jar -path /datasests -output /output lodanalysis.metrics.CreateDescriptions
+//		new Entry(new String[]{"-nostrict", "-data_version", "11", "-force", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
 		/**
 		 * create void descriptions
 		 */
-//		new Entry(new String[]{"-force" , "-graph_update", "http://localhost:8890/sparql-graph-crud", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
-		new Entry(new String[]{"-nostrict","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
+		new Entry(new String[]{"-force", "-data_version", "11", "-nostrict","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
 		/**
 		 * store void descriptions
 		 */
-//		new Entry(new String[]{"-force" , "-graph_update", "http://localhost:8890/sparql-graph-crud", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
-		new Entry(new String[]{"-ng_prefix", "http://testtt-", "-data_version", "11", "-graph_update", "http://localhost:8890/sparql-graph-crud", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.StoreDescriptionsInEndpoint"});
+//		new Entry(new String[]{"-data_version", "11", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.StoreDescriptionsInEndpoint"});
 	}
 }

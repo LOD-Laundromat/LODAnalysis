@@ -53,7 +53,6 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
 	
 	private void sendMetrics(File fileToUpload) throws IOException {
 		String urlToConnect = entry.getGraphUpdateUrl() + "?graph-uri=" + URLEncoder.encode(metricsNamedGraph, "UTF-8");
-		System.out.println(urlToConnect);
 		String paramToSend = "res-file";
 		String boundary = Long.toHexString(System.currentTimeMillis()); // Just generate some unique random value.
 

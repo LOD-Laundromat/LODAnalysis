@@ -26,7 +26,7 @@ public class CreateDescriptions  extends RuneableClass{
 			
 			if (new File(metricDir, Aggregator.DELTA_FILENAME).exists() && //i.e., it has some files we can create the model from
 					(entry.forceExec() || Utils.getDelta(metricDir, DELTA_FILENAME) < DELTA_ID)) {
-				new CreateModelFile(metricDir);
+				new DescriptionsFactory(metricDir);
 				//write newest delta
 				FileUtils.write(new File(metricDir, DELTA_FILENAME), Integer.toString(DELTA_ID));
 			}

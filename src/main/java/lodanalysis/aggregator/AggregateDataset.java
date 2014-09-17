@@ -47,7 +47,7 @@ public class AggregateDataset implements Runnable  {
 	private HashMultiset<String> langTagCounts = HashMultiset.create();
 	private HashMultiset<String> langTagWithoutRegCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
-	private HashMultiset<PatriciaNode> uniqBnodeCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> bnodeCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> typeCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> outdegreeCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> indegreeCounts = HashMultiset.create();
@@ -72,10 +72,16 @@ public class AggregateDataset implements Runnable  {
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
+				boolean somethingRead = false;
 				while((line = br.readLine())!= null) {
+					somethingRead = true;
 					processLine(line);
 				}
-				store();
+				if (somethingRead) {
+					store();
+				} else {
+					log("empty input file found in dataset " + datasetDir.getName());
+				}
 				
 				close();
 			} else {
@@ -103,7 +109,7 @@ public class AggregateDataset implements Runnable  {
 		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
 		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
 		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_UNIQ_BNODES_COUNTS), uniqBnodeCounts);
+		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_BNODE_COUNTS), bnodeCounts);
 		writePredCountersToFile(datasetOutputDir, predicateCounts);
 		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_TYPE_COUNTS), typeCounts);
 		
@@ -119,14 +125,14 @@ public class AggregateDataset implements Runnable  {
 		 * Write degree info
 		 */
 		DescriptiveStatistics stats = new DescriptiveStatistics();
-		//outdegree (media/median/mode/range)
 		
 		for (PatriciaNode pNode: outdegreeCounts.elementSet()) stats.addValue(outdegreeCounts.count(pNode));
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), stats.getSum());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_AVG), stats.getMean());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_MEDIAN), stats.getPercentile(50));
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_STD), stats.getStandardDeviation());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_RANGE), stats.getMax() - stats.getMin());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_MAX), stats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_MIN), stats.getMin());
 		//indegree (media/median/mode/range)
 		stats.clear();
 		for (PatriciaNode pNode: indegreeCounts.elementSet()) stats.addValue(indegreeCounts.count(pNode));
@@ -134,7 +140,8 @@ public class AggregateDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_AVG), stats.getMean());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_MEDIAN), stats.getPercentile(50));
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_STD), stats.getStandardDeviation());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_RANGE), stats.getMax() - stats.getMin());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_MAX), stats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_MIN), stats.getMin());
 		//degree (media/median/mode/range)
 		HashMultiset<PatriciaNode> degrees = HashMultiset.create();
 		degrees.addAll(indegreeCounts);
@@ -144,7 +151,8 @@ public class AggregateDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_AVG), stats.getMean());
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_MEDIAN), stats.getPercentile(50));
 		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_STD), stats.getStandardDeviation());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_RANGE), stats.getMax() - stats.getMin());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_MAX), stats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_MIN), stats.getMin());
 		
 		
 		
@@ -212,7 +220,7 @@ public class AggregateDataset implements Runnable  {
 			 */
 			tripleCount++;
 			outdegreeCounts.add(sub.ticket);
-			indegreeCounts.add(sub.ticket);
+			indegreeCounts.add(obj.ticket);
 //			distinctSubjects.add(sub.ticket);
 //			distinctObjects.add(obj.ticket);
 			PredicateCounter predCounter = null;
@@ -244,9 +252,9 @@ public class AggregateDataset implements Runnable  {
 			/**
 			 * store uniq bnodes
 			 */
-			if (sub.isBnode) uniqBnodeCounts.add(sub.ticket);
-			if (pred.isBnode) uniqBnodeCounts.add(pred.ticket);
-			if (obj.isBnode) uniqBnodeCounts.add(obj.ticket);
+			if (sub.isBnode) bnodeCounts.add(sub.ticket);
+			if (pred.isBnode) bnodeCounts.add(pred.ticket);
+			if (obj.isBnode) bnodeCounts.add(obj.ticket);
 
 
 			if (obj.isLiteral) {
@@ -272,15 +280,6 @@ public class AggregateDataset implements Runnable  {
 			 */
 			if (pred.isRdf_type) {
 				typeCounts.add(obj.ticket);
-//			} else if (pred.isRdfs_domain || pred.isRdfs_range) {
-//				propertyCounts.add(sub.stringRepresentation);
-//				classCounts.add(obj.stringRepresentation);
-//			} else if (pred.isRdfs_subClassOf) {
-//				classCounts.add(sub.stringRepresentation);
-//				classCounts.add(obj.stringRepresentation);
-//			} else if (pred.isRdfs_subPropertyOf) {
-//				propertyCounts.add(sub.stringRepresentation);
-//				propertyCounts.add(obj.stringRepresentation);
 			}
 			
 			

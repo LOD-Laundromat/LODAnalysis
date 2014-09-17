@@ -7,7 +7,7 @@ public class Settings {
 	public static final String FILE_NAME_LANG_TAG_NOREG_COUNTS = "langTagCountsWithoutRegion";
 	public static final String FILE_NAME_DATATYPE_COUNTS = "dataTypeCounts";
 	public static final String FILE_NAME_UNIQ_URIS_COUNTS = "urisUniq";
-	public static final String FILE_NAME_UNIQ_BNODES_COUNTS = "bnodesUniq";
+	public static final String FILE_NAME_BNODE_COUNTS = "bnodesUniq";
 	public static final String FILE_NAME_NS_TRIPLE_COUNTS = "namespaceTripleCounts";
 	public static final String FILE_NAME_TYPE_COUNTS = "typeCounts";
 	public static final String FILE_NAME_INPUT_GZ = "clean.nt.gz";
@@ -21,15 +21,18 @@ public class Settings {
 	public static final String FILE_NAME_DEGREE_AVG = "degreeAvg";
 	public static final String FILE_NAME_DEGREE_STD = "degreeStd";
 	public static final String FILE_NAME_DEGREE_MEDIAN = "degreeMedian";
-	public static final String FILE_NAME_DEGREE_RANGE = "degreeRange";
+	public static final String FILE_NAME_DEGREE_MAX = "degreeMax";
+	public static final String FILE_NAME_DEGREE_MIN = "degreeMin";
 	public static final String FILE_NAME_INDEGREE_AVG = "indegreeAvg";
 	public static final String FILE_NAME_INDEGREE_STD = "indegreeStd";
 	public static final String FILE_NAME_INDEGREE_MEDIAN = "indegreeMedian";
-	public static final String FILE_NAME_INDEGREE_RANGE = "indegreeRange";
+	public static final String FILE_NAME_INDEGREE_MAX = "indegreeMax";
+	public static final String FILE_NAME_INDEGREE_MIN = "indegreeMin";
 	public static final String FILE_NAME_OUTDEGREE_AVG = "outdegreeAvg";
 	public static final String FILE_NAME_OUTDEGREE_STD = "outdegreeStd";
 	public static final String FILE_NAME_OUTDEGREE_MEDIAN = "outdegreeMedian";
-	public static final String FILE_NAME_OUTDEGREE_RANGE = "outdegreeRange";
+	public static final String FILE_NAME_OUTDEGREE_MAX = "outdegreeMax";
+	public static final String FILE_NAME_OUTDEGREE_MIN = "outdegreeMin";
 	
 	public static final String FILE_NAME_OBJECT_COUNT = "objectCount";
 	public static final String FILE_NAME_URI_COUNT = "uriCount";
