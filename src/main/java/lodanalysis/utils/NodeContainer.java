@@ -10,7 +10,7 @@ public class NodeContainer {
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
 	//TODO: make complete string (starts with)
-	private static final String BNODE_SUBSTRING = "/.well-known/genid/";
+	private static final String BNODE_SUBSTRING = "http://lodlaundromat.org/.well-known/";
 
 	private final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 	
@@ -66,13 +66,7 @@ public class NodeContainer {
 		}
 		
 		if (isUri) {
-			System.out.println(stringRepresentation);
-			System.out.println("check whether our string matching goes well (i.e., I think the URIs start with a <, breaking some of the string matching");
-			System.exit(1);
-			if (stringRepresentation.contains(BNODE_SUBSTRING)) {
-				System.out.println(stringRepresentation);
-				System.out.println("AH, we need to change string contains to starts-with for optimization");
-				System.exit(1);
+			if (stringRepresentation.startsWith(BNODE_SUBSTRING)) {
 				//we rewrite each bnode to uri. check whether this is one of these uris
 				this.isBnode = true;
 				this.isUri = false;

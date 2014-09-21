@@ -22,11 +22,11 @@ public class Debug {
 		/**
 		 * aggregator
 		 */
-//		new Entry(new String[]{"-nostrict", "-data_version", "11", "-force", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
+		new Entry(new String[]{"-nostrict", "-data_version", "11", "-force", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
 		/**
 		 * create void descriptions
 		 */
-		new Entry(new String[]{"-force", "-data_version", "11", "-nostrict","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
+//		new Entry(new String[]{"-force", "-data_version", "11", "-nostrict","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
 		/**
 		 * store void descriptions
 		 */

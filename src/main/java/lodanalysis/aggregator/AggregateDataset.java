@@ -231,8 +231,7 @@ public class AggregateDataset implements Runnable  {
 		}
 
 		String obj = line.substring(offset, line.length() - endOffset);
-//		return new String[]{sub.intern(), pred.intern(), obj.intern()};//this avoid gc mem cleanup errors, but comes with higher cpu cost as well
-		return new String[]{sub, pred, obj};//only do intern on pred. compromise between avoiding gc mem cleanup errors, and cpu costs
+		return new String[]{sub, pred, obj};
 	}
 
 	private void processLine(String line) {
