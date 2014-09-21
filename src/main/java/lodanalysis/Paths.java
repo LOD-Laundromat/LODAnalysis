@@ -63,6 +63,11 @@ public class Paths {
 	public static final String DISTINCT_BNODES_OBJ = "distinctBnodesObj";
 	public static final String DISTINCT_OBJECTS = "distinctObjs";
 	public static final String DISTINCT_URIS = "distinctUris";
+	public static final String DISTINCT_DEFINED_CLASSES = "distinctDefinedClasses";
+	public static final String DISTINCT_DEFINED_PROPERTIES = "distinctDefinedProperties";
+	
+	public static final String ALL_URIS = "allUris";
+	public static final String ALL_LITERALS = "allUris";
 	
 	public static final String DESCRIPTION_NT = "description.nt";
 	public static final String PROVENANCE = "provenance";

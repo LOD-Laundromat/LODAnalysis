@@ -42,6 +42,8 @@ public class AggregateDataset implements Runnable  {
 	private BufferedReader reader;
 	private Vault<String, PatriciaNode> vault =  new PatriciaVault();
 	int tripleCount = 0;
+	int uriCount = 0;
+	int literalCount = 0;
 	private HashMultiset<Set<PatriciaNode>> tripleNsCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> bnodeCounts = HashMultiset.create();
@@ -57,6 +59,8 @@ public class AggregateDataset implements Runnable  {
 	private HashSet<PatriciaNode> distinctObjBnodes = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctLangTags = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctDataTypes = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> distinctDefinedObjects = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> distinctDefinedProperties = new HashSet<PatriciaNode>();
 	private DescriptiveStatistics uriLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics uriSubLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics uriPredLengthStats = new DescriptiveStatistics();
@@ -130,6 +134,11 @@ public class AggregateDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), distinctSubBnodes.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), distinctObjUris.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), distinctObjBnodes.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_URIS), uriCount);
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_LITERALS), uriCount);
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), distinctObjBnodes.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_CLASSES), distinctDefinedObjects.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_PROPERTIES), distinctDefinedProperties.size());
 		
 		
 		
@@ -283,6 +292,7 @@ public class AggregateDataset implements Runnable  {
 
 
 			if (obj.isLiteral) {
+				literalCount++;
 				distinctLiterals.add(obj.ticket);
 				if (obj.datatype != null) {
 					distinctDataTypes.add(obj.datatype);
@@ -302,6 +312,14 @@ public class AggregateDataset implements Runnable  {
 			 */
 			if (pred.isRdf_type) {
 				classCounts.add(obj.ticket);
+				
+				if (obj.isDefinedClass()) {
+					distinctDefinedObjects.add(sub.ticket);
+				} else if (obj.isDefinedProperty()) {
+					distinctDefinedProperties.add(sub.ticket);
+				}
+				
+				
 			}
 			
 			
@@ -309,6 +327,7 @@ public class AggregateDataset implements Runnable  {
 			
 			//store URI info
 			if (sub.isUri) {
+				uriCount++;
 				uriLengthStats.addValue(sub.uriLength);
 				uriSubLengthStats.addValue(sub.uriLength);
 				distinctUris.add(sub.ticket);
@@ -318,6 +337,7 @@ public class AggregateDataset implements Runnable  {
 				distinctSubBnodes.add(sub.ticket);
 			}
 			if (pred.isUri) {
+				uriCount++;
 				uriLengthStats.addValue(pred.uriLength);
 				distinctUris.add(pred.ticket);
 				uriPredLengthStats.addValue(pred.uriLength);
@@ -325,6 +345,7 @@ public class AggregateDataset implements Runnable  {
 				bnodeCounts.add(pred.ticket);
 			}
 			if (obj.isUri) {
+				uriCount++;
 				uriLengthStats.addValue(obj.uriLength);
 				uriObjLengthStats.addValue(obj.uriLength);
 				distinctUris.add(obj.ticket);

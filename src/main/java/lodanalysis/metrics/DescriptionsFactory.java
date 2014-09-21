@@ -3,15 +3,32 @@ package lodanalysis.metrics;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.voids.*;
+import lodanalysis.metrics.voids.Degree;
+import lodanalysis.metrics.voids.DegreeIn;
+import lodanalysis.metrics.voids.DegreeOut;
+import lodanalysis.metrics.voids.LengthLiteral;
+import lodanalysis.metrics.voids.LengthUri;
+import lodanalysis.metrics.voids.LengthUriObj;
+import lodanalysis.metrics.voids.LengthUriPred;
+import lodanalysis.metrics.voids.LengthUriSub;
+import lodanalysis.metrics.voids.NumDistinctBnodes;
+import lodanalysis.metrics.voids.NumDistinctClasses;
+import lodanalysis.metrics.voids.NumDistinctDefinedClasses;
+import lodanalysis.metrics.voids.NumDistinctDefinedProperties;
+import lodanalysis.metrics.voids.NumDistinctEntities;
+import lodanalysis.metrics.voids.NumDistinctLiterals;
+import lodanalysis.metrics.voids.NumDistinctObjects;
+import lodanalysis.metrics.voids.NumDistinctProperties;
+import lodanalysis.metrics.voids.NumDistinctSubjects;
+import lodanalysis.metrics.voids.NumDistinctTriples;
+import lodanalysis.metrics.voids.PartitionPropsVoid;
+import lodanalysis.metrics.voids.PartitionTypesDs;
+import lodanalysis.metrics.voids.PartitionTypesVoid;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 public class DescriptionsFactory {
@@ -69,6 +86,8 @@ public class DescriptionsFactory {
 				new NumDistinctObjects(this),
 				new NumDistinctProperties(this),
 				new NumDistinctSubjects(this),
+				new NumDistinctDefinedClasses(this),
+				new NumDistinctDefinedProperties(this),
 				new PartitionPropsVoid(this),
 				new PartitionTypesDs(this),
 				new PartitionTypesVoid(this),
