@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.voids.*;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -19,6 +19,7 @@ public class DescriptionsFactory {
 		LL("ll", "http://lodlaundromat.org/resource/"),
 		LLO("llo", "http://lodlaundromat.org/ontology/"),
 		VOID("void", "http://rdfs.org/ns/void#"),
+		VOID_EXT("void-ext", "http://ldf.fi/void-ext#"),
 		RDF("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
 		RDFS("rdfs", "http://www.w3.org/2000/01/rdf-schema#"),
 		PROV("prov", "http://www.w3.org/ns/prov#"),
@@ -74,13 +75,18 @@ public class DescriptionsFactory {
 				new Degree(this),
 				new DegreeIn(this),
 				new DegreeOut(this),
+				new LengthUri(this),
+				new LengthUriObj(this),
+				new LengthUriPred(this),
+				new LengthUriSub(this),
+				new LengthLiteral(this),
 		};
 		for (DescriptionCreator description: descriptions) {
 			description.createDescription();
 		}
 		
 		
-		model.write(new FileOutputStream(new File(metricDir, Settings.FILE_NAME_DESCRIPTION_NT)), "NT");
+		model.write(new FileOutputStream(new File(metricDir, Paths.DESCRIPTION_NT)), "NT");
 	}
 	
 	

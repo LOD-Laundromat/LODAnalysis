@@ -3,7 +3,7 @@ package lodanalysis.metrics.voids;
 import java.io.File;
 import java.io.IOException;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionCreator;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
@@ -22,7 +22,7 @@ public class NumDistinctSubjects extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.VOID, "distinctSubjects"), FileUtils.readFileToString(new File(dir, Settings.FILE_NAME_SUBJECT_COUNT)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLO, "distinctSubjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_SUBJECTS)), XSDDatatype.XSDlong);
 	}
 
 }

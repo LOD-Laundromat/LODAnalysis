@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionCreator;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
@@ -22,7 +22,7 @@ public class NumDistinctLiterals extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctLiterals"), FileUtils.readFileToString(new File(dir, Settings.FILE_NAME_LITERAL_COUNT)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLO, "distinctLiterals"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_LITERALS)), XSDDatatype.XSDlong);
 	}
 
 }

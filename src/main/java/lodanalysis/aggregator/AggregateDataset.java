@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import lodanalysis.Entry;
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.utils.NodeContainer;
 
 import org.apache.commons.io.FileUtils;
@@ -43,17 +43,26 @@ public class AggregateDataset implements Runnable  {
 	private Vault<String, PatriciaNode> vault =  new PatriciaVault();
 	int tripleCount = 0;
 	private HashMultiset<Set<PatriciaNode>> tripleNsCounts = HashMultiset.create();
-	private HashMultiset<String> dataTypeCounts = HashMultiset.create();
-	private HashMultiset<String> langTagCounts = HashMultiset.create();
-	private HashMultiset<String> langTagWithoutRegCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> bnodeCounts = HashMultiset.create();
-	private HashMultiset<PatriciaNode> typeCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> classCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> outdegreeCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> indegreeCounts = HashMultiset.create();
 	private HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
 	private Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctLiterals = new HashSet<PatriciaNode>();
+	private HashSet<PatriciaNode> distinctSubUris = new HashSet<PatriciaNode>();
+	private HashSet<PatriciaNode> distinctSubBnodes = new HashSet<PatriciaNode>();
+	private HashSet<PatriciaNode> distinctObjUris = new HashSet<PatriciaNode>();
+	private HashSet<PatriciaNode> distinctObjBnodes = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> distinctLangTags = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> distinctDataTypes = new HashSet<PatriciaNode>();
+	private DescriptiveStatistics uriLengthStats = new DescriptiveStatistics();
+	private DescriptiveStatistics uriSubLengthStats = new DescriptiveStatistics();
+	private DescriptiveStatistics uriPredLengthStats = new DescriptiveStatistics();
+	private DescriptiveStatistics uriObjLengthStats = new DescriptiveStatistics();
+	private DescriptiveStatistics literalLengthStats = new DescriptiveStatistics();
+	
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
@@ -68,7 +77,7 @@ public class AggregateDataset implements Runnable  {
 
 	private void processDataset() throws IOException {
 		try {
-			File inputFile = new File(datasetDir, Settings.FILE_NAME_INPUT_GZ);
+			File inputFile = new File(datasetDir, Paths.INPUT_GZ);
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
@@ -105,19 +114,22 @@ public class AggregateDataset implements Runnable  {
 		String datasetMd5 = datasetDir.getName();
 		File datasetOutputDir = new File(entry.getMetricsDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_NS_COUNTS), nsCounts);
-		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_COUNTS), langTagCounts);
-		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_LANG_TAG_NOREG_COUNTS), langTagWithoutRegCounts);
-		writeStringCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_DATATYPE_COUNTS), dataTypeCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_BNODE_COUNTS), bnodeCounts);
+		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.NS_COUNTS), nsCounts);
+		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.BNODE_COUNTS), bnodeCounts);
 		writePredCountersToFile(datasetOutputDir, predicateCounts);
-		writeCountersToFile(new File(datasetOutputDir, Settings.FILE_NAME_TYPE_COUNTS), typeCounts);
+		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.CLASS_COUNTS), classCounts);
 		
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_LITERAL_COUNT), distinctLiterals.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_TRIPLE_COUNT), tripleCount);
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), outdegreeCounts.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), indegreeCounts.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_URI_COUNT), distinctUris.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), distinctDataTypes.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), distinctLangTags.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), distinctLiterals.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_TRIPLES), tripleCount);
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), outdegreeCounts.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), indegreeCounts.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS), distinctUris.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_SUB), distinctSubUris.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), distinctSubBnodes.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), distinctObjUris.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), distinctObjBnodes.size());
 		
 		
 		
@@ -127,38 +139,49 @@ public class AggregateDataset implements Runnable  {
 		DescriptiveStatistics stats = new DescriptiveStatistics();
 		
 		for (PatriciaNode pNode: outdegreeCounts.elementSet()) stats.addValue(outdegreeCounts.count(pNode));
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_SUBJECT_COUNT), stats.getSum());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_AVG), stats.getMean());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_MEDIAN), stats.getPercentile(50));
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_STD), stats.getStandardDeviation());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_MAX), stats.getMax());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OUTDEGREE_MIN), stats.getMin());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), stats.getSum());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_AVG), stats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MEDIAN), stats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_STD), stats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MAX), stats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MIN), stats.getMin());
 		//indegree (media/median/mode/range)
 		stats.clear();
 		for (PatriciaNode pNode: indegreeCounts.elementSet()) stats.addValue(indegreeCounts.count(pNode));
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_OBJECT_COUNT), stats.getSum());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_AVG), stats.getMean());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_MEDIAN), stats.getPercentile(50));
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_STD), stats.getStandardDeviation());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_MAX), stats.getMax());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_INDEGREE_MIN), stats.getMin());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), stats.getSum());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_AVG), stats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MEDIAN), stats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_STD), stats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MAX), stats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MIN), stats.getMin());
 		//degree (media/median/mode/range)
 		HashMultiset<PatriciaNode> degrees = HashMultiset.create();
 		degrees.addAll(indegreeCounts);
 		degrees.addAll(outdegreeCounts);
 		stats.clear();
 		for (PatriciaNode pNode: outdegreeCounts.elementSet()) stats.addValue(degrees.count(pNode));
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_AVG), stats.getMean());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_MEDIAN), stats.getPercentile(50));
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_STD), stats.getStandardDeviation());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_MAX), stats.getMax());
-		writeSingleCountToFile(new File(datasetOutputDir, Settings.FILE_NAME_DEGREE_MIN), stats.getMin());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_AVG), stats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MEDIAN), stats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_STD), stats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MAX), stats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MIN), stats.getMin());
 		
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_AVG), literalLengthStats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MEDIAN), literalLengthStats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_STD), literalLengthStats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MAX), literalLengthStats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MIN), literalLengthStats.getMin());
+		
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_AVG), uriLengthStats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MEDIAN), uriLengthStats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_STD), uriLengthStats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MAX), uriLengthStats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MIN), uriLengthStats.getMin());
 		
 		
 		
 		//this one is a bit different (key is a set of strings)
-		File nsTripleCountsFile = new File(datasetOutputDir, Settings.FILE_NAME_NS_TRIPLE_COUNTS);
+		File nsTripleCountsFile = new File(datasetOutputDir, Paths.NS_TRIPLE_COUNTS);
 		FileWriter namespaceTripleCountsOutput = new FileWriter(nsTripleCountsFile);
 		for (com.google.common.collect.Multiset.Entry<Set<PatriciaNode>> entry: tripleNsCounts.entrySet()) {
 			for (PatriciaNode pNode: entry.getElement()) {
@@ -167,11 +190,13 @@ public class AggregateDataset implements Runnable  {
 			namespaceTripleCountsOutput.write("\t" + entry.getCount() + System.getProperty("line.separator"));
 		}
 		namespaceTripleCountsOutput.close();
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
+		
+		
 		
 		/**
-		 * Finally, store the delta of this run
+		 * Finally, store the delta of this run and store provenance
 		 */
+		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
 		FileUtils.write(new File(datasetOutputDir, Aggregator.DELTA_FILENAME), Integer.toString(Aggregator.DELTA_ID));
 	}
 
@@ -260,13 +285,10 @@ public class AggregateDataset implements Runnable  {
 			if (obj.isLiteral) {
 				distinctLiterals.add(obj.ticket);
 				if (obj.datatype != null) {
-					dataTypeCounts.add(obj.datatype);
+					distinctDataTypes.add(obj.datatype);
 				}
 				if (obj.langTag != null) {
-					langTagCounts.add(obj.langTag);
-				}
-				if (obj.langTagWithoutReg!= null) {
-					langTagWithoutRegCounts.add(obj.langTagWithoutReg);
+					distinctLangTags.add(obj.langTag);
 				}
 				predCounter.hasLiteralCount++;
 				predCounter.distinctLiteralCount.add(obj.ticket);
@@ -279,16 +301,39 @@ public class AggregateDataset implements Runnable  {
 			 * Store classes and props
 			 */
 			if (pred.isRdf_type) {
-				typeCounts.add(obj.ticket);
+				classCounts.add(obj.ticket);
 			}
 			
 			
 			
 			
 			//store URI info
-			if (sub.isUri) distinctUris.add(sub.ticket);
-			if (pred.isUri) distinctUris.add(pred.ticket);
-			if (obj.isUri) distinctUris.add(obj.ticket);
+			if (sub.isUri) {
+				uriLengthStats.addValue(sub.uriLength);
+				uriSubLengthStats.addValue(sub.uriLength);
+				distinctUris.add(sub.ticket);
+				distinctSubUris.add(sub.ticket);
+			} else if (sub.isBnode) {
+				bnodeCounts.add(sub.ticket);
+				distinctSubBnodes.add(sub.ticket);
+			}
+			if (pred.isUri) {
+				uriLengthStats.addValue(pred.uriLength);
+				distinctUris.add(pred.ticket);
+				uriPredLengthStats.addValue(pred.uriLength);
+			} else if(pred.isBnode) {
+				bnodeCounts.add(pred.ticket);
+			}
+			if (obj.isUri) {
+				uriLengthStats.addValue(obj.uriLength);
+				uriObjLengthStats.addValue(obj.uriLength);
+				distinctUris.add(obj.ticket);
+				distinctObjUris.add(obj.ticket);
+			} else if (obj.isBnode) {
+				literalLengthStats.addValue(obj.literalLength);
+				bnodeCounts.add(obj.ticket);
+				distinctObjBnodes.add(obj.ticket);
+			}
 		} else {
 			System.out.println("Could not get triple from line. " + nodes.toString());
 		}
@@ -298,7 +343,7 @@ public class AggregateDataset implements Runnable  {
 	 * just a simple helper method, to store the maps with a string as key, and counter as val
 	 * @throws IOException 
 	 */
-	private void writeCountersToFile(File targetFile, HashMultiset<PatriciaNode> multiset) throws IOException {
+	private void writePatriciaCountsToFile(File targetFile, HashMultiset<PatriciaNode> multiset) throws IOException {
 		FileWriter fw = new FileWriter(targetFile);
 		for (com.google.common.collect.Multiset.Entry<PatriciaNode> entry: multiset.entrySet()) {
 			fw.write(vault.redeem((PatriciaNode)entry.getElement()) + "\t" + entry.getCount() + System.getProperty("line.separator"));
@@ -308,27 +353,13 @@ public class AggregateDataset implements Runnable  {
 		//also store provenance
 		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
-	/**
-	 * just a simple helper method, to store the maps with a string as key, and counter as val
-	 * @throws IOException 
-	 */
-	private void writeStringCountersToFile(File targetFile, HashMultiset<String> multiset) throws IOException {
-		FileWriter fw = new FileWriter(targetFile);
-		for (com.google.common.collect.Multiset.Entry<String> entry: multiset.entrySet()) {
-			fw.write(entry.getElement().toString() + "\t" + entry.getCount() + System.getProperty("line.separator"));
-			
-		}
-		fw.close();
-		//also store provenance
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
-	}
 
 	private void writePredCountersToFile(File targetDir, HashMap<PatriciaNode, PredicateCounter> predCounters) throws IOException {
-		File predCountsFile = new File(targetDir, Settings.FILE_NAME_PREDICATE_COUNTS);
+		File predCountsFile = new File(targetDir, Paths.PREDICATE_COUNTS);
 		FileWriter fwPredCounts = new FileWriter(predCountsFile);
-		File predLitCountFiles = new File(targetDir, Settings.FILE_NAME_PREDICATE_LITERAL_COUNTS);
+		File predLitCountFiles = new File(targetDir, Paths.PREDICATE_LITERAL_COUNTS);
 		FileWriter fwPredLitCounts = new FileWriter(predLitCountFiles);
-		File predUriCountsFile = new File(targetDir, Settings.FILE_NAME_PREDICATE_NON_LIT_COUNTS);
+		File predUriCountsFile = new File(targetDir, Paths.PREDICATE_NON_LIT_COUNTS);
 		FileWriter fwPredNonLitCounts = new FileWriter(predUriCountsFile);
 		for (java.util.Map.Entry<PatriciaNode, PredicateCounter> entry: predCounters.entrySet()) {
 			String pred = vault.redeem(entry.getKey());

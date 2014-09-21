@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionCreator;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
@@ -23,7 +23,7 @@ public class PartitionPropsVoid extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		for (String propLine: FileUtils.readLines(new File(dir, Settings.FILE_NAME_PREDICATE_COUNTS))) {
+		for (String propLine: FileUtils.readLines(new File(dir, Paths.PREDICATE_COUNTS))) {
 			String[] propLineSplit = propLine.split("\\t");
 			if (propLineSplit.length != 2) throw new IllegalStateException("Unexpected input. Cannot split: " + propLine);
 			Resource bnode = getBnode();

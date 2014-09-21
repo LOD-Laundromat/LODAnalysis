@@ -18,7 +18,7 @@ import java.util.Set;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.utils.Utils;
 
 import org.apache.http.HttpResponse;
@@ -108,7 +108,7 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
 			Utils.printProgress("storing description in endpoint (" + metricsNamedGraph + ")", totalCount, processed);
 			processed++;
 			if (force || !alreadyDone.contains(metricDir.getName())) {
-				sendMetrics(new File(metricDir, Settings.FILE_NAME_DESCRIPTION_NT));
+				sendMetrics(new File(metricDir, Paths.DESCRIPTION_NT));
 			}
 		}
 		

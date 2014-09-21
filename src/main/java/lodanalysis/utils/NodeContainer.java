@@ -22,14 +22,16 @@ public class NodeContainer {
 	//calculated stuff:
 	
 	public PatriciaNode nsTicket = null;
-	public String datatype = null;
+	public PatriciaNode datatype = null;
 	public boolean isLiteral = false;
 	public boolean isUri = true; //default: assume the node is a uri
 	public boolean isBnode = false;
-	public String langTag = null;
-	public String langTagWithoutReg = null;
+	public PatriciaNode langTag = null;
+//	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
 	public PatriciaNode ticket;
+	public int uriLength = -1;
+	public int literalLength = -1;
 	
 	public boolean isRdf_type = false;
 //	public boolean isRdfs_domain = false;
@@ -37,6 +39,9 @@ public class NodeContainer {
 //	public boolean isRdfs_subClassOf = false;
 //	public boolean isRdfs_subPropertyOf = false;
 	private Vault<String, PatriciaNode> vault;
+
+	private int dataTypeLength = 0;
+	private int langTagLength = 0;
 	public NodeContainer(Vault<String, PatriciaNode> vault, String stringRepresentation, Position position) {
 		this.position = position;
 		this.vault = vault;
@@ -57,10 +62,14 @@ public class NodeContainer {
 		
 		if (isUri) {
 			if (stringRepresentation.contains(BNODE_SUBSTRING)) {
+				System.out.println(stringRepresentation);
+				System.out.println("AH, we need to change string contains to starts-with for optimization");
+				System.exit(1);
 				//we rewrite each bnode to uri. check whether this is one of these uris
 				this.isBnode = true;
 				this.isUri = false;
 			} else {
+				uriLength = stringRepresentation.length();
 				String ns = getNs(stringRepresentation);
 				this.nsTicket = vault.store(ns);
 				getSchemaInfo(stringRepresentation, ns);
@@ -72,11 +81,27 @@ public class NodeContainer {
 		
 
 		if (position == Position.OBJ && isLiteral) {
+			
 			//only for literals
 			getDataType(stringRepresentation);
 			getLangTagInfo(stringRepresentation);
+			getLiteralLength(stringRepresentation);
+			
 		}
 
+	}
+
+	private void getLiteralLength(String stringRepresentation) {
+		this.literalLength = stringRepresentation.length() - 2; //subtract the two quotes
+		
+		if (dataTypeLength > 0) {
+			//subtract datatype length, plus the two ^^
+			this.literalLength -= dataTypeLength - 2;
+		} else if (langTagLength > 0) {
+			//also subtract the @
+			this.literalLength -= langTagLength - 1;
+		}
+		
 	}
 
 	private void getSchemaInfo(String stringRepresentation, String ns) {
@@ -110,7 +135,8 @@ public class NodeContainer {
 	}
 
 	private void getDataType(String stringRepresentation) {
-		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("^^")) {
+		if (stringRepresentation.contains("^^")) {
+			//probably a datatype
 			int closingQuote = stringRepresentation.lastIndexOf("\"");
 
 			if (
@@ -127,7 +153,8 @@ public class NodeContainer {
 				   dataTypeBuilder.append(c);
 				}
 				if (dataTypeBuilder.length() > 0) {
-					this.datatype = dataTypeBuilder.toString();
+					this.dataTypeLength = dataTypeBuilder.length();
+					this.datatype = vault.store(dataTypeBuilder.toString());
 				}
 
 			}
@@ -137,7 +164,7 @@ public class NodeContainer {
 	private void getLangTagInfo(String stringRepresentation) {
 		this.langTag = null;
 
-		if (stringRepresentation.startsWith("\"") && stringRepresentation.contains("@")) {
+		if (stringRepresentation.contains("@")) {
 			//this is probably a literal
 
 			int closingQuote = stringRepresentation.lastIndexOf("\"");
@@ -152,15 +179,17 @@ public class NodeContainer {
 				   langTagBuilder.append(c);
 				}
 				if (langTagBuilder.length() > 0) {
-					this.langTag = langTagBuilder.toString();
+					this.langTagLength = langTagBuilder.length();
+					this.langTag = vault.store(langTagBuilder.toString());
 				}
 			}
 		}
-		if (this.langTag != null && this.langTag.contains("-")) {
-			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-'));
-		} else {
-			this.langTagWithoutReg = this.langTag;
-		}
+		//not using the lang tag without reg for now
+//		if (this.langTag != null && this.langTag.contains("-")) {
+//			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-'));
+//		} else {
+//			this.langTagWithoutReg = this.langTag;
+//		}
 	}
 
 
@@ -170,7 +199,6 @@ public class NodeContainer {
 //			"ns: " + ns + "\n" +
 			"datatype: " + datatype + "\n" +
 			"lang tag: " + langTag + "\n" +
-			"lang tag (without reg): " + langTagWithoutReg + "\n" +
 			"isLiteral: " + (isLiteral? "yes": "no") + "\n" +
 			"isUri: " + (isUri? "yes": "no") + "\n" +
 			"ignore: " + (ignoreIri? "yes": "no") + "\n";

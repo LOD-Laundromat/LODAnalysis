@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionCreator;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
@@ -29,7 +29,7 @@ public class PartitionTypesDs extends DescriptionCreator {
 		 * https://github.com/bio2rdf/bio2rdf-scripts/wiki/Bio2RDF-dataset-metrics
 		 */
 		//add type counts: how often is each type used
-		for (String typeLine: FileUtils.readLines(new File(dir, Settings.FILE_NAME_TYPE_COUNTS))) {
+		for (String typeLine: FileUtils.readLines(new File(dir, Paths.CLASS_COUNTS))) {
 			String[] typeLineSplit = typeLine.split("\\t");
 			if (typeLineSplit.length != 2) throw new IllegalStateException("Unexpected input. Cannot split: " + typeLine);
 			

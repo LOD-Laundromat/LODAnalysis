@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionCreator;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
@@ -23,13 +23,13 @@ public class NumBnodes extends DescriptionCreator {
 	@Override
 	public void createDescription() throws IOException {
 		int bnodeCount = 0;
-		for (String bnodeLine: FileUtils.readLines(new File(dir, Settings.FILE_NAME_BNODE_COUNTS))) {
+		for (String bnodeLine: FileUtils.readLines(new File(dir, Paths.BNODE_COUNTS))) {
 			String[] typeLineSplit = bnodeLine.split("\\t");
 			if (typeLineSplit.length != 2) throw new IllegalStateException("Unexpected input. Cannot split: " + bnodeLine);
 			bnodeCount += Integer.parseInt(typeLineSplit[1]);
 		}
 		
-		doc.addProperty(getProp(Namespace.LLO, "bnodes"), Integer.toString(bnodeCount), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLO, "blankNodes"), Integer.toString(bnodeCount), XSDDatatype.XSDlong);
 	}
 
 }

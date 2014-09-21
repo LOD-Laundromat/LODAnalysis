@@ -2,43 +2,43 @@ package lodanalysis.metrics.voids;
 
 import com.hp.hpl.jena.rdf.model.Property;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
 
-public class Degree extends DegreeInfo{
+public class Degree extends DescriptiveStatsInfo{
 
 	public Degree(DescriptionsFactory factory) {
 		super(factory);
 	}
 	@Override
-	protected Property getDegreeProp() {
-		return getProp(Namespace.LL, "degree");
+	protected Property getDescriptiveProp() {
+		return getProp(Namespace.LLO, "degree");
 	}
 
 	@Override
 	protected String getMeanFilename() {
-		return Settings.FILE_NAME_DEGREE_AVG;
+		return Paths.DEGREE_AVG;
 	}
 
 	@Override
 	protected String getMedianFilename() {
-		return Settings.FILE_NAME_DEGREE_MEDIAN;
+		return Paths.DEGREE_MEDIAN;
 	}
 
 	@Override
 	protected String getMinFilename() {
-		return Settings.FILE_NAME_DEGREE_MIN;
+		return Paths.DEGREE_MIN;
 	}
 
 	@Override
 	protected String getMaxFilename() {
-		return Settings.FILE_NAME_DEGREE_MAX;
+		return Paths.DEGREE_MAX;
 	}
 
 	@Override
 	protected String getStdFilename() {
-		return Settings.FILE_NAME_DEGREE_STD;
+		return Paths.DEGREE_STD;
 	}
 
 }

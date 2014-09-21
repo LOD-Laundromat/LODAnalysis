@@ -3,7 +3,7 @@ package lodanalysis.metrics.voids;
 import java.io.File;
 import java.io.IOException;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionCreator;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
@@ -20,7 +20,7 @@ public class NumDistinctBnodes extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctBnodes"), Integer.toString(countLines(new File(dir, Settings.FILE_NAME_BNODE_COUNTS))), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLO, "distinctBlankNodes"), Integer.toString(countLines(new File(dir, Paths.BNODE_COUNTS))), XSDDatatype.XSDlong);
 	}
 
 }

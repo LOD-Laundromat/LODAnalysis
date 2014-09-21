@@ -11,16 +11,16 @@ import lodanalysis.metrics.DescriptionsFactory.Namespace;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 
 
-public class NumDistinctClasses extends DescriptionCreator {
+public class NumSubBnodes extends DescriptionCreator {
 
 
-	public NumDistinctClasses(DescriptionsFactory factory) {
+	public NumSubBnodes(DescriptionsFactory factory) {
 		super(factory);
 	}
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctClasses"), Integer.toString(countLines(new File(dir, Paths.CLASS_COUNTS))), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLO, "distinctSubjectBlankNodes"), Integer.toString(countLines(new File(dir, Paths.DISTINCT_BNODES_SUB))), XSDDatatype.XSDlong);
 	}
 
 }

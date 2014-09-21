@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.utils.Utils;
 
 public class Aggregator  extends RuneableClass {
@@ -20,7 +20,7 @@ public class Aggregator  extends RuneableClass {
 	
 	public static int TOTAL_DIR_COUNT;
 	public static int PROCESSED_COUNT = 0;
-	public static File PROVENANCE_FILE = new File(Settings.DIR_NAME_TMP + "/" + Settings.FILE_NAME_PROVENANCE);
+	public static File PROVENANCE_FILE = new File(Paths.DIR_NAME_TMP + "/" + Paths.PROVENANCE);
 	
 	private static BufferedWriter LOG_FILE_WRITER;
 	public Aggregator(Entry entry) throws IOException, InterruptedException {
@@ -30,9 +30,9 @@ public class Aggregator  extends RuneableClass {
 		 */
 		Utils.writeSystemInfoToFile(PROVENANCE_FILE);
 		
-		File logFile = new File(Settings.FILE_NAME_LOG_AGGREGATE);
+		File logFile = new File(Paths.LOG_AGGREGATE);
 		if (logFile.exists()) logFile.delete();
-		LOG_FILE_WRITER = new BufferedWriter(new FileWriter(Settings.FILE_NAME_LOG_AGGREGATE));
+		LOG_FILE_WRITER = new BufferedWriter(new FileWriter(Paths.LOG_AGGREGATE));
 		
 		Collection<File> datasetDirs = entry.getDatasetDirs();
 		TOTAL_DIR_COUNT = datasetDirs.size();

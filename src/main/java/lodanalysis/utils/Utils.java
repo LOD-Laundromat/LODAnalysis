@@ -15,7 +15,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -121,7 +121,7 @@ public class Utils {
 	}
 	
 	public static boolean hasInputFileWithContent(File datasetDir) throws IOException{
-		File file = new File(datasetDir, Settings.FILE_NAME_INPUT_GZ);
+		File file = new File(datasetDir, Paths.INPUT_GZ);
 		if (!file.exists()) return false;
 		BufferedReader reader = null;
 		GZIPInputStream gzipStream = null;

@@ -3,7 +3,7 @@ package lodanalysis.metrics.voids;
 import java.io.File;
 import java.io.IOException;
 
-import lodanalysis.Settings;
+import lodanalysis.Paths;
 import lodanalysis.metrics.DescriptionCreator;
 import lodanalysis.metrics.DescriptionsFactory;
 import lodanalysis.metrics.DescriptionsFactory.Namespace;
@@ -20,7 +20,7 @@ public class NumDistinctProperties extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.VOID, "properties"), Integer.toString(countLines(new File(dir, Settings.FILE_NAME_PREDICATE_COUNTS))), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLO, "distinctProperties"), Integer.toString(countLines(new File(dir, Paths.PREDICATE_COUNTS))), XSDDatatype.XSDlong);
 	}
 
 }
