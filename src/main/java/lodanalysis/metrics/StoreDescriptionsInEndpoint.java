@@ -108,7 +108,12 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
 			Utils.printProgress("storing description in endpoint (" + metricsNamedGraph + ")", totalCount, processed);
 			processed++;
 			if (force || !alreadyDone.contains(metricDir.getName())) {
-				sendMetrics(new File(metricDir, Paths.DESCRIPTION_NT));
+				File descrFile = new File(metricDir, Paths.DESCRIPTION_NT);
+				if (!descrFile.exists()) {
+					System.err.println(descrFile.getAbsolutePath() + " does not exist. Skip sending");
+					continue;
+				}
+				sendMetrics(descrFile);
 			}
 		}
 		
