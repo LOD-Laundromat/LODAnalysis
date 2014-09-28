@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils;
 
 public class CreateDescriptions  extends RuneableClass{
 	private static int DELTA_ID = 1;
-	private static String DELTA_FILENAME = "aggregator_delta";
+	private static String DELTA_FILENAME = "description_delta";
 	public CreateDescriptions(Entry entry) throws IOException {
 		super(entry);
 		File[] metricDirs = entry.getMetricsDir().listFiles();
