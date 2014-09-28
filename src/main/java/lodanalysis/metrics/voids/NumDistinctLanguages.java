@@ -22,7 +22,7 @@ public class NumDistinctLanguages extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctLanguages"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_LANG_TAGS)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctLanguages"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_LANG_TAGS)), XSDDatatype.XSDlong);
 	}
 
 }

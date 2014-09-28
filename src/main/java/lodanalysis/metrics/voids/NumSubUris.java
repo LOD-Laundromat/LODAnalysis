@@ -20,7 +20,7 @@ public class NumSubUris extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctSubjectIRIs"), Integer.toString(countLines(new File(dir, Paths.DISTINCT_URIS_SUB))), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctSubjectIRIs"), Integer.toString(countLines(new File(dir, Paths.DISTINCT_URIS_SUB))), XSDDatatype.XSDlong);
 	}
 
 }

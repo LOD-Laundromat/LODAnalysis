@@ -22,7 +22,7 @@ public class NumAllLiterals extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "IRIs"), FileUtils.readFileToString(new File(dir, Paths.ALL_URIS)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "IRIs"), FileUtils.readFileToString(new File(dir, Paths.ALL_URIS)), XSDDatatype.XSDlong);
 	}
 
 }

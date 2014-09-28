@@ -20,7 +20,7 @@ public class NumDistinctDefinedProperties extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctDefinedProperties"), Integer.toString(countLines(new File(dir, Paths.DISTINCT_DEFINED_PROPERTIES))), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctDefinedProperties"), Integer.toString(countLines(new File(dir, Paths.DISTINCT_DEFINED_PROPERTIES))), XSDDatatype.XSDlong);
 	}
 
 }

@@ -9,7 +9,6 @@ public class NodeContainer {
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
-	//TODO: make complete string (starts with)
 	private static final String BNODE_SUBSTRING = "http://lodlaundromat.org/.well-known/";
 
 	private final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -18,7 +17,8 @@ public class NodeContainer {
 	private static final String RDF_CLASS = "http://www.w3.org/2000/01/rdf-schema#Class";
 	private static final String OWL_CLASS = "http://www.w3.org/2002/07/owl#Class";
 	private static final String RDF_PROPERTY = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
-	private static final String OWL_PROPERTY = "http://www.w3.org/2002/07/owl#ObjectProperty";
+	private static final String OWL_OBJECT_PROPERTY = "http://www.w3.org/2002/07/owl#ObjectProperty";
+	private static final String OWL_DATATYPE_PROPERTY = "http://www.w3.org/2002/07/owl#DatatypeProperty";
 	
 
 	public enum Position {SUB, PRED, OBJ};
@@ -31,7 +31,6 @@ public class NodeContainer {
 	public boolean isUri = true; //default: assume the node is a uri
 	public boolean isBnode = false;
 	public PatriciaNode langTag = null;
-//	public String langTagWithoutReg = null;
 	public boolean ignoreIri = false;
 	public PatriciaNode ticket;
 	public int uriLength = -1;
@@ -155,7 +154,7 @@ public class NodeContainer {
 		return startsWithW3cUri() && (stringRepresentation.equals(RDF_CLASS) || stringRepresentation.equals(OWL_CLASS));
 	}
 	public boolean isDefinedProperty() {
-		return startsWithW3cUri() && (stringRepresentation.equals(RDF_PROPERTY) || stringRepresentation.equals(OWL_PROPERTY));
+		return startsWithW3cUri() && (stringRepresentation.equals(RDF_PROPERTY) || stringRepresentation.equals(OWL_DATATYPE_PROPERTY) || stringRepresentation.equals(OWL_OBJECT_PROPERTY));
 	}
 
 	private boolean startsWithW3cUri() {

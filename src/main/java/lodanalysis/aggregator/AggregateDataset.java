@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -68,6 +69,8 @@ public class AggregateDataset implements Runnable  {
 	private DescriptiveStatistics literalLengthStats = new DescriptiveStatistics();
 	
 	
+	
+	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
 		AggregateDataset aggr = new AggregateDataset(entry, datasetDir);
@@ -82,7 +85,8 @@ public class AggregateDataset implements Runnable  {
 	private void processDataset() throws IOException {
 		try {
 			File inputFile = new File(datasetDir, Paths.INPUT_GZ);
-			if (inputFile.exists()) {
+			//skip files modified in last hour, to avoid concurrency issues
+			if (inputFile.exists() && (entry.forceExec() || (new Date().getTime() -  inputFile.lastModified() > 3600000))) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
 				boolean somethingRead = false;
@@ -186,6 +190,24 @@ public class AggregateDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_STD), uriLengthStats.getStandardDeviation());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MAX), uriLengthStats.getMax());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MIN), uriLengthStats.getMin());
+		
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_AVG), uriObjLengthStats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MEDIAN), uriObjLengthStats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_STD), uriObjLengthStats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MAX), uriObjLengthStats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MIN), uriObjLengthStats.getMin());
+		
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_AVG), uriSubLengthStats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MEDIAN), uriSubLengthStats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_STD), uriSubLengthStats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MAX), uriSubLengthStats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MIN), uriSubLengthStats.getMin());
+
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_AVG), uriPredLengthStats.getMean());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MEDIAN), uriPredLengthStats.getPercentile(50));
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_STD), uriPredLengthStats.getStandardDeviation());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MAX), uriPredLengthStats.getMax());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MIN), uriPredLengthStats.getMin());
 		
 		
 		

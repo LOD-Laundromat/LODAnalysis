@@ -35,6 +35,7 @@ public class DescriptionsFactory {
 	public enum Namespace {
 		LL("ll", "http://lodlaundromat.org/resource/"),
 		LLO("llo", "http://lodlaundromat.org/ontology/"),
+		LLM("llm", "http://lodlaundromat.org/metrics/ontology/"),
 		VOID("void", "http://rdfs.org/ns/void#"),
 		VOID_EXT("void-ext", "http://ldf.fi/void-ext#"),
 		RDF("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
@@ -74,7 +75,7 @@ public class DescriptionsFactory {
 		}
 
 		voidDoc = model.createResource(Namespace.LL.getUrl() + metricDir.getName() + "/metrics");
-		model.createResource(Namespace.LL.getUrl() + metricDir.getName()).addProperty(model.createProperty(Namespace.LLO.getUrl(), "metrics"), voidDoc);
+		model.createResource(Namespace.LL.getUrl() + metricDir.getName()).addProperty(model.createProperty(Namespace.LLM.getUrl(), "metrics"), voidDoc);
 		voidDoc.addProperty(model.createProperty(Namespace.RDF.getUrl(), "type"), model.createResource(Namespace.DS + "Dataset"));
 		
 		DescriptionCreator[] descriptions = new DescriptionCreator[] {

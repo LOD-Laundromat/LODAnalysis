@@ -29,7 +29,7 @@ public class NumBnodes extends DescriptionCreator {
 			bnodeCount += Integer.parseInt(typeLineSplit[1]);
 		}
 		
-		doc.addProperty(getProp(Namespace.LLO, "blankNodes"), Integer.toString(bnodeCount), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "blankNodes"), Integer.toString(bnodeCount), XSDDatatype.XSDlong);
 	}
 
 }

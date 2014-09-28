@@ -20,7 +20,7 @@ public class NumDistinctClasses extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctClasses"), Integer.toString(countLines(new File(dir, Paths.CLASS_COUNTS))), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctClasses"), Integer.toString(countLines(new File(dir, Paths.CLASS_COUNTS))), XSDDatatype.XSDlong);
 	}
 
 }

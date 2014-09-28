@@ -22,7 +22,7 @@ public class NumDistinctEntities extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctEntities"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctEntities"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS)), XSDDatatype.XSDlong);
 	}
 
 }

@@ -22,7 +22,7 @@ public class NumDistinctDataTypes extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctDataTypes"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_DATA_TYPES)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctDataTypes"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_DATA_TYPES)), XSDDatatype.XSDlong);
 	}
 
 }

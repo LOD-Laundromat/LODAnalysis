@@ -22,7 +22,7 @@ public class NumDistinctTriples extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "triples"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_TRIPLES)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "triples"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_TRIPLES)), XSDDatatype.XSDlong);
 	}
 
 }

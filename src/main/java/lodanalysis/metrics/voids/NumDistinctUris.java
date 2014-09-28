@@ -22,7 +22,7 @@ public class NumDistinctUris extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctIRIs"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctIRIs"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS)), XSDDatatype.XSDlong);
 	}
 
 }

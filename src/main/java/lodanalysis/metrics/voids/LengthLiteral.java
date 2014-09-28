@@ -13,7 +13,7 @@ public class LengthLiteral extends DescriptiveStatsInfo{
 	}
 	@Override
 	protected Property getDescriptiveProp() {
-		return getProp(Namespace.LLO, "literalLength");
+		return getProp(Namespace.LLM, "literalLength");
 	}
 
 	@Override

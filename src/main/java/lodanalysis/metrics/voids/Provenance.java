@@ -31,8 +31,8 @@ public class Provenance extends DescriptionCreator {
 		String gitUrl = gitProps.getProperty("git.remote.origin.url").toString().replace("git@", "https://");
 		Resource provGitEntity = getResource(gitUrl + "#", gitProps.getProperty("git.commit.id").toString());
 		provGitEntity.addProperty(getProp(Namespace.RDF, "type"), getResource(Namespace.PROV, "Entity"));
-		provGitEntity.addProperty(getProp(Namespace.LLO, "gitId"), gitProps.getProperty("git.commit.id").toString(), XSDDatatype.XSDstring);
-		provGitEntity.addProperty(getProp(Namespace.LLO, "gitBranch"), gitProps.getProperty("git.branch").toString(), XSDDatatype.XSDstring);
+		provGitEntity.addProperty(getProp(Namespace.LLM, "gitId"), gitProps.getProperty("git.commit.id").toString(), XSDDatatype.XSDstring);
+		provGitEntity.addProperty(getProp(Namespace.LLM, "gitBranch"), gitProps.getProperty("git.branch").toString(), XSDDatatype.XSDstring);
 		provGitEntity.addProperty(getProp(Namespace.FOAF, "homePage"), "http://github.com/LODLaundromat/LODAnalysis", XSDDatatype.XSDstring);
 		
 		//define activity

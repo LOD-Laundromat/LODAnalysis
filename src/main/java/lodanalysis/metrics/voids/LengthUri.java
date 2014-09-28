@@ -13,7 +13,7 @@ public class LengthUri extends DescriptiveStatsInfo{
 	}
 	@Override
 	protected Property getDescriptiveProp() {
-		return getProp(Namespace.LLO, "IRILength");
+		return getProp(Namespace.LLM, "IRILength");
 	}
 
 	@Override

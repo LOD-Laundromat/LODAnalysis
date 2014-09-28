@@ -25,7 +25,7 @@ public class NumDistinctNodes extends DescriptionCreator {
 		int totalNodes = Integer.parseInt(FileUtils.readFileToString(new File(dir, Paths.DISTINCT_LITERALS))) +
 				Integer.parseInt(FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS))) + 
 				countLines(new File(dir, Paths.BNODE_COUNTS));
-		doc.addProperty(getProp(Namespace.LLO, "distinctRDFNodes"), Integer.toString(totalNodes), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctRDFNodes"), Integer.toString(totalNodes), XSDDatatype.XSDlong);
 	}
 
 }

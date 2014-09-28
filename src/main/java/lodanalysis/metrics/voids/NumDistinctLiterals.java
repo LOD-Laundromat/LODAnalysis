@@ -22,7 +22,7 @@ public class NumDistinctLiterals extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctLiterals"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_LITERALS)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctLiterals"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_LITERALS)), XSDDatatype.XSDlong);
 	}
 
 }

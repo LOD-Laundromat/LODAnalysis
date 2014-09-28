@@ -20,7 +20,7 @@ public class NumDistinctBnodes extends DescriptionCreator {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLO, "distinctBlankNodes"), Integer.toString(countLines(new File(dir, Paths.BNODE_COUNTS))), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "distinctBlankNodes"), Integer.toString(countLines(new File(dir, Paths.BNODE_COUNTS))), XSDDatatype.XSDlong);
 	}
 
 }
