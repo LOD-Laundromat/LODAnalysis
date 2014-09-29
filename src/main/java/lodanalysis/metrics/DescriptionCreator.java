@@ -30,13 +30,13 @@ public abstract class DescriptionCreator {
 		return factory.model.createProperty(ns.getUrl(), postfix);
 	}
 	protected Resource getResource(DescriptionsFactory.Namespace ns, String postfix) {
-		return getResource(ns.getUrl(), "postfix");
+		return getResource(ns.getUrl(), postfix);
 	}
 	protected Resource getBnode() {
 		return factory.model.createResource();
 	}
 	protected Resource getResource(String ns, String postfix) {
-		return factory.model.createResource(ns + "postfix");
+		return factory.model.createResource(ns + postfix);
 	}
 	
 	/**

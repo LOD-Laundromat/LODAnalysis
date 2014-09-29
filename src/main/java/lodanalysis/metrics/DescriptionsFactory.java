@@ -76,7 +76,7 @@ public class DescriptionsFactory {
 
 		voidDoc = model.createResource(Namespace.LL.getUrl() + metricDir.getName() + "/metrics");
 		model.createResource(Namespace.LL.getUrl() + metricDir.getName()).addProperty(model.createProperty(Namespace.LLM.getUrl(), "metrics"), voidDoc);
-		voidDoc.addProperty(model.createProperty(Namespace.RDF.getUrl(), "type"), model.createResource(Namespace.DS + "Dataset"));
+		voidDoc.addProperty(model.createProperty(Namespace.RDF.getUrl(), "type"), model.createResource(Namespace.LLM.getUrl() + "Dataset"));
 		
 		DescriptionCreator[] descriptions = new DescriptionCreator[] {
 				new NumDistinctTriples(this),
@@ -89,9 +89,9 @@ public class DescriptionsFactory {
 				new NumDistinctSubjects(this),
 				new NumDistinctDefinedClasses(this),
 				new NumDistinctDefinedProperties(this),
-				new PartitionPropsVoid(this),
-				new PartitionTypesDs(this),
-				new PartitionTypesVoid(this),
+//				new PartitionPropsVoid(this),
+//				new PartitionTypesDs(this),
+//				new PartitionTypesVoid(this),
 				new Degree(this),
 				new DegreeIn(this),
 				new DegreeOut(this),
