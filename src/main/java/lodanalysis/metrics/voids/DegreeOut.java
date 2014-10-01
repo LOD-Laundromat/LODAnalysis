@@ -13,7 +13,7 @@ public class DegreeOut extends DescriptiveStatsInfo{
 	}
 	@Override
 	protected Property getDescriptiveProp() {
-		return getProp(Namespace.LL, "outdegree");
+		return getProp(Namespace.LLO, "outdegree");
 	}
 
 	@Override
