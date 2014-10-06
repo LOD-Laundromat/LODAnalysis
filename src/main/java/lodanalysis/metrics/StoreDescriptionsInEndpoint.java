@@ -31,7 +31,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
 public class StoreDescriptionsInEndpoint  extends RuneableClass{
-	private static String SPARQL_GET_EXISTING_METRICS = "SELECT DISTINCT ?doc WHERE {?doc <http://lodlaundromat.org/ontology/metrics> []}";
+	private static String SPARQL_GET_EXISTING_METRICS = "SELECT DISTINCT ?doc WHERE {?doc <http://lodlaundromat.org/metrics/ontology/metrics> []}";
 	private String sparqlEndpointUrl;
 	private String graphUpdateUrl;
 	private String metricsNamedGraph;
@@ -128,7 +128,7 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 		HttpResponse response = httpclient.execute(httppost);
 		if (response.getStatusLine().getStatusCode() >= 300) {
-			System.err.println("Failed to retrieve the existing list of metrics. " + response.getStatusLine().toString());
+			throw new IOException("Failed to retrieve the existing list of metrics. " + response.getStatusLine().toString());
 		}
 		
 		Set<String> existingMetrics = new HashSet<String>();
@@ -145,7 +145,11 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
         		existingMetrics.add(line.substring(line.lastIndexOf("/"), line.length() - 1));//extract md5, and remove final quote of string
         	}
         }
-        
+        if (existingMetrics.size() == 0) {
+            System.err.println("No existing metrics found. Is this correct??");
+        } else {
+            System.out.println("Example of fetched existing metric URIs: " + existingMetrics.iterator().next());
+        }
 		return existingMetrics;
 	}
 	
