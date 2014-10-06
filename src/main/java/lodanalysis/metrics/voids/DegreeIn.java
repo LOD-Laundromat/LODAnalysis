@@ -13,7 +13,7 @@ public class DegreeIn extends DescriptiveStatsInfo{
 	}
 	@Override
 	protected Property getDescriptiveProp() {
-		return getProp(Namespace.LLM, "indegree");
+		return getProp(Namespace.LLM, "inDegree");
 	}
 
 	@Override
