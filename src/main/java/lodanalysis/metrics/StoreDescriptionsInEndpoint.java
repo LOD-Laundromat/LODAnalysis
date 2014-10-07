@@ -142,7 +142,7 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
         		continue;
         	}
         	if (line.length() > 0) {
-        		existingMetrics.add(line.substring(line.lastIndexOf("/"), line.length() - 1));//extract md5, and remove final quote of string
+        		existingMetrics.add(line.substring(line.lastIndexOf("/") + 1, line.length() - 1));//extract md5, and remove final quote of string
         	}
         }
         if (existingMetrics.size() == 0) {
