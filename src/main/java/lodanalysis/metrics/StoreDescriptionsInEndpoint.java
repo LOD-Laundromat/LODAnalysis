@@ -32,8 +32,10 @@ import org.apache.http.message.BasicNameValuePair;
 
 public class StoreDescriptionsInEndpoint  extends RuneableClass{
 	private static String SPARQL_GET_EXISTING_METRICS = "SELECT DISTINCT ?doc WHERE {?doc <http://lodlaundromat.org/metrics/ontology/metrics> []}";
-	private String sparqlEndpointUrl;
+    private final int offset = 20000;
+    private String sparqlEndpointUrl;
 	private String graphUpdateUrl;
+    private Set<String> alreadyDone = new HashSet<String>();
 	private String metricsNamedGraph;
 	public StoreDescriptionsInEndpoint(Entry entry) throws IOException {
 		super(entry);
@@ -96,11 +98,11 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
 	}
 	
 	private void storeMetricsInEndpoint(File[] metricDirs) throws IOException {
-		Set<String> alreadyDone = null;
 		boolean force = entry.forceExec();
 		if (!force) {
 			//in this case, skip the ones we already stored
-			alreadyDone = getExistingMetricDatasets();
+		    while(getExistingMetricDatasets());
+			System.out.println("" + alreadyDone.size() + " already stored metrics");
 		}
 		int totalCount = metricDirs.length;
 		int processed = 0;
@@ -118,12 +120,13 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
 		}
 		
 	}
-	private Set<String> getExistingMetricDatasets() throws ClientProtocolException, IOException {
+	private boolean getExistingMetricDatasets() throws ClientProtocolException, IOException {
 		HttpClient httpclient = HttpClients.createDefault();
 		HttpPost httppost = new HttpPost(sparqlEndpointUrl);
 		httppost.addHeader("Accept", "text/csv");
 		List<NameValuePair> params = new ArrayList<NameValuePair>(2);
-		params.add(new BasicNameValuePair("query", SPARQL_GET_EXISTING_METRICS));
+		String query = SPARQL_GET_EXISTING_METRICS + " LIMIT " + offset + " OFFSET " + alreadyDone.size();
+		params.add(new BasicNameValuePair("query", query));
 		params.add(new BasicNameValuePair("default-graph-uri", metricsNamedGraph));
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 		HttpResponse response = httpclient.execute(httppost);
@@ -131,26 +134,29 @@ public class StoreDescriptionsInEndpoint  extends RuneableClass{
 			throw new IOException("Failed to retrieve the existing list of metrics. " + response.getStatusLine().toString());
 		}
 		
-		Set<String> existingMetrics = new HashSet<String>();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-        String line;
-        boolean firstLine = true;
-        while ((line = reader.readLine()) != null) {
-        	line = line.trim();
-        	if (firstLine) {
+		String line;
+		boolean firstLine = true;
+		boolean somethingNext = true;
+		boolean somethingFound = false;
+		while ((line = reader.readLine()) != null) {
+		    line = line.trim();
+		    if (firstLine) {
         		firstLine = false;//skip first, as this one contains the var name
         		continue;
-        	}
-        	if (line.length() > 0) {
-        		existingMetrics.add(line.substring(line.lastIndexOf("/") + 1, line.length() - 1));//extract md5, and remove final quote of string
-        	}
-        }
-        if (existingMetrics.size() == 0) {
-            System.err.println("No existing metrics found. Is this correct??");
-        } else {
-            System.out.println("Example of fetched existing metric URIs: " + existingMetrics.iterator().next());
-        }
-		return existingMetrics;
+		    }
+		    
+		    if (line.length() > 0) {
+			somethingFound = true;
+			alreadyDone.add(line.substring(line.lastIndexOf("/") + 1, line.length() - 1));//extract md5, and remove final quote of string
+		    }
+		}
+		if (alreadyDone.size() == 0) {
+		    System.err.println("No existing metrics found. Is this correct??");
+		} else {
+		    System.out.println("Example of fetched existing metric URIs: " + alreadyDone.iterator().next());
+		}
+		return somethingFound;
 	}
 	
 	
