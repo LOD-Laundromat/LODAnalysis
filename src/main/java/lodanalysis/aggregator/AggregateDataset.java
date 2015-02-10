@@ -283,7 +283,7 @@ public class AggregateDataset implements Runnable  {
 				predCounter = new PredicateCounter();
 				predicateCounts.put(pred.ticket, predCounter);
 			} else {
-				predCounter = predicateCounts.get(pred.ticket);
+			    predicateCounts.get(pred.ticket).count++;
 			}
 			
 			
