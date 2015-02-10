@@ -42,6 +42,7 @@ public class StreamDataset implements Runnable  {
 	private Reader decoder;
 	private BufferedReader reader;
 	private Vault<String, PatriciaNode> vault =  new PatriciaVault();
+	private boolean isNquadFile = false;
 	int tripleCount = 0;
 	int uriCount = 0;
 	int literalCount = 0;
@@ -72,7 +73,7 @@ public class StreamDataset implements Runnable  {
 	
 	
 	private Entry entry;
-	public static void aggregate(Entry entry, File datasetDir) throws IOException {
+	public static void stream(Entry entry, File datasetDir) throws IOException {
 		StreamDataset aggr = new StreamDataset(entry, datasetDir);
 
 		aggr.run();
@@ -84,7 +85,11 @@ public class StreamDataset implements Runnable  {
 
 	private void processDataset() throws IOException {
 		try {
-			File inputFile = new File(datasetDir, Paths.INPUT_GZ);
+			File inputFile = new File(datasetDir, Paths.INPUT_NT_GZ);
+			if (!inputFile.exists()) {
+			    inputFile = new File(datasetDir, Paths.INPUT_NQ_GZ);
+			    isNquadFile = true;
+			}
 			//skip files modified in last hour, to avoid concurrency issues
 			if (inputFile.exists() && (entry.forceExec() || (new Date().getTime() -  inputFile.lastModified() > 3600000))) {
 				BufferedReader br = getNtripleInputStream(inputFile);
@@ -238,28 +243,54 @@ public class StreamDataset implements Runnable  {
 	 * @param line
 	 * @return
 	 */
-	public static String[] getNodes(String line) throws IndexOutOfBoundsException {
-		int offset = 1;
+	public static String[] getNodes(String line, boolean isNquadFile) throws IndexOutOfBoundsException {
+		int offset = 1;//remove first <
 		String sub = line.substring(offset, line.indexOf("> "));
-		offset += sub.length()+3;
+		offset += sub.length()+3;//remove '> <'
 		String pred = line.substring(offset, line.indexOf("> ", offset));
-		offset += pred.length() + 2;
-
-		int endOffset = 2; //remove final ' .';
+		offset += pred.length() + 2;//remove '> '
+		
+		
+		
+		int endIndex = line.lastIndexOf(' '); //remove final ' .';
+		boolean objIsUri = false;
 		if (line.charAt(offset) == '<') {
-			//remove angular brackets
-			offset++;
-			endOffset++;
+		    //a uri
+		    objIsUri = true;
+		    endIndex--;//remove '>'
+			offset++;//remove '<' as well
 		}
-
-		String obj = line.substring(offset, line.length() - endOffset);
-		return new String[]{sub, pred, obj};
+		String obj = line.substring(offset, endIndex);
+		String graph = null;
+		
+		
+		if (isNquadFile) {
+		    //there might be a graph specified in this statement
+		    if (objIsUri) {
+		        int separatorIndex = obj.indexOf(' ');
+		        if (separatorIndex > 0) {
+		            //ah, this line has graph specified
+		            graph = obj.substring(separatorIndex + 2);//remove ' <' of ng ('>' is already removed)
+		            obj = obj.substring(0, separatorIndex-1);//remove '>' of obj
+		        }
+		    } else {
+		        if (obj.charAt(obj.length() - 1) == '>' && obj.lastIndexOf(' ') > obj.lastIndexOf('^')) {
+		            //ah, this line has graph specified. Tricky condition, because we don't want to confuse datatyped literals: "literal"^^<datatype>
+		            int separatorIndex = obj.lastIndexOf(' ');
+		            graph = obj.substring(separatorIndex + 2, obj.length() - 1);
+		            obj = obj.substring(0, separatorIndex);
+		        }
+		    }
+		    
+		    
+		}
+	    return new String[]{sub, pred, obj, graph};
 	}
 
 	private void processLine(String line) {
 		String[] nodes;
 		try {
-			nodes = getNodes(line);
+			nodes = getNodes(line, isNquadFile);
 		} catch (Exception e) {
 			// Invalid triples. In our class it should never happen
 			return;
@@ -462,7 +493,6 @@ public class StreamDataset implements Runnable  {
 	@Override
 	public void run() {
 		try {
-
 			log("aggregating " + datasetDir.getName());
 			delDelta();
 			processDataset();
@@ -472,4 +502,5 @@ public class StreamDataset implements Runnable  {
 			e.printStackTrace();
 		}
 	}
+	
 }

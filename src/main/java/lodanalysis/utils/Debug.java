@@ -22,7 +22,7 @@ public class Debug {
 		/**
 		 * aggregator
 		 */
-		new Entry(new String[]{"-nostrict", "-data_version", "11",  "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
+//		new Entry(new String[]{"-nostrict", "-data_version", "11",  "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
 		/**
 		 * create void descriptions
 		 */

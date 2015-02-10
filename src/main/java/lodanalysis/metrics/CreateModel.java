@@ -63,9 +63,6 @@ public class CreateModel {
 	public Resource voidDoc;
 	public File metricDir;
 	
-	
-
-	
 
 	public CreateModel(File metricDir) throws IOException {
 		this.metricDir = metricDir;

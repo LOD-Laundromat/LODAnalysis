@@ -121,8 +121,12 @@ public class Utils {
 	}
 	
 	public static boolean hasInputFileWithContent(File datasetDir) throws IOException{
-		File file = new File(datasetDir, Paths.INPUT_GZ);
-		if (!file.exists()) return false;
+		File file = new File(datasetDir, Paths.INPUT_NT_GZ);
+		if (!file.exists()) {
+		    //try whether nquad exists
+		    file = new File(datasetDir, Paths.INPUT_NQ_GZ);
+		    if (!file.exists()) return false;//does not exist as well!
+		}
 		BufferedReader reader = null;
 		GZIPInputStream gzipStream = null;
 		FileInputStream fileStream = null;

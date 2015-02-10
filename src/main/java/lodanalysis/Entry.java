@@ -26,7 +26,6 @@ public class Entry {
 	private enum OptionKeys {help, threads, dataset, datasets, nostrict, verbose, metrics, force,sparql_endpoint, graph_update, data_version, ng_prefix};
 	private Map<String, String> args = new HashMap<String, String>();
 	private boolean strict = true;
-//	private CommandLine line;
 	private Set<File> datasetDirs = new HashSet<File>();
 	private File metricsDir;
 	private List<Object> classesToExec;
