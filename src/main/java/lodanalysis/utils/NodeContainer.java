@@ -115,9 +115,10 @@ public class NodeContainer {
 	private String getNs() {
 		int hashTagIndex = stringRepresentation.lastIndexOf('#');
 		int slashIndex = stringRepresentation.lastIndexOf('/');
-		if (hashTagIndex > 6 || slashIndex > 6) {
+		int colonIndex = stringRepresentation.lastIndexOf(':');
+		if (hashTagIndex > 6 || slashIndex > 6 || colonIndex > 6) {
 			//ok, this has a namespace, and not something like http://google.com
-			return stringRepresentation.substring(0, Math.max(hashTagIndex, slashIndex));
+			return stringRepresentation.substring(0, Math.max(Math.max(hashTagIndex, slashIndex), colonIndex));
 		} else {
 			return stringRepresentation; //initialize with ns as whole URI
 		}
