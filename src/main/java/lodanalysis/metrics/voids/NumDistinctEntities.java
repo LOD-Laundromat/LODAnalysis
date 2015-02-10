@@ -4,19 +4,19 @@ import java.io.File;
 import java.io.IOException;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 import org.apache.commons.io.FileUtils;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 
 
-public class NumDistinctEntities extends DescriptionCreator {
+public class NumDistinctEntities extends CreateModelStatement {
 
 
-	public NumDistinctEntities(DescriptionsFactory factory) {
+	public NumDistinctEntities(CreateModel factory) {
 		super(factory);
 	}
 

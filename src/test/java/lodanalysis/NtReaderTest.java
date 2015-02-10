@@ -1,7 +1,7 @@
 package lodanalysis;
 
 import static org.junit.Assert.assertArrayEquals;
-import lodanalysis.aggregator.AggregateDataset;
+import lodanalysis.aggregator.StreamDataset;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -26,7 +26,7 @@ public class NtReaderTest {
 					"http://data.ordnancesurvey.co.uk/ontology/geometry/asWKT",
 					"\"POLYGON ((71.0000000000000000 35.0000000000000000, 71.0000000000000000 39.0000000000000000, 66.0000000000000000 39.0000000000000000, 66.0000000000000000 35.0000000000000000, 71.0000000000000000 35.0000000000000000))\"",
 			},
-			AggregateDataset.getNodes("<http://atlantides.org/capgrids/99#this-extent> <http://data.ordnancesurvey.co.uk/ontology/geometry/asWKT> \"POLYGON ((71.0000000000000000 35.0000000000000000, 71.0000000000000000 39.0000000000000000, 66.0000000000000000 39.0000000000000000, 66.0000000000000000 35.0000000000000000, 71.0000000000000000 35.0000000000000000))\" .")
+			StreamDataset.getNodes("<http://atlantides.org/capgrids/99#this-extent> <http://data.ordnancesurvey.co.uk/ontology/geometry/asWKT> \"POLYGON ((71.0000000000000000 35.0000000000000000, 71.0000000000000000 39.0000000000000000, 66.0000000000000000 39.0000000000000000, 66.0000000000000000 35.0000000000000000, 71.0000000000000000 35.0000000000000000))\" .")
 		);
 		assertArrayEquals(
 				new String[]{
@@ -34,7 +34,7 @@ public class NtReaderTest {
 						"http://blaa2",
 						"\"sdf\"@en-be",
 				},
-				AggregateDataset.getNodes("<http://blaat1> <http://blaa2> \"sdf\"@en-be .")
+				StreamDataset.getNodes("<http://blaat1> <http://blaa2> \"sdf\"@en-be .")
 		);
 		assertArrayEquals(
 				new String[]{
@@ -42,7 +42,7 @@ public class NtReaderTest {
 						"http://blaa2",
 						"\"sdf\"^^<http://stringggg>",
 				},
-				AggregateDataset.getNodes("<http://blaat1> <http://blaa2> \"sdf\"^^<http://stringggg> .")
+				StreamDataset.getNodes("<http://blaat1> <http://blaa2> \"sdf\"^^<http://stringggg> .")
 		);
 		assertArrayEquals(
 				new String[]{
@@ -50,7 +50,7 @@ public class NtReaderTest {
 						"http://blaa2",
 						"http://blaa3",
 				},
-				AggregateDataset.getNodes("<http://blaat1> <http://blaa2> <http://blaa3> .")
+				StreamDataset.getNodes("<http://blaat1> <http://blaa2> <http://blaa3> .")
 		);
 		
 

@@ -27,7 +27,7 @@ import org.data2semantics.vault.Vault;
 
 import com.google.common.collect.HashMultiset;
 
-public class AggregateDataset implements Runnable  {
+public class StreamDataset implements Runnable  {
 	public class PredicateCounter {
 		int count = 1;//how often does this predicate occur. (initialize with 1)
 		int hasLiteralCount = 0;//how many literals does it co-occur with
@@ -73,11 +73,11 @@ public class AggregateDataset implements Runnable  {
 	
 	private Entry entry;
 	public static void aggregate(Entry entry, File datasetDir) throws IOException {
-		AggregateDataset aggr = new AggregateDataset(entry, datasetDir);
+		StreamDataset aggr = new StreamDataset(entry, datasetDir);
 
 		aggr.run();
 	}
-	public AggregateDataset(Entry entry, File datasetDir) throws IOException {
+	public StreamDataset(Entry entry, File datasetDir) throws IOException {
 		this.entry = entry;
 		this.datasetDir = datasetDir;
 	}
@@ -114,7 +114,7 @@ public class AggregateDataset implements Runnable  {
 
 	private void log(String msg) throws IOException {
 		if (entry.isVerbose()) System.out.println(msg);
-		Aggregator.writeToLogFile(msg);
+		StreamDatasets.writeToLogFile(msg);
 
 	}
 
@@ -227,8 +227,8 @@ public class AggregateDataset implements Runnable  {
 		/**
 		 * Finally, store the delta of this run and store provenance
 		 */
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
-		FileUtils.write(new File(datasetOutputDir, Aggregator.DELTA_FILENAME), Integer.toString(Aggregator.DELTA_ID));
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
+		FileUtils.write(new File(datasetOutputDir, StreamDatasets.DELTA_FILENAME), Integer.toString(StreamDatasets.DELTA_ID));
 	}
 
 
@@ -393,7 +393,7 @@ public class AggregateDataset implements Runnable  {
 		}
 		fw.close();
 		//also store provenance
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 
 	private void writePredCountersToFile(File targetDir, HashMap<PatriciaNode, PredicateCounter> predCounters) throws IOException {
@@ -413,17 +413,17 @@ public class AggregateDataset implements Runnable  {
 		fwPredLitCounts.close();
 		fwPredNonLitCounts.close();
 		//also store provenance
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(predCountsFile.getAbsolutePath() + ".sysinfo"));
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(predLitCountFiles.getAbsolutePath() + ".sysinfo"));
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(predUriCountsFile.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(predCountsFile.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(predLitCountFiles.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(predUriCountsFile.getAbsolutePath() + ".sysinfo"));
 	}
 	private void writeSingleCountToFile(File targetFile, int val) throws IOException {
 		FileUtils.writeStringToFile(targetFile, Integer.toString(val));
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 	private void writeSingleCountToFile(File targetFile, double val) throws IOException {
 		FileUtils.writeStringToFile(targetFile, Double.toString(val));
-		FileUtils.copyFile(Aggregator.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 
 
@@ -455,7 +455,7 @@ public class AggregateDataset implements Runnable  {
 	 * @throws IOException
 	 */
 	private void delDelta() throws IOException {
-		File deltaFile = new File(datasetDir, Aggregator.DELTA_FILENAME);
+		File deltaFile = new File(datasetDir, StreamDatasets.DELTA_FILENAME);
 		if (deltaFile.exists()) deltaFile.delete();
 	}
 
@@ -466,8 +466,8 @@ public class AggregateDataset implements Runnable  {
 			log("aggregating " + datasetDir.getName());
 			delDelta();
 			processDataset();
-			Aggregator.PROCESSED_COUNT++;
-			Aggregator.printProgress(datasetDir);
+			StreamDatasets.PROCESSED_COUNT++;
+			StreamDatasets.printProgress(datasetDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

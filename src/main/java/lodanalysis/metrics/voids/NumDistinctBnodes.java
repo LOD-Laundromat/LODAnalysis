@@ -4,17 +4,17 @@ import java.io.File;
 import java.io.IOException;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 
 
-public class NumDistinctBnodes extends DescriptionCreator {
+public class NumDistinctBnodes extends CreateModelStatement {
 
 
-	public NumDistinctBnodes(DescriptionsFactory factory) {
+	public NumDistinctBnodes(CreateModel factory) {
 		super(factory);
 	}
 

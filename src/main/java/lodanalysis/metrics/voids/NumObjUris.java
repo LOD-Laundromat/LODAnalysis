@@ -4,17 +4,17 @@ import java.io.File;
 import java.io.IOException;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 
 
-public class NumObjUris extends DescriptionCreator {
+public class NumObjUris extends CreateModelStatement {
 
 
-	public NumObjUris(DescriptionsFactory factory) {
+	public NumObjUris(CreateModel factory) {
 		super(factory);
 	}
 

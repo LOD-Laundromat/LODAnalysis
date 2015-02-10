@@ -3,9 +3,9 @@ package lodanalysis.metrics.voids;
 import java.io.File;
 import java.io.IOException;
 
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 import org.apache.commons.io.FileUtils;
 
@@ -14,9 +14,9 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 
-public abstract class DescriptiveStatsInfo extends DescriptionCreator {
+public abstract class DescriptiveStatsInfo extends CreateModelStatement {
 
-	public DescriptiveStatsInfo(DescriptionsFactory factory) {
+	public DescriptiveStatsInfo(CreateModel factory) {
 		super(factory);
 	}
 

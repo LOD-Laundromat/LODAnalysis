@@ -3,12 +3,12 @@ package lodanalysis.metrics.voids;
 import com.hp.hpl.jena.rdf.model.Property;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 public class LengthLiteral extends DescriptiveStatsInfo{
 
-	public LengthLiteral(DescriptionsFactory factory) {
+	public LengthLiteral(CreateModel factory) {
 		super(factory);
 	}
 	@Override

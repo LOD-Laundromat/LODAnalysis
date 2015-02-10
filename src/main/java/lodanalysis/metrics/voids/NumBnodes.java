@@ -6,17 +6,17 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 
 
-public class NumBnodes extends DescriptionCreator {
+public class NumBnodes extends CreateModelStatement {
 
 
-	public NumBnodes(DescriptionsFactory factory) {
+	public NumBnodes(CreateModel factory) {
 		super(factory);
 	}
 

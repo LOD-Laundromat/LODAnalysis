@@ -10,15 +10,15 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 
-public abstract class DescriptionCreator {
+public abstract class CreateModelStatement {
 	
-	protected DescriptionsFactory factory;
+	protected CreateModel factory;
 	protected File dir;
 	protected Resource doc;
 	
 	
 	
-	public DescriptionCreator(DescriptionsFactory factory) {
+	public CreateModelStatement(CreateModel factory) {
 		this.factory = factory;
 		this.dir = factory.metricDir;
 		this.doc = factory.voidDoc;
@@ -26,10 +26,10 @@ public abstract class DescriptionCreator {
 	
 	public abstract void createDescription() throws IOException;
 	
-	protected Property getProp(DescriptionsFactory.Namespace ns, String postfix) {
+	protected Property getProp(CreateModel.Namespace ns, String postfix) {
 		return factory.model.createProperty(ns.getUrl(), postfix);
 	}
-	protected Resource getResource(DescriptionsFactory.Namespace ns, String postfix) {
+	protected Resource getResource(CreateModel.Namespace ns, String postfix) {
 		return getResource(ns.getUrl(), postfix);
 	}
 	protected Resource getBnode() {

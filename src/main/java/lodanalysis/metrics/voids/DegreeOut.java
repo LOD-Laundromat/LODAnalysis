@@ -3,12 +3,12 @@ package lodanalysis.metrics.voids;
 import com.hp.hpl.jena.rdf.model.Property;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 public class DegreeOut extends DescriptiveStatsInfo{
 
-	public DegreeOut(DescriptionsFactory factory) {
+	public DegreeOut(CreateModel factory) {
 		super(factory);
 	}
 	@Override

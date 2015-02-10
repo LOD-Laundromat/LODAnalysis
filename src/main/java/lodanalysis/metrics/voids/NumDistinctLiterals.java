@@ -8,15 +8,15 @@ import org.apache.commons.io.FileUtils;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 
-public class NumDistinctLiterals extends DescriptionCreator {
+public class NumDistinctLiterals extends CreateModelStatement {
 
 
-	public NumDistinctLiterals(DescriptionsFactory factory) {
+	public NumDistinctLiterals(CreateModel factory) {
 		super(factory);
 	}
 

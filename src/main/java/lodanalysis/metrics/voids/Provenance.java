@@ -3,18 +3,18 @@ package lodanalysis.metrics.voids;
 import java.io.IOException;
 import java.util.Properties;
 
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 
-public class Provenance extends DescriptionCreator {
+public class Provenance extends CreateModelStatement {
 
 
-	public Provenance(DescriptionsFactory factory) {
+	public Provenance(CreateModel factory) {
 		super(factory);
 	}
 

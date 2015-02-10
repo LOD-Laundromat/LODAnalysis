@@ -6,18 +6,18 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 
 import lodanalysis.Paths;
-import lodanalysis.metrics.DescriptionCreator;
-import lodanalysis.metrics.DescriptionsFactory;
-import lodanalysis.metrics.DescriptionsFactory.Namespace;
+import lodanalysis.metrics.CreateModelStatement;
+import lodanalysis.metrics.CreateModel;
+import lodanalysis.metrics.CreateModel.Namespace;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 
-public class PartitionPropsVoid extends DescriptionCreator {
+public class PartitionPropsVoid extends CreateModelStatement {
 
 
-	public PartitionPropsVoid(DescriptionsFactory factory) {
+	public PartitionPropsVoid(CreateModel factory) {
 		super(factory);
 	}
 

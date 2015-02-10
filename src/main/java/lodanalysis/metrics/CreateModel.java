@@ -31,7 +31,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 
-public class DescriptionsFactory {
+public class CreateModel {
 	public enum Namespace {
 		LL("ll", "http://lodlaundromat.org/resource/"),
 		LLO("llo", "http://lodlaundromat.org/ontology/"),
@@ -67,7 +67,7 @@ public class DescriptionsFactory {
 
 	
 
-	public DescriptionsFactory(File metricDir) throws IOException {
+	public CreateModel(File metricDir) throws IOException {
 		this.metricDir = metricDir;
 		model = ModelFactory.createDefaultModel();
 		for (Namespace ns: Namespace.values()) {
@@ -78,7 +78,7 @@ public class DescriptionsFactory {
 		model.createResource(Namespace.LL.getUrl() + metricDir.getName()).addProperty(model.createProperty(Namespace.LLM.getUrl(), "metrics"), voidDoc);
 		voidDoc.addProperty(model.createProperty(Namespace.RDF.getUrl(), "type"), model.createResource(Namespace.LLM.getUrl() + "Dataset"));
 		
-		DescriptionCreator[] descriptions = new DescriptionCreator[] {
+		CreateModelStatement[] descriptions = new CreateModelStatement[] {
 				new NumDistinctTriples(this),
 				new NumDistinctBnodes(this),
 				new NumDistinctClasses(this),
@@ -101,7 +101,7 @@ public class DescriptionsFactory {
 				new LengthUriSub(this),
 				new LengthLiteral(this),
 		};
-		for (DescriptionCreator description: descriptions) {
+		for (CreateModelStatement description: descriptions) {
 			description.createDescription();
 		}
 		

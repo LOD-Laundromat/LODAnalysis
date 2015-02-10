@@ -30,14 +30,14 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
-public class StoreDescriptionsInEndpoint  extends RuneableClass{
+public class StoreModelsInEndpoint  extends RuneableClass{
 	private static String SPARQL_GET_EXISTING_METRICS = "SELECT DISTINCT ?doc WHERE {?doc <http://lodlaundromat.org/metrics/ontology/metrics> []}";
     private final int offset = 20000;
     private String sparqlEndpointUrl;
 	private String graphUpdateUrl;
     private Set<String> alreadyDone = new HashSet<String>();
 	private String metricsNamedGraph;
-	public StoreDescriptionsInEndpoint(Entry entry) throws IOException {
+	public StoreModelsInEndpoint(Entry entry) throws IOException {
 		super(entry);
 		metricsNamedGraph =  entry.getMetricNamedGraphPrefix() + entry.getLlVersion();
 		File[] metricDirs = entry.getMetricsDir().listFiles();
