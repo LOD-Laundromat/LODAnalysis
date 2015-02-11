@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -89,8 +89,7 @@ public class StreamDataset implements Runnable  {
 			    inputFile = new File(datasetDir, Paths.INPUT_NQ_GZ);
 			    isNquadFile = true;
 			}
-			//skip files modified in last hour, to avoid concurrency issues
-			if (inputFile.exists() && (entry.forceExec() || (new Date().getTime() -  inputFile.lastModified() > 3600000))) {
+			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
 				boolean somethingRead = false;
@@ -294,7 +293,7 @@ public class StreamDataset implements Runnable  {
 			// Invalid triples. In our class it should never happen
 			return;
 		}
-		if (nodes.length == 3) {
+		if (nodes.length >= 3) {
 			NodeWrapper sub = new NodeWrapper(vault, nodes[0], NodeWrapper.Position.SUB);
 			NodeWrapper pred = new NodeWrapper(vault, nodes[1], NodeWrapper.Position.PRED);
 			NodeWrapper obj = new NodeWrapper(vault, nodes[2], NodeWrapper.Position.OBJ);
@@ -306,14 +305,13 @@ public class StreamDataset implements Runnable  {
 			tripleCount++;
 			outdegreeCounts.add(sub.ticket);
 			indegreeCounts.add(obj.ticket);
-//			distinctSubjects.add(sub.ticket);
-//			distinctObjects.add(obj.ticket);
 			PredicateCounter predCounter = null;
 			if (!predicateCounts.containsKey(pred.ticket)) {
 				predCounter = new PredicateCounter();
 				predicateCounts.put(pred.ticket, predCounter);
 			} else {
-			    predicateCounts.get(pred.ticket).count++;
+			    predCounter = predicateCounts.get(pred.ticket);
+			    predCounter.count++;
 			}
 			
 			
@@ -407,7 +405,7 @@ public class StreamDataset implements Runnable  {
 				distinctObjBnodes.add(obj.ticket);
 			}
 		} else {
-			System.out.println("Could not get triple from line. " + nodes.toString());
+			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
 		}
 
 	}

@@ -16,18 +16,18 @@ public class Debug {
 
 		
 		
-		//java -jar -path <path> lodanalysis.aggregator.Aggregator
 		/**
-		 * aggregator
+		 * streamer
 		 */
-//		new Entry(new String[]{"-nostrict", "-data_version", "11",  "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.aggregator.Aggregator"});
+		new Entry(new String[]{"-force","-dataset", "testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 		/**
-		 * create void descriptions
+		 * model creator
 		 */
-//		new Entry(new String[]{"-force", "-data_version", "11", "-nostrict","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.CreateDescriptions"});
+//		new Entry(new String[]{"-force", "-data_version", "11", "-nostrict","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.metrics.CreateDescriptions"});
 		/**
-		 * store void descriptions
+		 * upload models
 		 */
-//		new Entry(new String[]{"-data_version", "11", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "output", "lodanalysis.metrics.StoreDescriptionsInEndpoint"});
+//		http://lodlaundromat.org#metrics-11
+//		new Entry(new String[]{"-data_version", "11", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.metrics.StoreDescriptionsInEndpoint"});
 	}
 }

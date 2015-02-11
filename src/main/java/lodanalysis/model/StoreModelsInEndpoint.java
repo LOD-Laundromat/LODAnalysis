@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Set;
 
 import lodanalysis.Entry;
-import lodanalysis.RuneableClass;
 import lodanalysis.Paths;
+import lodanalysis.RuneableClass;
 import lodanalysis.utils.Utils;
 
 import org.apache.http.HttpResponse;
@@ -39,7 +39,7 @@ public class StoreModelsInEndpoint  extends RuneableClass{
 	private String metricsNamedGraph;
 	public StoreModelsInEndpoint(Entry entry) throws IOException {
 		super(entry);
-		metricsNamedGraph =  entry.getMetricNamedGraphPrefix() + entry.getLlVersion();
+		metricsNamedGraph =  entry.getMetricNamedGraph();
 		File[] metricDirs = entry.getMetricsDir().listFiles();
 		
 		this.sparqlEndpointUrl = entry.getSparqlUrl();
@@ -137,7 +137,6 @@ public class StoreModelsInEndpoint  extends RuneableClass{
 		BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 		String line;
 		boolean firstLine = true;
-		boolean somethingNext = true;
 		boolean somethingFound = false;
 		while ((line = reader.readLine()) != null) {
 		    line = line.trim();

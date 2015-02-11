@@ -23,9 +23,8 @@ import org.apache.commons.cli.ParseException;
 
 public class Entry {
 	private static Properties DEFAULTS = new Properties();
-	private enum OptionKeys {help, threads, dataset, datasets, nostrict, verbose, metrics, force,sparql_endpoint, graph_update, data_version, ng_prefix};
+	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics, force,sparql_endpoint, graph_update, namedgraph};
 	private Map<String, String> args = new HashMap<String, String>();
-	private boolean strict = true;
 	private Set<File> datasetDirs = new HashSet<File>();
 	private File metricsDir;
 	private List<Object> classesToExec;
@@ -44,9 +43,6 @@ public class Entry {
 	public String getGraphUpdateUrl() {
 		return args.get(OptionKeys.graph_update.toString());
 	}
-	public boolean strict() {
-		return strict;
-	}
 	public int getNumThreads() {
 		return Integer.parseInt(args.get(OptionKeys.threads.toString()));
 	}
@@ -63,11 +59,8 @@ public class Entry {
 		}
 		return parentDir;
 	}
-	public int getLlVersion() {
-		return Integer.parseInt(args.get(OptionKeys.data_version.toString()));
-	}
-	public String getMetricNamedGraphPrefix() {
-		return args.get(OptionKeys.ng_prefix.toString());
+	public String getMetricNamedGraph() {
+		return args.get(OptionKeys.namedgraph.toString());
 	}
 	public File getMetricsDir() {
 		return metricsDir;
@@ -80,7 +73,6 @@ public class Entry {
 		}
 		metricsDir = new File(args.get(OptionKeys.metrics.toString()));
 		if (args.containsKey(OptionKeys.dataset.toString())) datasetDirs.add(new File(args.get(OptionKeys.dataset.toString())));
-		strict = !args.containsKey(OptionKeys.nostrict.toString());
 	}
 	private void mergeDefaults(CommandLine commandLine) {
 		for (Object key: DEFAULTS.keySet()) {
@@ -173,12 +165,6 @@ public class Entry {
 			if (!new File(args.get(OptionKeys.dataset.toString())).exists()) throw new ParseException("The dataset you specified does not exist: " + args.get(OptionKeys.dataset.toString()));
 			if (!new File(args.get(OptionKeys.dataset.toString())).isDirectory()) throw new ParseException("The dataset you specified is not a directory" + args.get(OptionKeys.dataset.toString()));
 		}
-		if (!args.containsKey(OptionKeys.data_version.toString())) {
-			throw new ParseException("No data version specified");
-		}
-		if (!args.containsKey(OptionKeys.ng_prefix.toString())) {
-			throw new ParseException("No named graph prefix argument defined");
-		}
 	}
 
 	public boolean isVerbose() {
@@ -207,7 +193,6 @@ public class Entry {
 		Options options = new Options();
 		
 		Option verbose = new Option(OptionKeys.verbose.toString(), getOptionTextWithDefault(OptionKeys.verbose, "be extra verbose"));
-		Option noStrict = new Option(OptionKeys.nostrict.toString(), getOptionTextWithDefault(OptionKeys.nostrict, "disable some checking, such as whether certain files exist. useful for debugging"));
 		Option force = new Option(OptionKeys.force.toString(), getOptionTextWithDefault(OptionKeys.force, "force execution (i.e. ignore delta id)"));
 		Option datasets = OptionBuilder.withArgName(OptionKeys.datasets.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.datasets, "Path containing all the dataset directories")).create(OptionKeys.datasets.toString());
 		Option metrics = OptionBuilder.withArgName(OptionKeys.metrics.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.metrics, "Directory to write metrics")).create(OptionKeys.metrics.toString());
@@ -215,8 +200,7 @@ public class Entry {
 		Option dataset = OptionBuilder.withArgName(OptionKeys.dataset.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.dataset, "Dataset directory. Useful for debugging, when you only want to analyze 1 dataset")).create(OptionKeys.dataset.toString());
 		Option sparqlEndpoint = OptionBuilder.withArgName(OptionKeys.sparql_endpoint.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.sparql_endpoint, "SPARQL update to query for existing dataset metrics")).create(OptionKeys.sparql_endpoint.toString());
 		Option graphUpdate = OptionBuilder.withArgName(OptionKeys.graph_update.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.graph_update, "Graph protocol URL to use for inserting new metrics")).create(OptionKeys.graph_update.toString());
-		Option dataVersion = OptionBuilder.withArgName(OptionKeys.data_version.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.data_version, "The data version which we would like to analyze (int). Use so we know in which named graph to store the metrics")).create(OptionKeys.data_version.toString());
-		Option namedGraphPrefix = OptionBuilder.withArgName(OptionKeys.ng_prefix.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.ng_prefix, "Which named graph to use for storing the prefixes. (version number is appended). Useful as argument for debugging.")).create(OptionKeys.ng_prefix.toString());
+		Option namedGraphPrefix = OptionBuilder.withArgName(OptionKeys.namedgraph.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.namedgraph, "Which named graph to use for storing the prefixes")).create(OptionKeys.namedgraph.toString());
 		Option help = new Option(OptionKeys.help.toString(), "print this message");
 		
 		
@@ -227,10 +211,8 @@ public class Entry {
 		options.addOption(metrics);
 		options.addOption(dataset);
 		options.addOption(threads);
-		options.addOption(noStrict);
 		options.addOption(sparqlEndpoint);
 		options.addOption(graphUpdate);
-		options.addOption(dataVersion);
 		options.addOption(namedGraphPrefix);
 		return options;
 	}
