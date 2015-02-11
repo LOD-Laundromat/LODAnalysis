@@ -1,11 +1,9 @@
 #!/bin/bash
 jarFile='target/lodAnalysis-1.0-SNAPSHOT-jar-with-dependencies.jar'
 force='-force';
-#new Entry(new String[]{"-force","-nostrict",  "-verbose", "-data_version", "11",  "-threads", "1","-dataset", "testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+verbose='-verbose';
 
-[ -z "$1" ] && echo "No argument supplied" && exit 1;
+[ -z "$1" ] && echo "No dataset provided as argument" && exit 1;
+[ -z "$2" ] && echo "No output directory provided to write results to" && exit 1;
 
-
-for f in $1; do
-  java -jar $jarFile $force -
-done
+java -jar $jarFile $force $verbose -dataset $1 -output $2 "lodanalysis.streamer.StreamDatasets"
