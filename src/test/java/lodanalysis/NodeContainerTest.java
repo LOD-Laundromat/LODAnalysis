@@ -1,8 +1,8 @@
 package lodanalysis;
 
 import static org.junit.Assert.assertEquals;
-import lodanalysis.utils.NodeContainer;
-import lodanalysis.utils.NodeContainer.Position;
+import lodanalysis.streamer.NodeWrapper;
+import lodanalysis.streamer.NodeWrapper.Position;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
