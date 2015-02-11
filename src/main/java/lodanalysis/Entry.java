@@ -23,10 +23,10 @@ import org.apache.commons.cli.ParseException;
 
 public class Entry {
 	private static Properties DEFAULTS = new Properties();
-	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics, force,sparql_endpoint, graph_update, namedgraph};
+	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics,metric, force,sparql_endpoint, graph_update, namedgraph};
 	private Map<String, String> args = new HashMap<String, String>();
 	private Set<File> datasetDirs = new HashSet<File>();
-	private File metricsDir;
+	private Set<File> metricDirs = new HashSet<File>();
 	private List<Object> classesToExec;
 	public Entry(String[] args) throws IOException  {
 		DEFAULTS.load(getClass().getClassLoader().getResourceAsStream("defaults.properties"));
@@ -34,6 +34,7 @@ public class Entry {
 	}
 	
 	public Set<File> getDatasetDirs() {
+	    if (datasetDirs.size() == 0) throw new IllegalStateException("no dataset dirs specified?");
 		return datasetDirs;
 	}
 	
@@ -59,11 +60,23 @@ public class Entry {
 		}
 		return parentDir;
 	}
+	public File getMetricParentDir() {
+	    File parentDir = null;
+	    if (args.containsKey(OptionKeys.datasets.toString())) {
+	        parentDir = new File(args.get(OptionKeys.datasets.toString()));
+	    } else {
+	        for (File datasetDir: datasetDirs) {
+	            parentDir = datasetDir.getParentFile();
+	            break;
+	        }
+	    }
+	    return parentDir;
+	}
 	public String getMetricNamedGraph() {
 		return args.get(OptionKeys.namedgraph.toString());
 	}
-	public File getMetricsDir() {
-		return metricsDir;
+	public Set<File> getMetricDirs() {
+		return metricDirs;
 	}
 	private void processParameters() {
 		if (args.containsKey(OptionKeys.datasets.toString()))  {
@@ -71,8 +84,13 @@ public class Entry {
 				if (dataset.isDirectory()) datasetDirs.add(dataset);
 			}
 		}
-		metricsDir = new File(args.get(OptionKeys.metrics.toString()));
 		if (args.containsKey(OptionKeys.dataset.toString())) datasetDirs.add(new File(args.get(OptionKeys.dataset.toString())));
+		if (args.containsKey(OptionKeys.metrics.toString()))  {
+            for (File metricDir: new File(args.get(OptionKeys.metrics.toString())).listFiles()) {
+                if (metricDir.isDirectory()) metricDirs.add(metricDir);
+            }
+        }
+		if (args.containsKey(OptionKeys.metric.toString())) metricDirs.add(new File(args.get(OptionKeys.metric.toString())));
 	}
 	private void mergeDefaults(CommandLine commandLine) {
 		for (Object key: DEFAULTS.keySet()) {
@@ -149,7 +167,7 @@ public class Entry {
 	private void validateParameters() throws ParseException{
 		if (args.containsKey(OptionKeys.help.toString())) throw new ParseException("");
 		if (classesToExec == null || classesToExec.size() == 0) throw new ParseException("You forgot to tell me what class(es) you want to run!");
-		if (!args.containsKey((OptionKeys.datasets.toString())) && !args.containsKey(OptionKeys.dataset.toString())) throw new ParseException("Please specify the path where we can find the dataset directories");
+		//if (!args.containsKey((OptionKeys.datasets.toString())) && !args.containsKey(OptionKeys.dataset.toString())) throw new ParseException("Please specify the path where we can find the dataset directories");
 		if (!args.containsKey(OptionKeys.metrics.toString())) {
 			throw new ParseException("No metrics directory specified");
 		} else {
@@ -195,12 +213,13 @@ public class Entry {
 		Option verbose = new Option(OptionKeys.verbose.toString(), getOptionTextWithDefault(OptionKeys.verbose, "be extra verbose"));
 		Option force = new Option(OptionKeys.force.toString(), getOptionTextWithDefault(OptionKeys.force, "force execution (i.e. ignore delta id)"));
 		Option datasets = OptionBuilder.withArgName(OptionKeys.datasets.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.datasets, "Path containing all the dataset directories")).create(OptionKeys.datasets.toString());
-		Option metrics = OptionBuilder.withArgName(OptionKeys.metrics.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.metrics, "Directory to write metrics")).create(OptionKeys.metrics.toString());
+		Option metrics = OptionBuilder.withArgName(OptionKeys.metrics.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.metrics, "Directory to store all metrics in")).create(OptionKeys.metrics.toString());
+		Option metric = OptionBuilder.withArgName(OptionKeys.metric.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.metric, "Directory to write metric in for a particular dataset")).create(OptionKeys.metric.toString());
 		Option threads = OptionBuilder.withArgName(OptionKeys.threads.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.threads, "Number of threats to use")).create(OptionKeys.threads.toString());
 		Option dataset = OptionBuilder.withArgName(OptionKeys.dataset.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.dataset, "Dataset directory. Useful for debugging, when you only want to analyze 1 dataset")).create(OptionKeys.dataset.toString());
 		Option sparqlEndpoint = OptionBuilder.withArgName(OptionKeys.sparql_endpoint.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.sparql_endpoint, "SPARQL update to query for existing dataset metrics")).create(OptionKeys.sparql_endpoint.toString());
 		Option graphUpdate = OptionBuilder.withArgName(OptionKeys.graph_update.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.graph_update, "Graph protocol URL to use for inserting new metrics")).create(OptionKeys.graph_update.toString());
-		Option namedGraphPrefix = OptionBuilder.withArgName(OptionKeys.namedgraph.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.namedgraph, "Which named graph to use for storing the prefixes")).create(OptionKeys.namedgraph.toString());
+		Option namedGraph = OptionBuilder.withArgName(OptionKeys.namedgraph.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.namedgraph, "Which named graph to use for storing the prefixes")).create(OptionKeys.namedgraph.toString());
 		Option help = new Option(OptionKeys.help.toString(), "print this message");
 		
 		
@@ -209,11 +228,12 @@ public class Entry {
 		options.addOption(force);
 		options.addOption(datasets);
 		options.addOption(metrics);
+		options.addOption(metric);
 		options.addOption(dataset);
 		options.addOption(threads);
 		options.addOption(sparqlEndpoint);
 		options.addOption(graphUpdate);
-		options.addOption(namedGraphPrefix);
+		options.addOption(namedGraph);
 		return options;
 	}
 

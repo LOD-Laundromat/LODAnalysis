@@ -123,7 +123,7 @@ public class StreamDataset implements Runnable  {
 
 	private void store() throws IOException {
 		String datasetMd5 = datasetDir.getName();
-		File datasetOutputDir = new File(entry.getMetricsDir(), datasetMd5);
+		File datasetOutputDir = new File(entry.getMetricParentDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
 		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.NS_COUNTS), nsCounts);
 		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.BNODE_COUNTS), bnodeCounts);

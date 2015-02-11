@@ -40,7 +40,7 @@ public class StoreModelsInEndpoint  extends RuneableClass{
 	public StoreModelsInEndpoint(Entry entry) throws IOException {
 		super(entry);
 		metricsNamedGraph =  entry.getMetricNamedGraph();
-		File[] metricDirs = entry.getMetricsDir().listFiles();
+		Set<File> metricDirs = entry.getMetricDirs();
 		
 		this.sparqlEndpointUrl = entry.getSparqlUrl();
 		this.graphUpdateUrl = entry.getGraphUpdateUrl();
@@ -97,14 +97,14 @@ public class StoreModelsInEndpoint  extends RuneableClass{
 		}
 	}
 	
-	private void storeMetricsInEndpoint(File[] metricDirs) throws IOException {
+	private void storeMetricsInEndpoint(Set<File> metricDirs) throws IOException {
 		boolean force = entry.forceExec();
 		if (!force) {
 			//in this case, skip the ones we already stored
 		    while(getExistingMetricDatasets());
 			System.out.println("" + alreadyDone.size() + " already stored metrics");
 		}
-		int totalCount = metricDirs.length;
+		int totalCount = metricDirs.size();
 		int processed = 0;
 		for (File metricDir: metricDirs) {
 			Utils.printProgress("storing description in endpoint (" + metricsNamedGraph + ")", totalCount, processed);

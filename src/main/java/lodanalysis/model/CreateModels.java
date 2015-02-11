@@ -2,6 +2,7 @@ package lodanalysis.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
@@ -15,10 +16,10 @@ public class CreateModels  extends RuneableClass{
 	private static String DELTA_FILENAME = "description_delta";
 	public CreateModels(Entry entry) throws IOException {
 		super(entry);
-		File[] metricDirs = entry.getMetricsDir().listFiles();
+		Set<File> metricDirs = entry.getMetricDirs();
 		
 
-		int totalCount = metricDirs.length;
+		int totalCount = metricDirs.size();
 		int processed = 0;
 		for (File metricDir: metricDirs) {
 			Utils.printProgress("creating descriptions", totalCount, processed);

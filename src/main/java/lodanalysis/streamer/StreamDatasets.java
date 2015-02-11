@@ -40,7 +40,7 @@ public class StreamDatasets  extends RuneableClass {
 		
 		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 		for (File datasetDir : datasetDirs) {
-			if (entry.forceExec() || Utils.getDelta(new File(entry.getMetricsDir(), datasetDir.getName()), DELTA_FILENAME) < DELTA_ID) {
+			if (entry.forceExec() || Utils.getDelta(new File(entry.getMetricParentDir(), datasetDir.getName()), DELTA_FILENAME) < DELTA_ID) {
 				Runnable worker = new StreamDataset(entry, datasetDir);
 				executor.execute(worker);
 			} else {

@@ -19,11 +19,12 @@ public class Debug {
 		/**
 		 * streamer
 		 */
-		new Entry(new String[]{"-force","-dataset", "testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+//		new Entry(new String[]{"-force","-dataset", "testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 		/**
 		 * model creator
 		 */
-//		new Entry(new String[]{"-force", "-data_version", "11", "-nostrict","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.metrics.CreateDescriptions"});
+		
+		new Entry(new String[]{"-force","-metrics", "metrics", "lodanalysis.model.CreateModels"});
 		/**
 		 * upload models
 		 */

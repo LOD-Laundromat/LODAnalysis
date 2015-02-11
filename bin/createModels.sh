@@ -5,4 +5,4 @@ force='-force';
 
 [ -z "$1" ] && echo "No metric directory provided as argument" && exit 1;
 
-java -jar $jarFile $force -metric $1 "lodanalysis.model.CreateModels";
+java -jar $jarFile $force -metrics $1 "lodanalysis.model.CreateModels";

@@ -23,9 +23,6 @@ import lodanalysis.model.statements.NumDistinctObjects;
 import lodanalysis.model.statements.NumDistinctProperties;
 import lodanalysis.model.statements.NumDistinctSubjects;
 import lodanalysis.model.statements.NumDistinctTriples;
-import lodanalysis.model.statements.PartitionPropsVoid;
-import lodanalysis.model.statements.PartitionTypesDs;
-import lodanalysis.model.statements.PartitionTypesVoid;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
