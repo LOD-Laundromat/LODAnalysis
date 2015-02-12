@@ -9,6 +9,9 @@
 #verbose='-verbose';
 threads=20;
 datasetDir="/scratch/lodlaundromat/11/"
+memory="-Xmx30G"
+
+
 if [ -z "$1" ]; then
     echo "Using dataset dir $datasetDir"
 else
@@ -28,7 +31,7 @@ fi
 
 while true; do
     echo "Run cmd [Y/n]?"
-    cmd="java -jar $LOD_ANALYSIS_JAR $force $verbose -threads $threads -datasets $datasetDir -metrics $metricDir \"lodanalysis.streamer.StreamDatasets\""
+    cmd="java $memory -jar $LOD_ANALYSIS_JAR $force $verbose -threads $threads -datasets $datasetDir -metrics $metricDir \"lodanalysis.streamer.StreamDatasets\""
     echo "$cmd"
     read -n 1 -r yn
     case $yn in
