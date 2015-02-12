@@ -1,8 +1,8 @@
 #!/bin/bash
+[ -z $LOD_ANALYSIS_JAR ] && echo "LOD_ANALYSIS_JAR environment variable not set" && exit 1;
 
-jarFile='target/lodAnalysis-1.0-SNAPSHOT-jar-with-dependencies.jar'
 force='-force';
 
 [ -z "$1" ] && echo "No metric directory provided as argument" && exit 1;
 
-java -jar $jarFile $force -metric $1 "lodanalysis.model.CreateModels";
+java -jar $LOD_ANALYSIS_JAR $force -metric $1 "lodanalysis.model.CreateModels";
