@@ -28,11 +28,11 @@ fi
 
 while true; do
     echo "Run cmd [Y/n]?"
-    cmd="java -jar $LOD_ANALYSIS_JAR $force $verbose -threads $threads -datasets $1 -metrics $2 \"lodanalysis.streamer.StreamDatasets\""
+    cmd="java -jar $LOD_ANALYSIS_JAR $force $verbose -threads $threads -datasets $datasetDir -metrics $metricDir \"lodanalysis.streamer.StreamDatasets\""
     echo "$cmd"
     read -n 1 -r yn
     case $yn in
-        [Yy]* ) eval "$cmd";;
+        [Yy]* ) echo && eval "$cmd";;
         [Nn]* ) exit 1;;
         * ) echo "Please answer yes or no.";;
     esac
