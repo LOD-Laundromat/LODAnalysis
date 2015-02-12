@@ -62,11 +62,11 @@ public class Entry {
 	}
 	public File getMetricParentDir() {
 	    File parentDir = null;
-	    if (args.containsKey(OptionKeys.datasets.toString())) {
-	        parentDir = new File(args.get(OptionKeys.datasets.toString()));
+	    if (args.containsKey(OptionKeys.metrics.toString())) {
+	        parentDir = new File(args.get(OptionKeys.metrics.toString()));
 	    } else {
-	        for (File datasetDir: datasetDirs) {
-	            parentDir = datasetDir.getParentFile();
+	        for (File metricDir: metricDirs) {
+	            parentDir = metricDir.getParentFile();
 	            break;
 	        }
 	    }
