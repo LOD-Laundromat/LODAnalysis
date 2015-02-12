@@ -32,7 +32,7 @@ while true; do
     echo "$cmd"
     read -n 1 -r yn
     case $yn in
-        [Yy]* ) echo && eval "$cmd";;
+        [Yy]* ) echo && eval "$cmd" && exit 0;;
         [Nn]* ) exit 1;;
         * ) echo "Please answer yes or no.";;
     esac
