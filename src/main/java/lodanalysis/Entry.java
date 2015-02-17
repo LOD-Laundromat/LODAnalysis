@@ -26,7 +26,7 @@ public class Entry {
 	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics,metric, force,sparql_endpoint, graph_update, namedgraph};
 	private Map<String, String> args = new HashMap<String, String>();
 	private Set<File> datasetDirs = new HashSet<File>();
-	private Set<File> metricDirs = new HashSet<File>();
+	private Set<File> metricDirs = null;
 	private List<Object> classesToExec;
 	public Entry(String[] args) throws IOException  {
 		DEFAULTS.load(getClass().getClassLoader().getResourceAsStream("defaults.properties"));
@@ -61,6 +61,7 @@ public class Entry {
 		return parentDir;
 	}
 	public File getMetricParentDir() {
+	    
 	    File parentDir = null;
 	    if (args.containsKey(OptionKeys.metrics.toString())) {
 	        parentDir = new File(args.get(OptionKeys.metrics.toString()));
@@ -76,20 +77,27 @@ public class Entry {
 		return args.get(OptionKeys.namedgraph.toString());
 	}
 	public Set<File> getMetricDirs() {
-		return metricDirs;
+	    if (metricDirs == null && args.containsKey(OptionKeys.metrics.toString())) {
+		metricDirs = new HashSet<File>();
+		for (File metricDir: new File(args.get(OptionKeys.metrics.toString())).listFiles()) {
+		    if (metricDir.isDirectory()) metricDirs.add(metricDir);
+		}
+	    }
+	    return metricDirs;
 	}
 	private void processParameters() {
 		if (args.containsKey(OptionKeys.datasets.toString()))  {
-			for (File dataset: new File(args.get(OptionKeys.datasets.toString())).listFiles()) {
-				if (dataset.isDirectory()) datasetDirs.add(dataset);
-			}
+		    System.out.println("Fetching directories to analyze");
+		    for (File dataset: new File(args.get(OptionKeys.datasets.toString())).listFiles()) {
+			if (dataset.isDirectory()) datasetDirs.add(dataset);
+		    }
 		}
 		if (args.containsKey(OptionKeys.dataset.toString())) datasetDirs.add(new File(args.get(OptionKeys.dataset.toString())));
-		if (args.containsKey(OptionKeys.metrics.toString()))  {
-            for (File metricDir: new File(args.get(OptionKeys.metrics.toString())).listFiles()) {
-                if (metricDir.isDirectory()) metricDirs.add(metricDir);
-            }
-        }
+		//if (args.containsKey(OptionKeys.metrics.toString()))  {
+		//    for (File metricDir: new File(args.get(OptionKeys.metrics.toString())).listFiles()) {
+		//	if (metricDir.isDirectory()) metricDirs.add(metricDir);
+		//    }
+		//}
 		if (args.containsKey(OptionKeys.metric.toString())) metricDirs.add(new File(args.get(OptionKeys.metric.toString())));
 	}
 	private void mergeDefaults(CommandLine commandLine) {

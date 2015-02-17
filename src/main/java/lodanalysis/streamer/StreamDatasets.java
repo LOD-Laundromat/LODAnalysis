@@ -33,7 +33,6 @@ public class StreamDatasets  extends RuneableClass {
 		File logFile = new File(Paths.LOG_AGGREGATE);
 		if (logFile.exists()) logFile.delete();
 		LOG_FILE_WRITER = new BufferedWriter(new FileWriter(Paths.LOG_AGGREGATE));
-		
 		datasetDirs = entry.getDatasetDirs();
 		TOTAL_DIR_COUNT = datasetDirs.size();
 		int numThreads = entry.getNumThreads();
@@ -54,6 +53,7 @@ public class StreamDatasets  extends RuneableClass {
 	
 	private void runSingleThread() throws IOException {
 	    for (File datasetDir : datasetDirs) {
+		printProgress(datasetDir);
 	        if (entry.forceExec() || Utils.getDelta(new File(entry.getMetricParentDir(), datasetDir.getName()), DELTA_FILENAME) < DELTA_ID) {
 	            StreamDataset stream = new StreamDataset(entry, datasetDir);
 	            stream.run();
