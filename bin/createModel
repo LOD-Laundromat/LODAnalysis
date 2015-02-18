@@ -1,8 +1,14 @@
 #!/bin/bash
 [ -z $LOD_ANALYSIS_JAR ] && echo "LOD_ANALYSIS_JAR environment variable not set" && exit 1;
+[ -z "$1" ] && echo "No metric dir provided as argument" && exit 1;
 
 force='-force';
+md5=`basename $1`
+datasetsDir=`dirname $1`;
+version=`basename $datasetsDir`;
+metrics="/scratch/lodlaundromat/metrics-$version"
 
-[ -z "$1" ] && echo "No metric directory provided as argument" && exit 1;
+metric=$metrics/$md5;
+echo $metric;
+echo "java -jar $LOD_ANALYSIS_JAR $force -metric $metric \"lodanalysis.model.CreateModels\";"
 
-java -jar $LOD_ANALYSIS_JAR $force -metric $1 "lodanalysis.model.CreateModels";

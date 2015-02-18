@@ -7,7 +7,7 @@
 
 #force='-force';
 #verbose='-verbose';
-threads=20;
+threads=2;
 datasetDir="/scratch/lodlaundromat/11/"
 memory="-Xmx30G"
 

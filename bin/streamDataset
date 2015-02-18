@@ -4,8 +4,17 @@
 force='-force';
 verbose='-verbose';
 memory="-Xmx30G"
-
 [ -z "$1" ] && echo "No dataset provided as argument" && exit 1;
-[ -z "$2" ] && echo "No output directory provided to write results to" && exit 1;
+datasetsDir=`dirname $1`;
+version=`basename $datasetsDir`;
+metrics="/scratch/lodlaundromat/metrics-$version"
 
-java $memory -jar $LOD_ANALYSIS_JAR $force $verbose -dataset $1 -metrics $2 "lodanalysis.streamer.StreamDatasets"
+if [ -z "$2" ]; then
+	echo "Using metric dir $metrics"
+else
+	metrics=$2;
+fi
+
+
+
+java $memory -jar $LOD_ANALYSIS_JAR $force $verbose -dataset $1 -metrics $metrics "lodanalysis.streamer.StreamDatasets"
