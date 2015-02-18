@@ -23,7 +23,7 @@ import org.apache.commons.cli.ParseException;
 
 public class Entry {
 	private static Properties DEFAULTS = new Properties();
-	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics,metric, force,sparql_endpoint, graph_update, namedgraph};
+	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics,metric, force,sparql_endpoint, tmp_dir, graph_update, namedgraph};
 	private Map<String, String> args = new HashMap<String, String>();
 	private Set<File> datasetDirs = new HashSet<File>();
 	private Set<File> metricDirs = null;
@@ -37,7 +37,9 @@ public class Entry {
 	    if (datasetDirs.size() == 0) throw new IllegalStateException("no dataset dirs specified?");
 		return datasetDirs;
 	}
-	
+   public File getTmpDir() {
+        return new File(args.get(OptionKeys.tmp_dir.toString()));
+    }
 	public String getSparqlUrl() {
 		return args.get(OptionKeys.sparql_endpoint.toString());
 	}

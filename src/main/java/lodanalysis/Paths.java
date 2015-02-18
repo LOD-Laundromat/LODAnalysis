@@ -73,7 +73,6 @@ public class Paths {
 	
 	public static final String DESCRIPTION_NT = "_description.nt";
 	public static final String PROVENANCE = "provenance";
-	public static final String DIR_NAME_TMP = "tmp";
 	
 	
 }
