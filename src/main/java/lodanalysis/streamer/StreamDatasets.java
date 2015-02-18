@@ -20,7 +20,7 @@ public class StreamDatasets  extends RuneableClass {
 	private Collection<File> datasetDirs;
 	public static int TOTAL_DIR_COUNT;
 	public static int PROCESSED_COUNT = 0;
-	public static File PROVENANCE_FILE;
+	public static File PROVENANCE_FILE = null;;
 	
 	private static BufferedWriter LOG_FILE_WRITER;
 	public StreamDatasets(Entry entry) throws IOException, InterruptedException {
@@ -28,7 +28,7 @@ public class StreamDatasets  extends RuneableClass {
 		/**
 		 * initialize temp file containing all provenance. We'll copy this file next to every statistic file we generate (for provenance reasons)
 		 */
-		PROVENANCE_FILE = new File(entry.getTmpDir(), Paths.PROVENANCE);
+		if (PROVENANCE_FILE == null) PROVENANCE_FILE = new File(entry.getTmpDir(), Paths.PROVENANCE);
 		System.out.println(PROVENANCE_FILE.toString());
 		Utils.writeSystemInfoToFile(PROVENANCE_FILE);
 		
