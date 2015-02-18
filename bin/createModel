@@ -9,6 +9,5 @@ version=`basename $datasetsDir`;
 metrics="/scratch/lodlaundromat/metrics-$version"
 
 metric=$metrics/$md5;
-echo $metric;
-echo "java -jar $LOD_ANALYSIS_JAR $force -metric $metric \"lodanalysis.model.CreateModels\";"
+java -jar $LOD_ANALYSIS_JAR $force -metric $metric "lodanalysis.model.CreateModels";
 
