@@ -98,7 +98,10 @@ public class Entry {
 		//	if (metricDir.isDirectory()) metricDirs.add(metricDir);
 		//    }
 		//}
-		if (args.containsKey(OptionKeys.metric.toString())) metricDirs.add(new File(args.get(OptionKeys.metric.toString())));
+		if (args.containsKey(OptionKeys.metric.toString())) {
+		    metricDirs = new HashSet<File>();
+		    metricDirs.add(new File(args.get(OptionKeys.metric.toString())));
+		}
 	}
 	private void mergeDefaults(CommandLine commandLine) {
 		for (Object key: DEFAULTS.keySet()) {
@@ -176,12 +179,9 @@ public class Entry {
 		if (args.containsKey(OptionKeys.help.toString())) throw new ParseException("");
 		if (classesToExec == null || classesToExec.size() == 0) throw new ParseException("You forgot to tell me what class(es) you want to run!");
 		//if (!args.containsKey((OptionKeys.datasets.toString())) && !args.containsKey(OptionKeys.dataset.toString())) throw new ParseException("Please specify the path where we can find the dataset directories");
-		if (!args.containsKey(OptionKeys.metrics.toString())) {
-			throw new ParseException("No metrics directory specified");
-		} else {
-			if (!new File(args.get(OptionKeys.metrics.toString())).exists()) {
-				throw new ParseException("Metrics directory " + args.get(OptionKeys.metrics.toString()) + " does not exist");
-			}
+		if (args.containsKey(OptionKeys.metrics.toString()) && !new File(args.get(OptionKeys.metrics.toString())).exists()) {
+		    throw new ParseException("Metrics directory " + args.get(OptionKeys.metrics.toString()) + " does not exist");
+		    
 		}
 		if (args.containsKey(OptionKeys.datasets.toString())) {
 			if (!new File(args.get(OptionKeys.datasets.toString())).exists()) throw new ParseException("The datasets path you specified does not exist: " + args.get(OptionKeys.datasets.toString()));
