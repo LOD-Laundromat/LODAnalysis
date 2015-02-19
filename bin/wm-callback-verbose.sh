@@ -18,5 +18,6 @@ echo $1 >> $hdtQueue;
 echo "Creating C-LOD file ($1)"
 streamDataset $1
 createModel $1
+storeModel $1
 
 exit 0;
