@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -32,17 +33,21 @@ import org.apache.http.message.BasicNameValuePair;
 
 public class StoreModelsInEndpoint  extends RuneableClass{
 	private static String SPARQL_GET_EXISTING_METRICS = "SELECT DISTINCT ?doc WHERE {?doc <http://lodlaundromat.org/metrics/ontology/metrics> []}";
+	
     private final int offset = 20000;
     private String sparqlEndpointUrl;
 	private String graphUpdateUrl;
     private Set<String> alreadyDone = new HashSet<String>();
 	private String metricsNamedGraph;
+
+    private String sparqEndpointUpdateUrl;
 	public StoreModelsInEndpoint(Entry entry) throws IOException {
 		super(entry);
 		metricsNamedGraph =  entry.getMetricNamedGraph();
 		Set<File> metricDirs = entry.getMetricDirs();
 		
 		this.sparqlEndpointUrl = entry.getSparqlUrl();
+		this.sparqEndpointUpdateUrl = entry.getSparqlUpdateUrl();
 		this.graphUpdateUrl = entry.getGraphUpdateUrl();
 
 		if (this.sparqlEndpointUrl == null || this.graphUpdateUrl == null) {
@@ -97,19 +102,103 @@ public class StoreModelsInEndpoint  extends RuneableClass{
 		}
 	}
 	
+	private boolean docAlreadyDone(String md5) throws IOException {
+	    boolean alreadyDone = false;
+	    String query = "ASK {<http://lodlaundromat.org/resource/" + md5 + "> <http://lodlaundromat.org/metrics/ontology/metrics> []}";
+	    
+        HttpClient httpclient = HttpClients.createDefault();
+        HttpPost httppost = new HttpPost(sparqlEndpointUrl);
+        httppost.addHeader("Accept", "text/plain");
+        List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+        params.add(new BasicNameValuePair("query", query));
+        params.add(new BasicNameValuePair("default-graph-uri", metricsNamedGraph));
+        httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+        HttpResponse response = httpclient.execute(httppost);
+        if (response.getStatusLine().getStatusCode() >= 300) {
+            throw new IOException("Failed to metric info for " + md5 + ". " + response.getStatusLine().toString());
+        }
+        
+        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+        String line = reader.readLine();
+        if (line != null && line.trim().toLowerCase().equals("true")) alreadyDone = true;
+	    return alreadyDone;
+	}
+	
+	
+	private void sendUpdate(String query) throws IOException {
+	    HttpClient httpclient = HttpClients.createDefault();
+        HttpPost httppost = new HttpPost(sparqEndpointUpdateUrl);
+        List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+        params.add(new BasicNameValuePair("query", query));
+        params.add(new BasicNameValuePair("default-graph-uri", metricsNamedGraph));
+        httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+        HttpResponse response = httpclient.execute(httppost);
+        if (response.getStatusLine().getStatusCode() >= 300) {
+            throw new IOException("Failed to retrieve the existing list of metrics. " + response.getStatusLine().toString());
+        }
+	}
+	
+	private void clearMetricInEndpoint(String md5) throws IOException {
+	    String resource = "<http://lodlaundromat.org/resource/" + md5 + ">";
+	    String metricsResource = "<http://lodlaundromat.org/resource/" + md5 + "/metrics>";
+	    
+	    //delete descriptive statistics (bnodes)
+	    sendUpdate("DELETE {\n" + 
+	            "  ?bnode ?pred ?obj\n" + 
+	            "}\n" + 
+	            "WHERE {\n" + 
+	            metricsResource + " ?f ?bnode.\n" + 
+	            "    FILTER(isBlank(?bnode))\n" + 
+	            "    ?bnode ?pred ?obj\n" + 
+	            "} ");
+	    
+	    //remove link with original resource
+	    sendUpdate("DELETE {\n" + 
+	            resource + " <http://lodlaundromat.org/metrics/ontology/metrics>  " + metricsResource + "\n" +
+	            "}");
+	    
+	    //remove all other stuff
+	    sendUpdate("DELETE {\n" + 
+	            metricsResource + " ?pred ?obj\n" + 
+	            "} WHERE {\n" + 
+	            metricsResource + " ?pred ?obj \n" + 
+	            "}");
+	}
+	
+	
 	private void storeMetricsInEndpoint(Set<File> metricDirs) throws IOException {
 		boolean force = entry.forceExec();
-		if (!force) {
-			//in this case, skip the ones we already stored
-		    while(getExistingMetricDatasets());
-			System.out.println("" + alreadyDone.size() + " already stored metrics");
-		}
 		int totalCount = metricDirs.size();
+		
+		
+		if (totalCount > 1) {
+		    //batch fetch existing metric datasets
+		    while(getExistingMetricDatasets());
+		    System.out.println("" + alreadyDone.size() + " already stored metrics");
+		}
+		
 		int processed = 0;
 		for (File metricDir: metricDirs) {
 			Utils.printProgress("storing description in endpoint (" + metricsNamedGraph + ")", totalCount, processed);
 			processed++;
-			if (force || !alreadyDone.contains(metricDir.getName())) {
+			
+			boolean metricDirDone = false;
+			if (totalCount > 1) {
+			    //fetch from batch list
+			    metricDirDone = alreadyDone.contains(metricDir.getName());
+			} else {
+			    //run ask query
+			    metricDirDone = docAlreadyDone(metricDir.getName());
+			}
+			
+			
+			if (force && metricDirDone) {
+			    //hmm, clear this metric
+			    clearMetricInEndpoint(metricDir.getName());
+			}
+			
+			
+			if (force || !metricDirDone) {
 				File descrFile = new File(metricDir, Paths.DESCRIPTION_NT);
 				if (!descrFile.exists()) {
 					System.err.println(descrFile.getAbsolutePath() + " does not exist. Skip sending");

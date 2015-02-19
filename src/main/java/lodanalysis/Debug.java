@@ -19,17 +19,17 @@ public class Debug {
 		/**
 		 * streamer
 		 */
-		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+//		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 
 		/**
 		 * model creator
 		 */
 		
-		new Entry(new String[]{"-force","-metrics", "metrics", "lodanalysis.model.CreateModels"});
+//		new Entry(new String[]{"-force","-metrics", "metrics", "lodanalysis.model.CreateModels"});
 		/**
 		 * upload models
 		 */
 //		http://lodlaundromat.org#metrics-11
-//		new Entry(new String[]{"-data_version", "11", "-nostrict", "-threads", "1","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.metrics.StoreDescriptionsInEndpoint"});
+		new Entry(new String[]{ "-force", "-metric", "metrics/0fb5cc2fb77fcd6c187ef3b4856f7813", "lodanalysis.model.StoreModelsInEndpoint"});
 	}
 }

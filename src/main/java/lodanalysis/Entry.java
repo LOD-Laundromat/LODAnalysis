@@ -23,7 +23,7 @@ import org.apache.commons.cli.ParseException;
 
 public class Entry {
 	private static Properties DEFAULTS = new Properties();
-	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics,metric, force,sparql_endpoint, tmp_dir, graph_update, namedgraph};
+	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics,metric, force,sparql_endpoint, tmp_dir, sparql_update, graph_update, namedgraph};
 	private Map<String, String> args = new HashMap<String, String>();
 	private Set<File> datasetDirs = new HashSet<File>();
 	private Set<File> metricDirs = null;
@@ -45,6 +45,9 @@ public class Entry {
 	}
 	public String getGraphUpdateUrl() {
 		return args.get(OptionKeys.graph_update.toString());
+	}
+	public String getSparqlUpdateUrl() {
+	    return args.get(OptionKeys.sparql_update.toString());
 	}
 	public int getNumThreads() {
 		return Integer.parseInt(args.get(OptionKeys.threads.toString()));
