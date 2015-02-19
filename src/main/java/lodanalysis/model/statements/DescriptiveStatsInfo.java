@@ -22,8 +22,10 @@ public abstract class DescriptiveStatsInfo extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
+	    String mean = FileUtils.readFileToString(new File(dir, getMeanFilename()));
+	    if (mean.equals("NaN")) return;//We don't have descriptive stats. (i.e. the n was zero). Just don't store this
 		Resource descriptiveStats = getBnode();
-		descriptiveStats.addProperty(getProp(Namespace.LLM, "mean"), FileUtils.readFileToString(new File(dir, getMeanFilename())), XSDDatatype.XSDdouble);
+		descriptiveStats.addProperty(getProp(Namespace.LLM, "mean"), mean, XSDDatatype.XSDdouble);
 		descriptiveStats.addProperty(getProp(Namespace.LLM, "median"), FileUtils.readFileToString(new File(dir, getMedianFilename())), XSDDatatype.XSDlong);
 		descriptiveStats.addProperty(getProp(Namespace.LLM, "min"), FileUtils.readFileToString(new File(dir, getMinFilename())), XSDDatatype.XSDlong);
 		descriptiveStats.addProperty(getProp(Namespace.LLM, "max"), FileUtils.readFileToString(new File(dir, getMaxFilename())), XSDDatatype.XSDlong);
