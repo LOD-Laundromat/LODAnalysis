@@ -173,7 +173,9 @@ public class Entry {
 			long diff = endTime.getTime() - startTime.getTime();
 			long diffSeconds = diff / 1000 % 60;  
 			long diffMinutes = diff / (60 * 1000) % 60; 
-			System.out.println("Finished: " + endTime.toString() + " (duration: " + diffMinutes + " min, " + diffSeconds + " seconds)");
+			long diffHours = diff / (60* 60 * 1000) % 60; 
+			
+			System.out.println("Finished: " + endTime.toString() + " (duration: " + diffHours + " hours, " + diffMinutes + " min, " + diffSeconds + " seconds)");
 		}
 	}
 
