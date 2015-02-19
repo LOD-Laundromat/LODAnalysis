@@ -46,7 +46,7 @@ public class StoreModelsInEndpoint  extends RuneableClass{
 		this.graphUpdateUrl = entry.getGraphUpdateUrl();
 
 		if (this.sparqlEndpointUrl == null || this.graphUpdateUrl == null) {
-			System.out.println("NOT storing metrics remotely. No SPARQL endpoint and no graph update URL passed as argument");
+			System.err.println("NOT storing metrics remotely. No SPARQL endpoint and no graph update URL passed as argument");
 		} else {
 			storeMetricsInEndpoint(metricDirs);
 		}

@@ -337,11 +337,18 @@ public class StreamDataset implements Runnable  {
 			 */
 			if (sub.isBnode) bnodeCounts.add(sub.ticket);
 			if (pred.isBnode) bnodeCounts.add(pred.ticket);
-			if (obj.isBnode) bnodeCounts.add(obj.ticket);
+			if (obj.isBnode) {
+			    bnodeCounts.add(obj.ticket);
+			    distinctObjBnodes.add(obj.ticket);
+			}
 
-
+			
+			/**
+			 * Store literal info
+			 */
 			if (obj.isLiteral) {
 				literalCount++;
+				literalLengthStats.addValue(obj.literalLength);
 				distinctLiterals.add(obj.ticket);
 				if (obj.datatype != null) {
 					distinctDataTypes.add(obj.datatype);
@@ -367,14 +374,12 @@ public class StreamDataset implements Runnable  {
 				} else if (obj.isDefinedProperty()) {
 					distinctDefinedProperties.add(sub.ticket);
 				}
-				
-				
 			}
 			
 			
 			
 			
-			//store URI info
+			//Store URI info
 			if (sub.isUri) {
 				uriCount++;
 				uriLengthStats.addValue(sub.uriLength);
@@ -382,7 +387,6 @@ public class StreamDataset implements Runnable  {
 				distinctUris.add(sub.ticket);
 				distinctSubUris.add(sub.ticket);
 			} else if (sub.isBnode) {
-				bnodeCounts.add(sub.ticket);
 				distinctSubBnodes.add(sub.ticket);
 			}
 			if (pred.isUri) {
@@ -390,8 +394,6 @@ public class StreamDataset implements Runnable  {
 				uriLengthStats.addValue(pred.uriLength);
 				distinctUris.add(pred.ticket);
 				uriPredLengthStats.addValue(pred.uriLength);
-			} else if(pred.isBnode) {
-				bnodeCounts.add(pred.ticket);
 			}
 			if (obj.isUri) {
 				uriCount++;
@@ -399,10 +401,6 @@ public class StreamDataset implements Runnable  {
 				uriObjLengthStats.addValue(obj.uriLength);
 				distinctUris.add(obj.ticket);
 				distinctObjUris.add(obj.ticket);
-			} else if (obj.isBnode) {
-				literalLengthStats.addValue(obj.literalLength);
-				bnodeCounts.add(obj.ticket);
-				distinctObjBnodes.add(obj.ticket);
 			}
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));

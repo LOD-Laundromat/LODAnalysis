@@ -19,8 +19,8 @@ public class Debug {
 		/**
 		 * streamer
 		 */
-//		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
-		new Entry(new String[]{"-force","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+//		new Entry(new String[]{"-force","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 		//java -jar /home/lrd900/code/lodAnalysis/target/lodAnalysis-1.0-SNAPSHOT-jar-with-dependencies.jar   -threads 20 -datasets datasets/ -metrics metrics/ "lodanalysis.streamer.StreamDatasets"
 
 		/**
