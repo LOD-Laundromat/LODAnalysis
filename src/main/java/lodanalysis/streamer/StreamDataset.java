@@ -228,9 +228,9 @@ public class StreamDataset implements Runnable  {
 		
 		
 		/**
-		 * Finally, store the delta of this run and store provenance
+		 * Finally, store the delta of this run
 		 */
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
+//		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(nsTripleCountsFile.getAbsolutePath() + ".sysinfo"));
 		FileUtils.write(new File(datasetOutputDir, StreamDatasets.DELTA_FILENAME), Integer.toString(StreamDatasets.DELTA_ID));
 	}
 
