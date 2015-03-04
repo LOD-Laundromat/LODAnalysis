@@ -117,8 +117,6 @@ public class StreamDataset implements Runnable  {
 
 	private void log(String msg) throws IOException {
 		if (entry.isVerbose()) System.out.println(msg);
-		StreamDatasets.writeToLogFile(msg);
-
 	}
 
 	private void store() throws IOException {

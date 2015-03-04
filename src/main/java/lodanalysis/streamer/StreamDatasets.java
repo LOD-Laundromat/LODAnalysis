@@ -1,8 +1,6 @@
 package lodanalysis.streamer;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -10,8 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import lodanalysis.Entry;
-import lodanalysis.RuneableClass;
 import lodanalysis.Paths;
+import lodanalysis.RuneableClass;
 import lodanalysis.utils.Utils;
 
 public class StreamDatasets  extends RuneableClass {
@@ -22,7 +20,6 @@ public class StreamDatasets  extends RuneableClass {
 	public static int PROCESSED_COUNT = 0;
 	public static File PROVENANCE_FILE = null;;
 	
-	private static BufferedWriter LOG_FILE_WRITER;
 	public StreamDatasets(Entry entry) throws IOException, InterruptedException {
 		super(entry);
 		/**
@@ -32,9 +29,6 @@ public class StreamDatasets  extends RuneableClass {
 		System.out.println(PROVENANCE_FILE.toString());
 		Utils.writeSystemInfoToFile(PROVENANCE_FILE);
 		
-		File logFile = new File(Paths.LOG_AGGREGATE);
-		if (logFile.exists()) logFile.delete();
-		LOG_FILE_WRITER = new BufferedWriter(new FileWriter(Paths.LOG_AGGREGATE));
 		datasetDirs = entry.getDatasetDirs();
 		TOTAL_DIR_COUNT = datasetDirs.size();
 		int numThreads = entry.getNumThreads();
@@ -49,7 +43,6 @@ public class StreamDatasets  extends RuneableClass {
 		
 	    
 		System.out.println();
-		LOG_FILE_WRITER.close();
 		
 	}
 	
@@ -92,11 +85,6 @@ public class StreamDatasets  extends RuneableClass {
 
     public static void printProgress(File datasetDir) throws IOException {
 		Utils.printProgress("aggregating", TOTAL_DIR_COUNT, PROCESSED_COUNT);
-	}
-	
-	public static void writeToLogFile(String msg) throws IOException {
-		LOG_FILE_WRITER.write(msg + "\n");
-		LOG_FILE_WRITER.flush();
 	}
 	
 
