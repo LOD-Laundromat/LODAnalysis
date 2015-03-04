@@ -71,6 +71,7 @@ public class Paths {
 	public static final String ALL_LITERALS = "allUris";
 	
 	public static final String DESCRIPTION_NT = "_description.nt";
+	public static final String PROVENANCE = "provenance";
 	
 	
 }

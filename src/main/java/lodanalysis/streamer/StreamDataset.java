@@ -120,9 +120,14 @@ public class StreamDataset implements Runnable  {
 	}
 
 	private void store() throws IOException {
+	    
 		String datasetMd5 = datasetDir.getName();
 		File datasetOutputDir = new File(entry.getMetricParentDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
+		
+		//store provenance file
+		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(datasetOutputDir, ".sysinfo"));
+		
 		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.NS_COUNTS), nsCounts);
 		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.BNODE_COUNTS), bnodeCounts);
 		writePredCountersToFile(datasetOutputDir, predicateCounts);
@@ -416,6 +421,7 @@ public class StreamDataset implements Runnable  {
 			
 		}
 		fw.close();
+		
 	}
 
 	private void writePredCountersToFile(File targetDir, HashMap<PatriciaNode, PredicateCounter> predCounters) throws IOException {
