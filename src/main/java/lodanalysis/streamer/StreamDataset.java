@@ -416,8 +416,6 @@ public class StreamDataset implements Runnable  {
 			
 		}
 		fw.close();
-		//also store provenance
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 
 	private void writePredCountersToFile(File targetDir, HashMap<PatriciaNode, PredicateCounter> predCounters) throws IOException {
@@ -436,18 +434,12 @@ public class StreamDataset implements Runnable  {
 		fwPredCounts.close();
 		fwPredLitCounts.close();
 		fwPredNonLitCounts.close();
-		//also store provenance
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(predCountsFile.getAbsolutePath() + ".sysinfo"));
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(predLitCountFiles.getAbsolutePath() + ".sysinfo"));
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(predUriCountsFile.getAbsolutePath() + ".sysinfo"));
 	}
 	private void writeSingleCountToFile(File targetFile, int val) throws IOException {
 		FileUtils.writeStringToFile(targetFile, Integer.toString(val));
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 	private void writeSingleCountToFile(File targetFile, double val) throws IOException {
 		FileUtils.writeStringToFile(targetFile, Double.toString(val));
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(targetFile.getAbsolutePath() + ".sysinfo"));
 	}
 
 

@@ -153,16 +153,7 @@ public class Utils {
 		System.out.print(msg + " (" + percentage + ")\r");
 	}
 	
-	
-	public static void writeSystemInfoToFile(File file) throws IOException {
-		ArrayList<String> lines = getGitInfoLines();
-		
-		for (String key: RELEVANT_SYS_PROPS) {
-			String prop = System.getProperty(key);
-			lines.add(key + ": " + (prop != null? prop: "null"));
-		}
-		FileUtils.writeLines(file, lines);
-	}
+
 	public static ArrayList<String> getGitInfoLines() throws IOException
 	{
 		ArrayList<String> lines = new ArrayList<String>();
