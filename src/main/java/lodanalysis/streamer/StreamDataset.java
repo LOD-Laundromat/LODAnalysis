@@ -29,10 +29,14 @@ import com.google.common.collect.HashMultiset;
 public class StreamDataset implements Runnable  {
 	public class PredicateCounter {
 		int count = 1;//how often does this predicate occur. (initialize with 1)
-		int hasLiteralCount = 0;//how many literals does it co-occur with
-		int hasNonLiteralCount = 0;//how many uris does it co-occur with
-		HashSet<PatriciaNode> distinctLiteralCount = new HashSet<PatriciaNode>();
-		HashSet<PatriciaNode> distinctNonLiteralCount = new HashSet<PatriciaNode>();
+		//how many literals (objects) does it co-occur with
+		int objLiteralCount = 0;
+		HashSet<PatriciaNode> distinctObjLiteralCount = new HashSet<PatriciaNode>();
+		//how many URIs/bnodes (objects) does it co-occur with
+		int objNonLiteralCount = 0;
+		HashSet<PatriciaNode> distinctObjNonLiteralCount = new HashSet<PatriciaNode>();
+        //how many distinct subjects (URIs or bnodes) does it co-occur with
+        HashSet<PatriciaNode> distinctSubCount = new HashSet<PatriciaNode>();
 	}
 
 	private File datasetDir;
@@ -67,7 +71,6 @@ public class StreamDataset implements Runnable  {
 	private DescriptiveStatistics uriPredLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics uriObjLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics literalLengthStats = new DescriptiveStatistics();
-	
 	
 	
 	
@@ -316,6 +319,7 @@ public class StreamDataset implements Runnable  {
 			    predCounter = predicateCounts.get(pred.ticket);
 			    predCounter.count++;
 			}
+			predCounter.distinctSubCount.add(sub.ticket);
 			
 			
 			/**
@@ -359,11 +363,11 @@ public class StreamDataset implements Runnable  {
 				if (obj.langTag != null) {
 					distinctLangTags.add(obj.langTag);
 				}
-				predCounter.hasLiteralCount++;
-				predCounter.distinctLiteralCount.add(obj.ticket);
+				predCounter.objLiteralCount++;
+				predCounter.distinctObjLiteralCount.add(obj.ticket);
 			} else {
-				predCounter.hasNonLiteralCount++;
-				predCounter.distinctNonLiteralCount.add(obj.ticket);
+				predCounter.objNonLiteralCount++;
+				predCounter.distinctObjNonLiteralCount.add(obj.ticket);
 			}
 			
 			/**
@@ -392,6 +396,8 @@ public class StreamDataset implements Runnable  {
 			} else if (sub.isBnode) {
 				distinctSubBnodes.add(sub.ticket);
 			}
+			
+			
 			if (pred.isUri) {
 				uriCount++;
 				uriLengthStats.addValue(pred.uriLength);
@@ -431,15 +437,19 @@ public class StreamDataset implements Runnable  {
 		FileWriter fwPredLitCounts = new FileWriter(predLitCountFiles);
 		File predUriCountsFile = new File(targetDir, Paths.PREDICATE_NON_LIT_COUNTS);
 		FileWriter fwPredNonLitCounts = new FileWriter(predUriCountsFile);
+		File predSubCountsFile = new File(targetDir, Paths.PREDICATE_SUB_COUNTS);
+		FileWriter fwPredSubCountsFile = new FileWriter(predSubCountsFile);
 		for (java.util.Map.Entry<PatriciaNode, PredicateCounter> entry: predCounters.entrySet()) {
 			String pred = vault.redeem(entry.getKey());
 			fwPredCounts.write(pred + "\t" + entry.getValue().count + System.getProperty("line.separator"));
-			fwPredLitCounts.write(pred + "\t" + entry.getValue().hasLiteralCount + "\t" + entry.getValue().distinctLiteralCount.size() + "\t" + System.getProperty("line.separator"));
-			fwPredNonLitCounts.write(pred + "\t" + entry.getValue().hasNonLiteralCount + "\t" + entry.getValue().distinctNonLiteralCount.size() + "\t" + System.getProperty("line.separator"));
+			fwPredLitCounts.write(pred + "\t" + entry.getValue().objLiteralCount + "\t" + entry.getValue().distinctObjLiteralCount.size() + "\t" + System.getProperty("line.separator"));
+			fwPredNonLitCounts.write(pred + "\t" + entry.getValue().objNonLiteralCount + "\t" + entry.getValue().distinctObjNonLiteralCount.size() + "\t" + System.getProperty("line.separator"));
+			fwPredSubCountsFile.write(pred + "\t" + entry.getValue().distinctSubCount.size()  + System.getProperty("line.separator"));
 		}
 		fwPredCounts.close();
 		fwPredLitCounts.close();
 		fwPredNonLitCounts.close();
+		fwPredSubCountsFile.close();
 	}
 	private void writeSingleCountToFile(File targetFile, int val) throws IOException {
 		FileUtils.writeStringToFile(targetFile, Integer.toString(val));

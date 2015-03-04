@@ -15,6 +15,7 @@ public class Paths {
 	public static final String PREDICATE_COUNTS = "predicateCounts";
 	public static final String PREDICATE_LITERAL_COUNTS = "predicateLiteralCounts";
 	public static final String PREDICATE_NON_LIT_COUNTS = "predicateNonLitCounts";
+	public static final String PREDICATE_SUB_COUNTS = "predicateSubCounts";
 	public static final String DEGREE_AVG = "degreeAvg";
 	public static final String DEGREE_STD = "degreeStd";
 	public static final String DEGREE_MEDIAN = "degreeMedian";
