@@ -14,8 +14,12 @@ public class Debug {
 	
 	public static void main(String[] args) throws IOException {
 
-		
-		
+		/**
+		 * ad hoc dataset resources script
+		 */
+	    new Entry(new String[]{"-force","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.GetDatasetsResources"});
+//	    new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.GetDatasetsResources"});
+	    
 		/**
 		 * streamer
 		 */
@@ -30,6 +34,6 @@ public class Debug {
 		 * upload models
 		 */
 //		http://lodlaundromat.org#metrics-11
-		new Entry(new String[]{ "-force", "-metric", "metrics/0fb5cc2fb77fcd6c187ef3b4856f7813", "lodanalysis.model.StoreModelsInEndpoint"});
+//		new Entry(new String[]{ "-force", "-metric", "metrics/0fb5cc2fb77fcd6c187ef3b4856f7813", "lodanalysis.model.StoreModelsInEndpoint"});
 	}
 }

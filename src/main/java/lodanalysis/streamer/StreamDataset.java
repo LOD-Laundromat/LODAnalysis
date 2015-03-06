@@ -3,17 +3,21 @@ package lodanalysis.streamer;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import lodanalysis.Entry;
 import lodanalysis.Paths;
@@ -57,6 +61,7 @@ public class StreamDataset implements Runnable  {
 	private HashMultiset<PatriciaNode> indegreeCounts = HashMultiset.create();
 	private HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
 	private Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> uriBnodeSet = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctLiterals = new HashSet<PatriciaNode>();
 	private HashSet<PatriciaNode> distinctSubUris = new HashSet<PatriciaNode>();
 	private HashSet<PatriciaNode> distinctSubBnodes = new HashSet<PatriciaNode>();
@@ -219,7 +224,14 @@ public class StreamDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MIN), uriPredLengthStats.getMin());
 		
 		
-		
+        FileOutputStream output = new FileOutputStream(new File(datasetOutputDir, Paths.URI_BNODE_SET));
+        Writer resourcesFileFw = new OutputStreamWriter(new GZIPOutputStream(output), "UTF-8");
+        for (PatriciaNode pNode : uriBnodeSet) {
+            resourcesFileFw.write(vault.redeem(pNode) + System.getProperty("line.separator"));
+        }
+        resourcesFileFw.close();
+        output.close();
+
 		//this one is a bit different (key is a set of strings)
 		File nsTripleCountsFile = new File(datasetOutputDir, Paths.NS_TRIPLE_COUNTS);
 		FileWriter namespaceTripleCountsOutput = new FileWriter(nsTripleCountsFile);
@@ -393,8 +405,10 @@ public class StreamDataset implements Runnable  {
 				uriSubLengthStats.addValue(sub.uriLength);
 				distinctUris.add(sub.ticket);
 				distinctSubUris.add(sub.ticket);
+				uriBnodeSet.add(sub.ticket);
 			} else if (sub.isBnode) {
 				distinctSubBnodes.add(sub.ticket);
+				uriBnodeSet.add(sub.ticket);
 			}
 			
 			
@@ -403,6 +417,7 @@ public class StreamDataset implements Runnable  {
 				uriLengthStats.addValue(pred.uriLength);
 				distinctUris.add(pred.ticket);
 				uriPredLengthStats.addValue(pred.uriLength);
+				uriBnodeSet.add(pred.ticket);
 			}
 			if (obj.isUri) {
 				uriCount++;
@@ -410,6 +425,9 @@ public class StreamDataset implements Runnable  {
 				uriObjLengthStats.addValue(obj.uriLength);
 				distinctUris.add(obj.ticket);
 				distinctObjUris.add(obj.ticket);
+				uriBnodeSet.add(obj.ticket);
+			} else if (obj.isBnode) {
+			    uriBnodeSet.add(obj.ticket);
 			}
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
