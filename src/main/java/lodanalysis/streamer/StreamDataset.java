@@ -76,7 +76,7 @@ public class StreamDataset implements Runnable  {
 	private DescriptiveStatistics uriPredLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics uriObjLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics literalLengthStats = new DescriptiveStatistics();
-	
+	private Set<PatriciaNode> distinctSos = new HashSet<PatriciaNode>();
 	
 	
 	private Entry entry;
@@ -141,6 +141,7 @@ public class StreamDataset implements Runnable  {
 		writePredCountersToFile(datasetOutputDir, predicateCounts);
 		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.CLASS_COUNTS), classCounts);
 		
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), distinctSos.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), distinctDataTypes.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), distinctLangTags.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), distinctLiterals.size());
@@ -172,6 +173,7 @@ public class StreamDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_STD), stats.getStandardDeviation());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MAX), stats.getMax());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MIN), stats.getMin());
+		
 		//indegree (media/median/mode/range)
 		stats.clear();
 		for (PatriciaNode pNode: indegreeCounts.elementSet()) stats.addValue(indegreeCounts.count(pNode));
@@ -324,6 +326,8 @@ public class StreamDataset implements Runnable  {
 			outdegreeCounts.add(sub.ticket);
 			indegreeCounts.add(obj.ticket);
 			PredicateCounter predCounter = null;
+			distinctSos.add(sub.ticket);
+			distinctSos.add(obj.ticket);
 			if (!predicateCounts.containsKey(pred.ticket)) {
 				predCounter = new PredicateCounter();
 				predicateCounts.put(pred.ticket, predCounter);
