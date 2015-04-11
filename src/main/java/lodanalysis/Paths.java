@@ -9,6 +9,7 @@ public class Paths {
 	public static final String INPUT_NT_GZ = "clean.nt.gz";
 	public static final String INPUT_NQ_GZ = "clean.nq.gz";
 	
+	public static final String DISTINCT_SOS_COUNT = "sosCount";
 	public static final String DISTINCT_LITERALS = "literalCount";
 	public static final String DISTINCT_TRIPLES = "tripleCount";
 	public static final String DISTINCT_SUBJECTS = "subjectCount";

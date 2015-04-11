@@ -1,4 +1,4 @@
-package lodanalysis.streamer;
+package lodanalysis.streamer.singlerun;
 
 import java.io.File;
 import java.io.IOException;

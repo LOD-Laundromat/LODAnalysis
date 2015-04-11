@@ -1,4 +1,4 @@
-package lodanalysis.streamer;
+package lodanalysis.streamer.singlerun;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,6 +20,7 @@ import java.util.zip.GZIPOutputStream;
 import lodanalysis.Entry;
 import lodanalysis.Paths;
 
+import org.apache.commons.io.FileUtils;
 import org.data2semantics.vault.PatriciaVault;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
 import org.data2semantics.vault.Vault;
@@ -37,6 +38,7 @@ public class GetDatasetResources implements Runnable  {
 	
 	
 	private Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> distinctSos = new HashSet<PatriciaNode>();
 	
 	private Entry entry;
 	public static void stream(Entry entry, File datasetDir) throws IOException {
@@ -92,6 +94,8 @@ public class GetDatasetResources implements Runnable  {
 		File datasetOutputDir = new File(entry.getMetricParentDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
 		
+		File writeFile = new File(datasetOutputDir, Paths.URI_BNODE_SET);
+		if (writeFile.exists()) writeFile.delete();
 		FileOutputStream output = new FileOutputStream(new File(datasetOutputDir, Paths.URI_BNODE_SET));
         Writer resourcesFileFw = new OutputStreamWriter(new GZIPOutputStream(output), "UTF-8");
         for (PatriciaNode pNode : distinctUris) {
@@ -99,7 +103,7 @@ public class GetDatasetResources implements Runnable  {
         }
         resourcesFileFw.close();
         output.close();
-
+        FileUtils.writeStringToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), Integer.toString(distinctSos.size()));
 	}
 
 
@@ -164,16 +168,22 @@ public class GetDatasetResources implements Runnable  {
 		}
 		if (nodes.length >= 3) {
 		    
-		    
+		    PatriciaNode sub = vault.store(nodes[0]);
+		    PatriciaNode pred = vault.store(nodes[1]);
+		    PatriciaNode obj = vault.store(nodes[2]);
+		    //get distinct uris
 		    if (nodes[0].charAt(0) != '"') {
-		        distinctUris.add(vault.store(nodes[0]));
+		        distinctUris.add(sub);
 		    }
-		    if (nodes[0].charAt(1) != '"') {
-		        distinctUris.add(vault.store(nodes[0]));
+		    if (nodes[1].charAt(0) != '"') {
+		        distinctUris.add(pred);
 		    }
-		    if (nodes[0].charAt(2) != '"') {
-		        distinctUris.add(vault.store(nodes[0]));
+		    if (nodes[2].charAt(0) != '"') {
+		        distinctUris.add(obj);
 		    }
+		    distinctSos.add(sub);
+		    distinctSos.add(obj);
+		    
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
 		}
