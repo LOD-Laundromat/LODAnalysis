@@ -17,7 +17,7 @@ public class Debug {
 		/**
 		 * ad hoc dataset resources script
 		 */
-	    new Entry(new String[]{"-force","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.GetDatasetsResources"});
+	    new Entry(new String[]{"-force","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.singlerun.GetDatasetsResources"});
 //	    new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.GetDatasetsResources"});
 	    
 		/**
