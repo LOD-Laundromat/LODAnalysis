@@ -58,7 +58,11 @@ public class GetDatasetResources implements Runnable  {
 			    inputFile = new File(datasetDir, Paths.INPUT_NQ_GZ);
 			    isNquadFile = true;
 			}
-			if (inputFile.exists()) {
+			File datasetOutputDir = new File(entry.getMetricParentDir(), datasetDir.getName());
+			File sosFile = new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT);
+			//if sos file exist, do not process this dataset (unless '-force' is set of course)
+			boolean doRun = entry.forceExec() || !datasetOutputDir.exists() || !sosFile.exists();
+			if (inputFile.exists() && doRun) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
 				boolean somethingRead = false;
