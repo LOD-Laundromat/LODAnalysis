@@ -172,13 +172,13 @@ public class GetDatasetResources implements Runnable  {
 		    PatriciaNode pred = vault.store(nodes[1]);
 		    PatriciaNode obj = vault.store(nodes[2]);
 		    //get distinct uris
-		    if (nodes[0].charAt(0) != '"') {
+		    if (nodes[0].length() > 0 && nodes[0].charAt(0) != '"') {
 		        distinctUris.add(sub);
 		    }
-		    if (nodes[1].charAt(0) != '"') {
+		    if (nodes[1].length() > 0 && nodes[1].charAt(0) != '"') {
 		        distinctUris.add(pred);
 		    }
-		    if (nodes[2].charAt(0) != '"') {
+		    if (nodes[2].length() > 0 && nodes[2].charAt(0) != '"') {
 		        distinctUris.add(obj);
 		    }
 		    distinctSos.add(sub);
