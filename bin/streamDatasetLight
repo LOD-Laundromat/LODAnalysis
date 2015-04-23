@@ -1,0 +1,20 @@
+#!/bin/bash
+[ -z $LOD_ANALYSIS_JAR ] && echo "LOD_ANALYSIS_JAR environment variable not set" && exit 1;
+
+force='-force';
+verbose='-verbose';
+memory="-Xmx30G"
+[ -z "$1" ] && echo "No dataset provided as argument" && exit 1;
+datasetsDir=`dirname $1`;
+version=`basename $datasetsDir`;
+metrics="/scratch/lodlaundromat/metrics-$version"
+
+if [ -z "$2" ]; then
+	echo "Using metric dir $metrics"
+else
+	metrics=$2;
+fi
+
+
+
+java $memory -jar $LOD_ANALYSIS_JAR $force $verbose -dataset $1 -metrics $metrics "lodanalysis.streamer.StreamDatasetsLight"
