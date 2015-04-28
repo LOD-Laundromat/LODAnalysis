@@ -3,30 +3,36 @@ package lodanalysis.streamer.singlerun;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import lodanalysis.Entry;
 import lodanalysis.Paths;
+import lodanalysis.streamer.NodeWrapper;
 
-import org.apache.commons.io.FileUtils;
 import org.data2semantics.vault.PatriciaVault;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
 import org.data2semantics.vault.Vault;
 
-public class GetDatasetResources implements Runnable  {
-	
+import com.google.common.collect.HashMultiset;
+
+public class StreamDatasetNamespaces implements Runnable  {
+	public class PredicateCounter {
+		int count = 1;//how often does this predicate occur. (initialize with 1)
+		//how many literals (objects) does it co-occur with
+		//how many URIs/bnodes (objects) does it co-occur with
+		int objNonLiteralCount = 0;
+		HashSet<PatriciaNode> distinctObjNonLiteralCount = new HashSet<PatriciaNode>();
+        //how many distinct subjects (URIs or bnodes) does it co-occur with
+        HashSet<PatriciaNode> distinctSubCount = new HashSet<PatriciaNode>();
+	}
 
 	private File datasetDir;
 	private InputStream gzipStream;
@@ -35,18 +41,16 @@ public class GetDatasetResources implements Runnable  {
 	private BufferedReader reader;
 	private Vault<String, PatriciaNode> vault =  new PatriciaVault();
 	private boolean isNquadFile = false;
-	
-	
-	private Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
-	private Set<PatriciaNode> distinctSos = new HashSet<PatriciaNode>();
+	int tripleCount = 0;
+	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
 	
 	private Entry entry;
 	public static void stream(Entry entry, File datasetDir) throws IOException {
-		GetDatasetResources aggr = new GetDatasetResources(entry, datasetDir);
+		StreamDatasetNamespaces aggr = new StreamDatasetNamespaces(entry, datasetDir);
 
 		aggr.run();
 	}
-	public GetDatasetResources(Entry entry, File datasetDir) throws IOException {
+	public StreamDatasetNamespaces(Entry entry, File datasetDir) throws IOException {
 		this.entry = entry;
 		this.datasetDir = datasetDir;
 	}
@@ -58,11 +62,7 @@ public class GetDatasetResources implements Runnable  {
 			    inputFile = new File(datasetDir, Paths.INPUT_NQ_GZ);
 			    isNquadFile = true;
 			}
-			File datasetOutputDir = new File(entry.getMetricParentDir(), datasetDir.getName());
-			File sosFile = new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT);
-			//if sos file exist, do not process this dataset (unless '-force' is set of course)
-			boolean doRun = entry.forceExec() || !datasetOutputDir.exists() || !sosFile.exists();
-			if (inputFile.exists() && doRun) {
+			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
 				boolean somethingRead = false;
@@ -98,19 +98,23 @@ public class GetDatasetResources implements Runnable  {
 		File datasetOutputDir = new File(entry.getMetricParentDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
 		
-		File writeFile = new File(datasetOutputDir, Paths.URI_BNODE_SET);
-		if (writeFile.exists()) writeFile.delete();
-		FileOutputStream output = new FileOutputStream(new File(datasetOutputDir, Paths.URI_BNODE_SET));
-        Writer resourcesFileFw = new OutputStreamWriter(new GZIPOutputStream(output), "UTF-8");
-        for (PatriciaNode pNode : distinctUris) {
-            resourcesFileFw.write(vault.redeem(pNode) + System.getProperty("line.separator"));
-        }
-        resourcesFileFw.close();
-        output.close();
-        FileUtils.writeStringToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), Integer.toString(distinctSos.size()));
+		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.NS_COUNTS), nsCounts);
+	
 	}
 
-
+	/**
+     * just a simple helper method, to store the maps with a string as key, and counter as val
+     * @throws IOException 
+     */
+    private void writePatriciaCountsToFile(File targetFile, HashMultiset<PatriciaNode> multiset) throws IOException {
+        FileWriter fw = new FileWriter(targetFile);
+        for (com.google.common.collect.Multiset.Entry<PatriciaNode> entry: multiset.entrySet()) {
+            fw.write(vault.redeem((PatriciaNode)entry.getElement()) + "\t" + entry.getCount() + System.getProperty("line.separator"));
+            
+        }
+        fw.close();
+        
+    }
 
 	/**
 	 * get nodes. if it is a uri, remove the < and >. For literals, keep quotes. This makes the number of substring operation later on low, and we can still distinguish between URIs and literals
@@ -160,8 +164,7 @@ public class GetDatasetResources implements Runnable  {
 		}
 	    return new String[]{sub, pred, obj, graph};
 	}
-	
-	
+
 	private void processLine(String line) {
 		String[] nodes;
 		try {
@@ -171,23 +174,19 @@ public class GetDatasetResources implements Runnable  {
 			return;
 		}
 		if (nodes.length >= 3) {
-		    
-		    PatriciaNode sub = vault.store(nodes[0]);
-		    PatriciaNode pred = vault.store(nodes[1]);
-		    PatriciaNode obj = vault.store(nodes[2]);
-		    //get distinct uris
-		    if (nodes[0].length() > 0 && nodes[0].charAt(0) != '"') {
-		        distinctUris.add(sub);
-		    }
-		    if (nodes[1].length() > 0 && nodes[1].charAt(0) != '"') {
-		        distinctUris.add(pred);
-		    }
-		    if (nodes[2].length() > 0 && nodes[2].charAt(0) != '"') {
-		        distinctUris.add(obj);
-		    }
-		    distinctSos.add(sub);
-		    distinctSos.add(obj);
-		    
+		    tripleCount++;
+            //get distinct uris
+            if (nodes[0].length() > 0 && nodes[0].charAt(0) != '"') {
+                if (!nodes[0].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[0])));
+            }
+            if (nodes[1].length() > 0 && nodes[1].charAt(0) != '"') {
+                if (!nodes[1].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[1])));
+            }
+            if (nodes[2].length() > 0 && nodes[2].charAt(0) != '"') {
+                if (!nodes[2].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[2])));
+            }
+
+			
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
 		}
@@ -218,14 +217,23 @@ public class GetDatasetResources implements Runnable  {
 	}
 
 
+	/**
+	 * del delta. This way, when we re-run (forced) a dataset analysis, but we stop in the middle, we know we have to re-run this dataset again later on
+	 * @throws IOException
+	 */
+	private void delDelta() throws IOException {
+		File deltaFile = new File(datasetDir, StreamDatasetsNamespaces.DELTA_FILENAME);
+		if (deltaFile.exists()) deltaFile.delete();
+	}
 
 	@Override
 	public void run() {
 		try {
 			log("aggregating " + datasetDir.getName());
+			delDelta();
 			processDataset();
-			GetDatasetsResources.PROCESSED_COUNT++;
-			GetDatasetsResources.printProgress(datasetDir);
+			StreamDatasetsNamespaces.PROCESSED_COUNT++;
+			StreamDatasetsNamespaces.printProgress(datasetDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

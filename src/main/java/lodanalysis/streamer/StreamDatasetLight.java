@@ -27,6 +27,8 @@ import org.data2semantics.vault.PatriciaVault;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
 import org.data2semantics.vault.Vault;
 
+import com.google.common.collect.HashMultiset;
+
 public class StreamDatasetLight implements Runnable  {
 	public class PredicateCounter {
 		int count = 1;//how often does this predicate occur. (initialize with 1)
@@ -49,7 +51,7 @@ public class StreamDatasetLight implements Runnable  {
 	private HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
 	private Set<PatriciaNode> uriBnodeSet = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctSos = new HashSet<PatriciaNode>();
-	
+	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
 	
 	private Entry entry;
 	public static void stream(Entry entry, File datasetDir) throws IOException {
@@ -109,7 +111,7 @@ public class StreamDatasetLight implements Runnable  {
 		writePredCountersToFile(datasetOutputDir, predicateCounts);
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), distinctSos.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_TRIPLES), tripleCount);
-		
+		writePatriciaCountsToFile(new File(datasetOutputDir, Paths.NS_COUNTS), nsCounts);
 	
 		
 		
@@ -128,7 +130,19 @@ public class StreamDatasetLight implements Runnable  {
 		FileUtils.write(new File(datasetOutputDir, StreamDatasets.DELTA_FILENAME), Integer.toString(StreamDatasets.DELTA_ID));
 	}
 
-
+	/**
+     * just a simple helper method, to store the maps with a string as key, and counter as val
+     * @throws IOException 
+     */
+    private void writePatriciaCountsToFile(File targetFile, HashMultiset<PatriciaNode> multiset) throws IOException {
+        FileWriter fw = new FileWriter(targetFile);
+        for (com.google.common.collect.Multiset.Entry<PatriciaNode> entry: multiset.entrySet()) {
+            fw.write(vault.redeem((PatriciaNode)entry.getElement()) + "\t" + entry.getCount() + System.getProperty("line.separator"));
+            
+        }
+        fw.close();
+        
+    }
 
 	/**
 	 * get nodes. if it is a uri, remove the < and >. For literals, keep quotes. This makes the number of substring operation later on low, and we can still distinguish between URIs and literals
@@ -213,17 +227,28 @@ public class StreamDatasetLight implements Runnable  {
             
             distinctSos.add(sub);
             distinctSos.add(obj);
+            
+            /**
+             * store ns counters
+             */
+            
+            
+            
+            
             //get distinct uris
             if (nodes[0].length() > 0 && nodes[0].charAt(0) != '"') {
                 uriBnodeSet.add(sub);
+                if (!nodes[0].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[0])));
             }
             if (nodes[1].length() > 0 && nodes[1].charAt(0) != '"') {
                 uriBnodeSet.add(pred);
+                if (!nodes[1].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[1])));
             }
             if (nodes[2].length() > 0 && nodes[2].charAt(0) != '"') {
                 predCounter.objNonLiteralCount++;
                 predCounter.distinctObjNonLiteralCount.add(obj);
                 uriBnodeSet.add(obj);
+                if (!nodes[2].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[2])));
             }
 
 			
@@ -297,8 +322,8 @@ public class StreamDatasetLight implements Runnable  {
 			log("aggregating " + datasetDir.getName());
 			delDelta();
 			processDataset();
-			StreamDatasets.PROCESSED_COUNT++;
-			StreamDatasets.printProgress(datasetDir);
+			StreamDatasetsLight.PROCESSED_COUNT++;
+			StreamDatasetsLight.printProgress(datasetDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -9,7 +9,7 @@ public class NodeWrapper {
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
 
-	private static final String BNODE_SUBSTRING = "http://lodlaundromat.org/.well-known/";
+	public static final String BNODE_SUBSTRING = "http://lodlaundromat.org/.well-known/";
 
 	private final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 	
@@ -71,7 +71,7 @@ public class NodeWrapper {
 				this.isUri = false;
 			} else {
 				uriLength = stringRepresentation.length();
-				String ns = getNs();
+				String ns = getNs(stringRepresentation);
 				this.nsTicket = vault.store(ns);
 				getSchemaInfo(stringRepresentation, ns);
 			}
@@ -112,15 +112,15 @@ public class NodeWrapper {
 	}
 	
 
-	private String getNs() {
-		int hashTagIndex = stringRepresentation.lastIndexOf('#');
-		int slashIndex = stringRepresentation.lastIndexOf('/');
-		int colonIndex = stringRepresentation.lastIndexOf(':');
+	public static String getNs(String uri) {
+		int hashTagIndex = uri.lastIndexOf('#');
+		int slashIndex = uri.lastIndexOf('/');
+		int colonIndex = uri.lastIndexOf(':');
 		if (hashTagIndex > 6 || slashIndex > 6 || colonIndex > 6) {
 			//ok, this has a namespace, and not something like http://google.com
-			return stringRepresentation.substring(0, Math.max(Math.max(hashTagIndex, slashIndex), colonIndex));
+			return uri.substring(0, Math.max(Math.max(hashTagIndex, slashIndex), colonIndex));
 		} else {
-			return stringRepresentation; //initialize with ns as whole URI
+			return uri; //initialize with ns as whole URI
 		}
 	}
 	

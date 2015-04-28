@@ -17,7 +17,8 @@ public class Debug {
 		/**
 		 * ad hoc dataset resources script
 		 */
-	    new Entry(new String[]{"-threads", "4", "-force","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasetsLight"});
+//	    new Entry(new String[]{"-threads", "4","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasetsLight"});
+	    new Entry(new String[]{"-threads", "4","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.singlerun.StreamDatasetsNamespaces"});
 	    
 		/**
 		 * streamer
