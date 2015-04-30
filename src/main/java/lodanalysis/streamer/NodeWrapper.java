@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
 import org.data2semantics.vault.Vault;
-
+import org.apache.xerces.util.XMLChar ;
 public class NodeWrapper {
 	@SuppressWarnings("unused")
 	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
@@ -112,18 +112,91 @@ public class NodeWrapper {
 	}
 	
 
-	public static String getNs(String uri) {
-		int hashTagIndex = uri.lastIndexOf('#');
-		int slashIndex = uri.lastIndexOf('/');
-		int colonIndex = uri.lastIndexOf(':');
-		if (hashTagIndex > 6 || slashIndex > 6 || colonIndex > 6) {
-			//ok, this has a namespace, and not something like http://google.com
-			return uri.substring(0, Math.max(Math.max(hashTagIndex, slashIndex), colonIndex));
-		} else {
-			return uri; //initialize with ns as whole URI
-		}
-	}
+//	public static String getNs(String uri) {
+//		int hashTagIndex = uri.lastIndexOf('#');
+//		int slashIndex = uri.lastIndexOf('/');
+//		int colonIndex = uri.lastIndexOf(':');
+//		if (hashTagIndex > 6 || slashIndex > 6 || colonIndex > 6) {
+//			//ok, this has a namespace, and not something like http://google.com
+//			return uri.substring(0, Math.max(Math.max(hashTagIndex, slashIndex), colonIndex));
+//		} else {
+//			return uri; //initialize with ns as whole URI
+//		}
+//	}
 	
+	//borrowed from jena
+public static String getNs(String uri) {
+        
+        // XML Namespaces 1.0:
+        // A qname name is NCName ':' NCName
+        // NCName             ::=      NCNameStartChar NCNameChar*
+        // NCNameChar         ::=      NameChar - ':'
+        // NCNameStartChar    ::=      Letter | '_'
+        // 
+        // XML 1.0
+        // NameStartChar      ::= ":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] |
+        //                        [#xD8-#xF6] | [#xF8-#x2FF] |
+        //                        [#x370-#x37D] | [#x37F-#x1FFF] |
+        //                        [#x200C-#x200D] | [#x2070-#x218F] |
+        //                        [#x2C00-#x2FEF] | [#x3001-#xD7FF] |
+        //                        [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
+        // NameChar           ::= NameStartChar | "-" | "." | [0-9] | #xB7 |
+        //                        [#x0300-#x036F] | [#x203F-#x2040]
+        // Name               ::= NameStartChar (NameChar)*
+        
+        char ch;
+        int lg = uri.length();
+        if (lg == 0)
+            return "";
+        int i = lg-1 ;
+        for ( ; i >= 1 ; i--) {
+            ch = uri.charAt(i);
+            if (notNameChar(ch)) break;
+        }
+        
+        int j = i + 1 ;
+
+        if ( j >= lg )
+            return uri ;
+        
+        // Check we haven't split up a %-encoding.
+        if ( j >= 2 && uri.charAt(j-2) == '%' )
+            j = j+1 ;
+        if ( j >= 1 && uri.charAt(j-1) == '%' )
+            j = j+2 ;
+        
+        // Have found the leftmost NCNameChar from the
+        // end of the URI string.
+        // Now scan forward for an NCNameStartChar
+        // The split must start with NCNameStart.
+        for (; j < lg; j++) {
+            ch = uri.charAt(j);
+//            if (XMLChar.isNCNameStart(ch))
+//                break ;
+            if (XMLChar.isNCNameStart(ch))
+            {
+                // "mailto:" is special.
+                // Keep part after mailto: at least one charcater.
+                // Do a quick test before calling .startsWith
+                // OLD: if ( uri.charAt(j - 1) == ':' && uri.lastIndexOf(':', j - 2) == -1)
+                if ( j == 7 && uri.startsWith("mailto:"))
+                    continue; // split "mailto:me" as "mailto:m" and "e" !
+                else
+                    break;
+            }
+        }
+//        return j;
+        return uri.substring( 0, j );
+    }
+
+/**
+answer true iff this is not a legal NCName character, ie, is
+a possible split-point start.
+*/
+public static boolean notNameChar( char ch )
+{ return !XMLChar.isNCName( ch ); }
+
+
 	private void getDataType() {
 		if (stringRepresentation.contains("^^")) {
 			//probably a datatype
@@ -205,6 +278,14 @@ public class NodeWrapper {
 			"ignore: " + (ignoreIri? "yes": "no") + "\n";
 	}
 	public static void main(String[] args) {
+	    System.out.println(getNs("test"));
+	    System.out.println(getNs("http://google"));
+	    System.out.println(getNs("http://google/"));
+	    System.out.println(getNs("http://google/test"));
+	    System.out.println(getNs("http://google/test?sdgds"));
+	    System.out.println(getNs("http://google/test#sdgds"));
+	    System.out.println(getNs("http://google/test:sdgds"));
+	    
 //		System.out.println(new NodeContainer("<http://google.com_1>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("<http://google.co/df/fdm_1111>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("<http://google.co/df#fdm_>", Position.OBJ).toString());
