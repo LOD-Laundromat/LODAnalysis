@@ -124,26 +124,8 @@ public class NodeWrapper {
 //		}
 //	}
 	
-	//borrowed from jena
+	//based on jena, but heavily modified. Jena allows e.g. % or _ as ns delimiter. I only want #, : and /
 public static String getNs(String uri) {
-        
-        // XML Namespaces 1.0:
-        // A qname name is NCName ':' NCName
-        // NCName             ::=      NCNameStartChar NCNameChar*
-        // NCNameChar         ::=      NameChar - ':'
-        // NCNameStartChar    ::=      Letter | '_'
-        // 
-        // XML 1.0
-        // NameStartChar      ::= ":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] |
-        //                        [#xD8-#xF6] | [#xF8-#x2FF] |
-        //                        [#x370-#x37D] | [#x37F-#x1FFF] |
-        //                        [#x200C-#x200D] | [#x2070-#x218F] |
-        //                        [#x2C00-#x2FEF] | [#x3001-#xD7FF] |
-        //                        [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
-        // NameChar           ::= NameStartChar | "-" | "." | [0-9] | #xB7 |
-        //                        [#x0300-#x036F] | [#x203F-#x2040]
-        // Name               ::= NameStartChar (NameChar)*
-        
         char ch;
         int lg = uri.length();
         if (lg == 0)
@@ -151,7 +133,7 @@ public static String getNs(String uri) {
         int i = lg-1 ;
         for ( ; i >= 1 ; i--) {
             ch = uri.charAt(i);
-            if (notNameChar(ch)) break;
+            if (ch == '#' || ch == ':' || ch == '/') break;
         }
         
         int j = i + 1 ;
@@ -159,33 +141,6 @@ public static String getNs(String uri) {
         if ( j >= lg )
             return uri ;
         
-        // Check we haven't split up a %-encoding.
-        if ( j >= 2 && uri.charAt(j-2) == '%' )
-            j = j+1 ;
-        if ( j >= 1 && uri.charAt(j-1) == '%' )
-            j = j+2 ;
-        
-        // Have found the leftmost NCNameChar from the
-        // end of the URI string.
-        // Now scan forward for an NCNameStartChar
-        // The split must start with NCNameStart.
-        for (; j < lg; j++) {
-            ch = uri.charAt(j);
-//            if (XMLChar.isNCNameStart(ch))
-//                break ;
-            if (XMLChar.isNCNameStart(ch))
-            {
-                // "mailto:" is special.
-                // Keep part after mailto: at least one charcater.
-                // Do a quick test before calling .startsWith
-                // OLD: if ( uri.charAt(j - 1) == ':' && uri.lastIndexOf(':', j - 2) == -1)
-                if ( j == 7 && uri.startsWith("mailto:"))
-                    continue; // split "mailto:me" as "mailto:m" and "e" !
-                else
-                    break;
-            }
-        }
-//        return j;
         return uri.substring( 0, j );
     }
 
@@ -284,7 +239,8 @@ public static boolean notNameChar( char ch )
 	    System.out.println(getNs("http://google/test"));
 	    System.out.println(getNs("http://google/test?sdgds"));
 	    System.out.println(getNs("http://google/test#sdgds"));
-	    System.out.println(getNs("http://google/test:sdgds"));
+	    System.out.println(getNs("http://google/test:sdgds")); 
+	    System.out.println(getNs("http://dbpedia.org/resource/%22Crocodile%22_Dundee")); 
 	    
 //		System.out.println(new NodeContainer("<http://google.com_1>", Position.OBJ).toString());
 //		System.out.println(new NodeContainer("<http://google.co/df/fdm_1111>", Position.OBJ).toString());
