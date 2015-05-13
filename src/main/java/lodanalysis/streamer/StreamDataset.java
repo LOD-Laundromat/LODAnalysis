@@ -146,8 +146,8 @@ public class StreamDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), distinctLangTags.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), distinctLiterals.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_TRIPLES), tripleCount);
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), outdegreeCounts.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), indegreeCounts.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), outdegreeCounts.elementSet().size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), indegreeCounts.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS), distinctUris.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_SUB), distinctSubUris.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), distinctSubBnodes.size());
