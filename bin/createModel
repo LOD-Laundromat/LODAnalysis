@@ -4,10 +4,7 @@
 
 force='-force';
 md5=`basename $1`
-datasetsDir=`dirname $1`;
-version=`basename $datasetsDir`;
-metrics="/scratch/lodlaundromat/metrics-$version"
 
-metric=$metrics/$md5;
+metric=$METRIC_DIR/$md5;
 java -jar $LOD_ANALYSIS_JAR $force -metric $metric "lodanalysis.model.CreateModels";
 
