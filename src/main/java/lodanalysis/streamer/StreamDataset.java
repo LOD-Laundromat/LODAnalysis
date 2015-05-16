@@ -79,6 +79,11 @@ public class StreamDataset implements Runnable  {
 	private Set<PatriciaNode> distinctSos = new HashSet<PatriciaNode>();
 	
 	
+	
+	private NodeWrapper subWrapper = new NodeWrapper(vault);
+    private NodeWrapper predWrapper = new NodeWrapper(vault);
+    private NodeWrapper objWrapper = new NodeWrapper(vault);
+	
 	private Entry entry;
 	public static void stream(Entry entry, File datasetDir) throws IOException {
 		StreamDataset aggr = new StreamDataset(entry, datasetDir);
@@ -314,88 +319,88 @@ public class StreamDataset implements Runnable  {
 			return;
 		}
 		if (nodes.length >= 3) {
-			NodeWrapper sub = new NodeWrapper(vault, nodes[0], NodeWrapper.Position.SUB);
-			NodeWrapper pred = new NodeWrapper(vault, nodes[1], NodeWrapper.Position.PRED);
-			NodeWrapper obj = new NodeWrapper(vault, nodes[2], NodeWrapper.Position.OBJ);
+		    subWrapper.init(nodes[0], NodeWrapper.Position.SUB);
+			predWrapper.init(nodes[1], NodeWrapper.Position.PRED);
+			objWrapper.init(nodes[2], NodeWrapper.Position.OBJ);
 			
 			
 			/**
 			 * Some generic counters
 			 */
 			tripleCount++;
-			outdegreeCounts.add(sub.ticket);
-			indegreeCounts.add(obj.ticket);
+			outdegreeCounts.add(subWrapper.ticket);
+			indegreeCounts.add(objWrapper.ticket);
 			PredicateCounter predCounter = null;
-			distinctSos.add(sub.ticket);
-			distinctSos.add(obj.ticket);
-			if (!predicateCounts.containsKey(pred.ticket)) {
+			distinctSos.add(subWrapper.ticket);
+			distinctSos.add(objWrapper.ticket);
+			if (!predicateCounts.containsKey(predWrapper.ticket)) {
 				predCounter = new PredicateCounter();
-				predicateCounts.put(pred.ticket, predCounter);
+				predicateCounts.put(predWrapper.ticket, predCounter);
 			} else {
-			    predCounter = predicateCounts.get(pred.ticket);
+			    predCounter = predicateCounts.get(predWrapper.ticket);
 			    predCounter.count++;
 			}
-			predCounter.distinctSubCount.add(sub.ticket);
+			predCounter.distinctSubCount.add(subWrapper.ticket);
 			
 			
 			/**
 			 * store ns triples
 			 */
 			Set<PatriciaNode> tripleNs = new HashSet<PatriciaNode>();
-			if (sub.nsTicket != null) tripleNs.add(sub.nsTicket);
-			if (pred.nsTicket != null) tripleNs.add(pred.nsTicket);
-			if (obj.nsTicket != null) tripleNs.add(obj.nsTicket);
+			if (subWrapper.nsTicket != null) tripleNs.add(subWrapper.nsTicket);
+			if (predWrapper.nsTicket != null) tripleNs.add(predWrapper.nsTicket);
+			if (objWrapper.nsTicket != null) tripleNs.add(objWrapper.nsTicket);
 			tripleNsCounts.add(tripleNs);
 
 			/**
 			 * store ns counters
 			 */
-			if (sub.isUri) nsCounts.add(sub.nsTicket);
-			if (pred.isUri) nsCounts.add(pred.nsTicket);
-			if (obj.isUri) nsCounts.add(obj.nsTicket);
+			if (subWrapper.isUri) nsCounts.add(subWrapper.nsTicket);
+			if (predWrapper.isUri) nsCounts.add(predWrapper.nsTicket);
+			if (objWrapper.isUri) nsCounts.add(objWrapper.nsTicket);
 
 			
 			/**
 			 * store uniq bnodes
 			 */
-			if (sub.isBnode) bnodeCounts.add(sub.ticket);
-			if (pred.isBnode) bnodeCounts.add(pred.ticket);
-			if (obj.isBnode) {
-			    bnodeCounts.add(obj.ticket);
-			    distinctObjBnodes.add(obj.ticket);
+			if (subWrapper.isBnode) bnodeCounts.add(subWrapper.ticket);
+			if (predWrapper.isBnode) bnodeCounts.add(predWrapper.ticket);
+			if (objWrapper.isBnode) {
+			    bnodeCounts.add(objWrapper.ticket);
+			    distinctObjBnodes.add(objWrapper.ticket);
 			}
 
 			
 			/**
 			 * Store literal info
 			 */
-			if (obj.isLiteral) {
+			if (objWrapper.isLiteral) {
 				literalCount++;
-				literalLengthStats.addValue(obj.literalLength);
-				distinctLiterals.add(obj.ticket);
-				if (obj.datatype != null) {
-					distinctDataTypes.add(obj.datatype);
+				literalLengthStats.addValue(objWrapper.literalLength);
+				distinctLiterals.add(objWrapper.ticket);
+				if (objWrapper.datatype != null) {
+					distinctDataTypes.add(objWrapper.datatype);
 				}
-				if (obj.langTag != null) {
-					distinctLangTags.add(obj.langTag);
+				if (objWrapper.langTag != null) {
+					distinctLangTags.add(objWrapper.langTag);
 				}
 				predCounter.objLiteralCount++;
-				predCounter.distinctObjLiteralCount.add(obj.ticket);
+				predCounter.distinctObjLiteralCount.add(objWrapper.ticket);
 			} else {
 				predCounter.objNonLiteralCount++;
-				predCounter.distinctObjNonLiteralCount.add(obj.ticket);
+				predCounter.distinctObjNonLiteralCount.add(objWrapper.ticket);
 			}
 			
 			/**
 			 * Store classes and props
 			 */
-			if (pred.isRdf_type) {
-				classCounts.add(obj.ticket);
+			if (predWrapper.isRdf_type) {
+				classCounts.add(objWrapper.ticket);
 				
-				if (obj.isDefinedClass()) {
-					distinctDefinedObjects.add(sub.ticket);
-				} else if (obj.isDefinedProperty()) {
-					distinctDefinedProperties.add(sub.ticket);
+				if (objWrapper.isDefinedClass()) {
+					distinctDefinedObjects.add(subWrapper.ticket);
+				} else if (objWrapper.isDefinedProperty()) {
+					distinctDefinedProperties.add(subWrapper.ticket);
 				}
 			}
 			
@@ -403,35 +408,35 @@ public class StreamDataset implements Runnable  {
 			
 			
 			//Store URI info
-			if (sub.isUri) {
+			if (subWrapper.isUri) {
 				uriCount++;
-				uriLengthStats.addValue(sub.uriLength);
-				uriSubLengthStats.addValue(sub.uriLength);
-				distinctUris.add(sub.ticket);
-				distinctSubUris.add(sub.ticket);
-				uriBnodeSet.add(sub.ticket);
-			} else if (sub.isBnode) {
-				distinctSubBnodes.add(sub.ticket);
-				uriBnodeSet.add(sub.ticket);
+				uriLengthStats.addValue(subWrapper.uriLength);
+				uriSubLengthStats.addValue(subWrapper.uriLength);
+				distinctUris.add(subWrapper.ticket);
+				distinctSubUris.add(subWrapper.ticket);
+				uriBnodeSet.add(subWrapper.ticket);
+			} else if (subWrapper.isBnode) {
+				distinctSubBnodes.add(subWrapper.ticket);
+				uriBnodeSet.add(subWrapper.ticket);
 			}
 			
 			
-			if (pred.isUri) {
+			if (predWrapper.isUri) {
 				uriCount++;
-				uriLengthStats.addValue(pred.uriLength);
-				distinctUris.add(pred.ticket);
-				uriPredLengthStats.addValue(pred.uriLength);
-				uriBnodeSet.add(pred.ticket);
+				uriLengthStats.addValue(predWrapper.uriLength);
+				distinctUris.add(predWrapper.ticket);
+				uriPredLengthStats.addValue(predWrapper.uriLength);
+				uriBnodeSet.add(predWrapper.ticket);
 			}
-			if (obj.isUri) {
+			if (objWrapper.isUri) {
 				uriCount++;
-				uriLengthStats.addValue(obj.uriLength);
-				uriObjLengthStats.addValue(obj.uriLength);
-				distinctUris.add(obj.ticket);
-				distinctObjUris.add(obj.ticket);
-				uriBnodeSet.add(obj.ticket);
-			} else if (obj.isBnode) {
-			    uriBnodeSet.add(obj.ticket);
+				uriLengthStats.addValue(objWrapper.uriLength);
+				uriObjLengthStats.addValue(objWrapper.uriLength);
+				distinctUris.add(objWrapper.ticket);
+				distinctObjUris.add(objWrapper.ticket);
+				uriBnodeSet.add(objWrapper.ticket);
+			} else if (objWrapper.isBnode) {
+			    uriBnodeSet.add(objWrapper.ticket);
 			}
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));

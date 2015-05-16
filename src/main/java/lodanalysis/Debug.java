@@ -18,18 +18,20 @@ public class Debug {
 		 * ad hoc dataset resources script
 		 */
 //	    new Entry(new String[]{"-threads", "4","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasetsLight"});
-	    new Entry(new String[]{"-threads", "4","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.singlerun.StreamDatasetsNamespaces"});
+//	    new Entry(new String[]{"-threads", "4","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.singlerun.StreamDatasetsNamespaces"});
 	    
 		/**
 		 * streamer
 		 */
-//		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+//		new Entry(new String[]{"-force","-dataset", "datasets/d11df3c8bc6e99c7d7a25cea746631e4", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 
 		/**
 		 * model creator
 		 */
 		
 //		new Entry(new String[]{"-force","-metrics", "metrics", "lodanalysis.model.CreateModels"});
+//		new Entry(new String[]{"-force","-metric", "/home/lrd900/code/anytime/test/data/clod/044e27f4a8d7e2cb0172dc8469308628", "lodanalysis.model.CreateModels"});
 		/**
 		 * upload models
 		 */

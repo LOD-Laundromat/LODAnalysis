@@ -1,58 +1,80 @@
 package lodanalysis.streamer;
 
-import java.util.regex.Pattern;
-
+import org.apache.xerces.util.XMLChar;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
 import org.data2semantics.vault.Vault;
-import org.apache.xerces.util.XMLChar ;
 public class NodeWrapper {
-	@SuppressWarnings("unused")
-	private static Pattern IGNORE_ALL_URI_ITERATORS = Pattern.compile(".*[#/]_\\d+>$");
-
+    
+    /**
+     * Statics
+     */
 	public static final String BNODE_SUBSTRING = "http://lodlaundromat.org/.well-known/";
-
 	private final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-	
 	private static final String W3C_URI_PREFIX = "http://www.w3.org/";
 	private static final String RDF_CLASS = "http://www.w3.org/2000/01/rdf-schema#Class";
 	private static final String OWL_CLASS = "http://www.w3.org/2002/07/owl#Class";
 	private static final String RDF_PROPERTY = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
 	private static final String OWL_OBJECT_PROPERTY = "http://www.w3.org/2002/07/owl#ObjectProperty";
 	private static final String OWL_DATATYPE_PROPERTY = "http://www.w3.org/2002/07/owl#DatatypeProperty";
-	
-
 	public enum Position {SUB, PRED, OBJ};
-	private Position position;
-	//calculated stuff:
+	
+	
+	
+	private Vault<String, PatriciaNode> vault;
+	
+	/**
+	 * variables (MAKE SURE TO RESET THESE VALUES IN THE RESET FUNCTION)
+	 * Resetting is required to avoid creating this object every time for every node in this graph
+	 */
+	private Position position = null;
 	private Boolean hasW3cUriPrefix = null;
 	public PatriciaNode nsTicket = null;
 	public PatriciaNode datatype = null;
 	public boolean isLiteral = false;
-	public boolean isUri = true; //default: assume the node is a uri
+	public boolean isUri = true;
 	public boolean isBnode = false;
 	public PatriciaNode langTag = null;
 	public boolean ignoreIri = false;
-	public PatriciaNode ticket;
+	public PatriciaNode ticket = null;
 	public int uriLength = -1;
 	public int literalLength = -1;
 	private String stringRepresentation;
 	public boolean isRdf_type = false;
-//	public boolean isRdfs_domain = false;
-//	public boolean isRdfs_range = false;
-//	public boolean isRdfs_subClassOf = false;
-//	public boolean isRdfs_subPropertyOf = false;
-	private Vault<String, PatriciaNode> vault;
-
 	private int dataTypeLength = 0;
 	private int langTagLength = 0;
-	public NodeWrapper(Vault<String, PatriciaNode> vault, String stringRepresentation, Position position) {
-		this.stringRepresentation = stringRepresentation;
-		this.position = position;
-		this.vault = vault;
-		calcInfo();
-		this.ticket = vault.store(stringRepresentation);
+
+	public NodeWrapper(Vault<String, PatriciaNode> vault) {
+	    this.vault = vault;
+	}
+	
+	
+	public void reset() {
+	    position = null;
+	    hasW3cUriPrefix = null;
+	    nsTicket = null;
+	    datatype = null;
+	    isLiteral = false;
+	    isUri = true; 
+	    isBnode = false;
+	    langTag = null;
+	    ignoreIri = false;
+	    ticket = null;
+	    uriLength = -1;
+	    literalLength = -1;
+	    stringRepresentation = null;
+	    isRdf_type = false;
+	    dataTypeLength = 0;
+	    langTagLength = 0;
 	}
 
+    public void init(String stringRepresentation, Position position) {
+        reset();
+        this.stringRepresentation = stringRepresentation;
+        this.position = position;
+        this.ticket = vault.store(stringRepresentation);
+        calcInfo();
+    }
+	
 	/**
 	 * do this once a-priori, as our counters often re-use info
 	 * NOTE: we can afford to optimize these calculations (i.e. avoid regex), because we know how exactly we serialize the ntriples.
