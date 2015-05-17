@@ -2,6 +2,7 @@ package lodanalysis.streamer;
 
 import org.apache.xerces.util.XMLChar;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
+import org.data2semantics.vault.PatriciaVault;
 import org.data2semantics.vault.Vault;
 public class NodeWrapper {
     
@@ -133,73 +134,51 @@ public class NodeWrapper {
 		}
 	}
 	
-
-//	public static String getNs(String uri) {
-//		int hashTagIndex = uri.lastIndexOf('#');
-//		int slashIndex = uri.lastIndexOf('/');
-//		int colonIndex = uri.lastIndexOf(':');
-//		if (hashTagIndex > 6 || slashIndex > 6 || colonIndex > 6) {
-//			//ok, this has a namespace, and not something like http://google.com
-//			return uri.substring(0, Math.max(Math.max(hashTagIndex, slashIndex), colonIndex));
-//		} else {
-//			return uri; //initialize with ns as whole URI
-//		}
-//	}
-	
-	//based on jena, but heavily modified. Jena allows e.g. % or _ as ns delimiter. I only want #, : and /
-public static String getNs(String uri) {
+    // based on jena, but heavily modified. Jena allows e.g. % or _ as ns
+    // delimiter. I only want #, : and /
+    public static String getNs(String uri) {
         char ch;
         int lg = uri.length();
         if (lg == 0)
             return "";
-        int i = lg-1 ;
-        for ( ; i >= 1 ; i--) {
+        int i = lg - 1;
+        for (; i >= 1; i--) {
             ch = uri.charAt(i);
-            if (ch == '#' || ch == ':' || ch == '/') break;
+            if (ch == '#' || ch == ':' || ch == '/')
+                break;
         }
-        
-        int j = i + 1 ;
 
-        if ( j >= lg )
-            return uri ;
-        
-        return uri.substring( 0, j );
+        int j = i + 1;
+
+        if (j >= lg)
+            return uri;
+
+        return uri.substring(0, j);
     }
 
-/**
-answer true iff this is not a legal NCName character, ie, is
-a possible split-point start.
-*/
-public static boolean notNameChar( char ch )
-{ return !XMLChar.isNCName( ch ); }
+    /**
+     * answer true iff this is not a legal NCName character, ie, is a possible
+     * split-point start.
+     */
+    public static boolean notNameChar(char ch) {
+        return !XMLChar.isNCName(ch);
+    }
 
+    private void getDataType() {
+        if (stringRepresentation.contains("^^")) {
+            // probably a datatype
+            int closingQuote = stringRepresentation.lastIndexOf("\"");
 
-	private void getDataType() {
-		if (stringRepresentation.contains("^^")) {
-			//probably a datatype
-			int closingQuote = stringRepresentation.lastIndexOf("\"");
-
-			if (
-					stringRepresentation.length() <= closingQuote + 2
-					|| stringRepresentation.charAt(closingQuote+1) != '^'
-					|| stringRepresentation.charAt(closingQuote+2) != '^'
-					|| stringRepresentation.charAt(closingQuote+3) != '<') {
-				//ah, no lang tag after all!! either nothing comes after the quote, or something else than an '^^' follows
-			} else {
-				StringBuilder dataTypeBuilder = new StringBuilder();
-				for(int i = closingQuote + 4; i < stringRepresentation.length(); i++) {
-				   char c = stringRepresentation.charAt(i);
-				   if (c == '>') break;
-				   dataTypeBuilder.append(c);
-				}
-				if (dataTypeBuilder.length() > 0) {
-					this.dataTypeLength = dataTypeBuilder.length();
-					this.datatype = vault.store(dataTypeBuilder.toString());
-				}
-
-			}
-		}
-	}
+            if (stringRepresentation.length() <= closingQuote + 2 || stringRepresentation.charAt(closingQuote + 1) != '^'
+                    || stringRepresentation.charAt(closingQuote + 2) != '^' || stringRepresentation.charAt(closingQuote + 3) != '<') {
+                // ah, no lang tag after all!! either nothing comes after the
+                // quote, or something else than an '^^' follows
+            } else {
+                this.datatype = vault.store(stringRepresentation.substring(closingQuote + 4, stringRepresentation.length() - 1));
+                this.dataTypeLength = stringRepresentation.length() - 1 - closingQuote - 4;
+            }
+        }
+    }
 	
 	public boolean isDefinedClass() {
 		return startsWithW3cUri() && (stringRepresentation.equals(RDF_CLASS) || stringRepresentation.equals(OWL_CLASS));
@@ -215,32 +194,17 @@ public static boolean notNameChar( char ch )
 	private void getLangTagInfo() {
 		this.langTag = null;
 
-		if (stringRepresentation.contains("@")) {
+		if (stringRepresentation.indexOf('@') >= 0) {
 			//this is probably a literal
 
 			int closingQuote = stringRepresentation.lastIndexOf("\"");
 			if (stringRepresentation.length() == closingQuote + 1 || stringRepresentation.charAt(closingQuote+1) != '@') {
 				//ah, no lang tag after all!! either nothing comes after the quote, or something else than an '@' follows
 			} else {
-				StringBuilder langTagBuilder = new StringBuilder();
-				for(int i = closingQuote + 2; i < stringRepresentation.length(); i++) {
-				   char c = stringRepresentation.charAt(i);
-				   if (c == ' ') break;
-
-				   langTagBuilder.append(c);
-				}
-				if (langTagBuilder.length() > 0) {
-					this.langTagLength = langTagBuilder.length();
-					this.langTag = vault.store(langTagBuilder.toString());
-				}
+			    this.langTag = vault.store(stringRepresentation.substring(closingQuote + 2, stringRepresentation.length()));
+			    this.langTagLength = stringRepresentation.length() - 2 - closingQuote;
 			}
 		}
-		//not using the lang tag without reg for now
-//		if (this.langTag != null && this.langTag.contains("-")) {
-//			this.langTagWithoutReg = this.langTag.substring(0, this.langTag.indexOf('-'));
-//		} else {
-//			this.langTagWithoutReg = this.langTag;
-//		}
 	}
 
 
@@ -255,25 +219,31 @@ public static boolean notNameChar( char ch )
 			"ignore: " + (ignoreIri? "yes": "no") + "\n";
 	}
 	public static void main(String[] args) {
-	    System.out.println(getNs("test"));
-	    System.out.println(getNs("http://google"));
-	    System.out.println(getNs("http://google/"));
-	    System.out.println(getNs("http://google/test"));
-	    System.out.println(getNs("http://google/test?sdgds"));
-	    System.out.println(getNs("http://google/test#sdgds"));
-	    System.out.println(getNs("http://google/test:sdgds")); 
-	    System.out.println(getNs("http://dbpedia.org/resource/%22Crocodile%22_Dundee")); 
+	    /**
+	     * check namespaces
+	     */
+//	    System.out.println(getNs("test"));
+//	    System.out.println(getNs("http://google"));
+//	    System.out.println(getNs("http://google/"));
+//	    System.out.println(getNs("http://google/test"));
+//	    System.out.println(getNs("http://google/test?sdgds"));
+//	    System.out.println(getNs("http://google/test#sdgds"));
+//	    System.out.println(getNs("http://google/test:sdgds")); 
+//	    System.out.println(getNs("http://dbpedia.org/resource/%22Crocodile%22_Dundee")); 
+	    Vault<String, PatriciaNode> vault = new PatriciaVault();
+        NodeWrapper wrapper = new NodeWrapper(vault);
+        wrapper.init("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ);
+        System.out.println(vault.redeem(wrapper.datatype));
+        System.out.println(vault.redeem(wrapper.langTag));
+        wrapper.init("\"That Seventies Show\"", Position.OBJ);
+        System.out.println(vault.redeem(wrapper.datatype));
+        System.out.println(vault.redeem(wrapper.langTag));
+        wrapper.init("\"That Seventies Show\"@en", Position.OBJ);
+        System.out.println(vault.redeem(wrapper.datatype));
+        System.out.println(vault.redeem(wrapper.langTag));
+        wrapper.init("\"That Seventies Show\"@en-be", Position.OBJ);
+        System.out.println(vault.redeem(wrapper.datatype));
+        System.out.println(vault.redeem(wrapper.langTag));
 	    
-//		System.out.println(new NodeContainer("<http://google.com_1>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://google.co/df/fdm_1111>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://google.co/df#fdm_>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://google.co/df#_12332>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://google.co/df/_12332>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_111>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("<http://www.w3.org/1999/02/22-rdf-syntax-ns#_>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("\"That Seventies Show\"", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("\"That Seventies Show\"@en", Position.OBJ).toString());
-//		System.out.println(new NodeContainer("\"That Seventies Show\"@en-be", Position.OBJ).toString());
 	}
 }
