@@ -233,17 +233,17 @@ public class NodeWrapper {
 	    Vault<String, PatriciaNode> vault = new PatriciaVault();
         NodeWrapper wrapper = new NodeWrapper(vault);
         wrapper.init("\"That Seventies Show\"^^<http://www.w3.org/2001/XMLSchema#string>", Position.OBJ);
-        System.out.println(vault.redeem(wrapper.datatype));
-        System.out.println(vault.redeem(wrapper.langTag));
+//        System.out.println(vault.redeem(wrapper.datatype));
+//        System.out.println(vault.redeem(wrapper.langTag));
         wrapper.init("\"That Seventies Show\"", Position.OBJ);
-        System.out.println(vault.redeem(wrapper.datatype));
-        System.out.println(vault.redeem(wrapper.langTag));
+//        System.out.println(vault.redeem(wrapper.datatype));
+//        System.out.println(vault.redeem(wrapper.langTag));
         wrapper.init("\"That Seventies Show\"@en", Position.OBJ);
-        System.out.println(vault.redeem(wrapper.datatype));
-        System.out.println(vault.redeem(wrapper.langTag));
+//        System.out.println(vault.redeem(wrapper.datatype));
+//        System.out.println(vault.redeem(wrapper.langTag));
         wrapper.init("\"That Seventies Show\"@en-be", Position.OBJ);
-        System.out.println(vault.redeem(wrapper.datatype));
-        System.out.println(vault.redeem(wrapper.langTag));
+//        System.out.println(vault.redeem(wrapper.datatype));
+//        System.out.println(vault.redeem(wrapper.langTag));
 	    
 	}
 }

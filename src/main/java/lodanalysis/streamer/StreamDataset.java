@@ -23,6 +23,7 @@ import lodanalysis.Entry;
 import lodanalysis.Paths;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.data2semantics.vault.PatriciaVault;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
@@ -60,24 +61,25 @@ public class StreamDataset implements Runnable  {
 	private HashMultiset<PatriciaNode> outdegreeCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> indegreeCounts = HashMultiset.create();
 	private HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
-	private Set<PatriciaNode> distinctUris = new HashSet<PatriciaNode>();
-	private Set<PatriciaNode> uriBnodeSet = new HashSet<PatriciaNode>();
+	private Set<PatriciaNode> distinctUris;
+	private Set<PatriciaNode> uriBnodeSet;
 	private Set<PatriciaNode> distinctLiterals = new HashSet<PatriciaNode>();
 	private HashSet<PatriciaNode> distinctSubUris = new HashSet<PatriciaNode>();
 	private HashSet<PatriciaNode> distinctSubBnodes = new HashSet<PatriciaNode>();
+	private HashSet<PatriciaNode> distinctPredUris = new HashSet<PatriciaNode>();
+	private HashSet<PatriciaNode> distinctPredBnodes = new HashSet<PatriciaNode>();
 	private HashSet<PatriciaNode> distinctObjUris = new HashSet<PatriciaNode>();
 	private HashSet<PatriciaNode> distinctObjBnodes = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctLangTags = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctDataTypes = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctDefinedObjects = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctDefinedProperties = new HashSet<PatriciaNode>();
-	private DescriptiveStatistics uriLengthStats = new DescriptiveStatistics();
+	private DescriptiveStatistics uriLengthStats;
 	private DescriptiveStatistics uriSubLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics uriPredLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics uriObjLengthStats = new DescriptiveStatistics();
 	private DescriptiveStatistics literalLengthStats = new DescriptiveStatistics();
-	private Set<PatriciaNode> distinctSos = new HashSet<PatriciaNode>();
-	
+	private Set<PatriciaNode> distinctSos;
 	
 	
 	private NodeWrapper subWrapper = new NodeWrapper(vault);
@@ -137,6 +139,33 @@ public class StreamDataset implements Runnable  {
 		String datasetMd5 = datasetDir.getName();
 		File datasetOutputDir = new File(entry.getMetricParentDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
+		
+		
+		/**
+		 * Do some post processing with the counts
+		 */
+		distinctUris = new HashSet<PatriciaNode>(distinctSubUris);
+		distinctUris.addAll(distinctPredUris);
+		distinctUris.addAll(distinctObjUris);
+		 
+		 
+		uriBnodeSet = new HashSet<PatriciaNode>(distinctUris);
+		uriBnodeSet.addAll(distinctSubBnodes);
+		uriBnodeSet.addAll(distinctPredBnodes);
+		uriBnodeSet.addAll(distinctObjBnodes);
+		
+		distinctSos = new HashSet<PatriciaNode>(distinctSubUris);
+		distinctSos.addAll(distinctObjUris);
+		distinctSos.addAll(distinctSubBnodes);
+		distinctSos.addAll(distinctObjBnodes);
+		distinctSos.addAll(distinctLiterals);
+		
+		
+		
+		double[] allUriLengths = ArrayUtils.addAll(uriSubLengthStats.getValues(), uriPredLengthStats.getValues());
+		uriLengthStats = new DescriptiveStatistics(ArrayUtils.addAll(allUriLengths, uriObjLengthStats.getValues()));
+		
+		
 		
 		//store provenance file
 		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(datasetOutputDir, ".sysinfo"));
@@ -331,8 +360,7 @@ public class StreamDataset implements Runnable  {
 			outdegreeCounts.add(subWrapper.ticket);
 			indegreeCounts.add(objWrapper.ticket);
 			PredicateCounter predCounter = null;
-			distinctSos.add(subWrapper.ticket);
-			distinctSos.add(objWrapper.ticket);
+
 			if (!predicateCounts.containsKey(predWrapper.ticket)) {
 				predCounter = new PredicateCounter();
 				predicateCounts.put(predWrapper.ticket, predCounter);
@@ -410,33 +438,33 @@ public class StreamDataset implements Runnable  {
 			//Store URI info
 			if (subWrapper.isUri) {
 				uriCount++;
-				uriLengthStats.addValue(subWrapper.uriLength);
+//				uriLengthStats.addValue(subWrapper.uriLength);
 				uriSubLengthStats.addValue(subWrapper.uriLength);
-				distinctUris.add(subWrapper.ticket);
 				distinctSubUris.add(subWrapper.ticket);
-				uriBnodeSet.add(subWrapper.ticket);
 			} else if (subWrapper.isBnode) {
 				distinctSubBnodes.add(subWrapper.ticket);
-				uriBnodeSet.add(subWrapper.ticket);
 			}
+			
 			
 			
 			if (predWrapper.isUri) {
 				uriCount++;
-				uriLengthStats.addValue(predWrapper.uriLength);
-				distinctUris.add(predWrapper.ticket);
+//				uriLengthStats.addValue(predWrapper.uriLength);
 				uriPredLengthStats.addValue(predWrapper.uriLength);
-				uriBnodeSet.add(predWrapper.ticket);
+			} else if (predWrapper.isBnode) {
+			    //shouldnt be there, but use just in case
+			    distinctPredBnodes.add(predWrapper.ticket);
 			}
+			
+			
+			
 			if (objWrapper.isUri) {
 				uriCount++;
-				uriLengthStats.addValue(objWrapper.uriLength);
+//				uriLengthStats.addValue(objWrapper.uriLength);
 				uriObjLengthStats.addValue(objWrapper.uriLength);
-				distinctUris.add(objWrapper.ticket);
 				distinctObjUris.add(objWrapper.ticket);
-				uriBnodeSet.add(objWrapper.ticket);
 			} else if (objWrapper.isBnode) {
-			    uriBnodeSet.add(objWrapper.ticket);
+			    distinctObjBnodes.add(objWrapper.ticket);
 			}
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
