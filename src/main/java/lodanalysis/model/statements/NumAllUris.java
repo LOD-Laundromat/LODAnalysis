@@ -22,7 +22,7 @@ public class NumAllUris extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLM, "literals"), FileUtils.readFileToString(new File(dir, Paths.ALL_LITERALS)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "IRIs"), FileUtils.readFileToString(new File(dir, Paths.ALL_URIS)), XSDDatatype.XSDlong);
 	}
 
 }

@@ -199,7 +199,7 @@ public class StreamDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), objUris.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), objBnodes.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_URIS), uriCount);
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_LITERALS), uriCount);
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_LITERALS), literalCount);
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), objBnodes.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_CLASSES), distinctDefinedObjects.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_PROPERTIES), distinctDefinedProperties.size());

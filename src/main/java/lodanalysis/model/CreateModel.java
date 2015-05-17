@@ -13,8 +13,12 @@ import lodanalysis.model.statements.LengthUri;
 import lodanalysis.model.statements.LengthUriObj;
 import lodanalysis.model.statements.LengthUriPred;
 import lodanalysis.model.statements.LengthUriSub;
+import lodanalysis.model.statements.NumAllLiterals;
+import lodanalysis.model.statements.NumAllUris;
+import lodanalysis.model.statements.NumBnodes;
 import lodanalysis.model.statements.NumDistinctBnodes;
 import lodanalysis.model.statements.NumDistinctClasses;
+import lodanalysis.model.statements.NumDistinctDataTypes;
 import lodanalysis.model.statements.NumDistinctDefinedClasses;
 import lodanalysis.model.statements.NumDistinctDefinedProperties;
 import lodanalysis.model.statements.NumDistinctEntities;
@@ -23,6 +27,9 @@ import lodanalysis.model.statements.NumDistinctObjects;
 import lodanalysis.model.statements.NumDistinctProperties;
 import lodanalysis.model.statements.NumDistinctSubjects;
 import lodanalysis.model.statements.NumDistinctTriples;
+import lodanalysis.model.statements.NumDistinctUris;
+import lodanalysis.model.statements.NumObjUris;
+import lodanalysis.model.statements.NumSubUris;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -83,6 +90,14 @@ public class CreateModel {
 				new NumDistinctSubjects(this),
 				new NumDistinctDefinedClasses(this),
 				new NumDistinctDefinedProperties(this),
+				new NumAllLiterals(this),
+				new NumAllUris(this),
+				new NumDistinctUris(this),
+				new NumBnodes(this),
+				new NumObjUris(this),
+				new NumSubUris(this),
+				new NumDistinctDataTypes(this),
+				new NumDistinctLanguages(this),
 //				new PartitionPropsVoid(this),
 //				new PartitionTypesDs(this),
 //				new PartitionTypesVoid(this),

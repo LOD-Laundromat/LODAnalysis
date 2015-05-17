@@ -10,9 +10,9 @@ public class Paths {
 	public static final String INPUT_NQ_GZ = "clean.nq.gz";
 	
 	public static final String DISTINCT_SOS_COUNT = "sosCount";
-	public static final String DISTINCT_LITERALS = "literalCount";
+	public static final String DISTINCT_LITERALS = "distinctLiteralCount";
 	public static final String DISTINCT_TRIPLES = "tripleCount";
-	public static final String DISTINCT_SUBJECTS = "subjectCount";
+	public static final String DISTINCT_SUBJECTS = "distinctSubjectCount";
 	public static final String PREDICATE_COUNTS = "predicateCounts";
 	public static final String PREDICATE_LITERAL_COUNTS = "predicateLiteralCounts";
 	public static final String PREDICATE_NON_LIT_COUNTS = "predicateNonLitCounts";
@@ -69,8 +69,8 @@ public class Paths {
 	public static final String DISTINCT_DEFINED_CLASSES = "distinctDefinedClasses";
 	public static final String DISTINCT_DEFINED_PROPERTIES = "distinctDefinedProperties";
 	
-	public static final String ALL_URIS = "allUris";
-	public static final String ALL_LITERALS = "allUris";
+	public static final String ALL_URIS = "numUris";
+	public static final String ALL_LITERALS = "numLiterals";
 	public static final String URI_BNODE_SET = "uriBnodeSet.gz";
 	
 	public static final String DESCRIPTION_NT = "_description.nt";
