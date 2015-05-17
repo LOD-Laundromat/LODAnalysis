@@ -58,18 +58,23 @@ public class StreamDataset implements Runnable  {
 	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> bnodeCounts = HashMultiset.create();
 	private HashMultiset<PatriciaNode> classCounts = HashMultiset.create();
-	private HashMultiset<PatriciaNode> outdegreeCounts = HashMultiset.create();
-	private HashMultiset<PatriciaNode> indegreeCounts = HashMultiset.create();
+	private HashMultiset<PatriciaNode> subjects = null;
+	private HashMultiset<PatriciaNode> objects;
+	
+    private HashMultiset<PatriciaNode> subUris = HashMultiset.create();
+    private HashMultiset<PatriciaNode> subBnodes = HashMultiset.create();
+    private HashMultiset<PatriciaNode> predUris = HashMultiset.create();
+    private HashMultiset<PatriciaNode> predBnodes = HashMultiset.create();
+    private HashMultiset<PatriciaNode> objUris = HashMultiset.create();
+    private HashMultiset<PatriciaNode> objBnodes = HashMultiset.create();
+    private HashMultiset<PatriciaNode> literals = HashMultiset.create();
+	    
+	
 	private HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
 	private Set<PatriciaNode> distinctUris;
 	private Set<PatriciaNode> uriBnodeSet;
-	private Set<PatriciaNode> distinctLiterals = new HashSet<PatriciaNode>();
-	private HashSet<PatriciaNode> distinctSubUris = new HashSet<PatriciaNode>();
-	private HashSet<PatriciaNode> distinctSubBnodes = new HashSet<PatriciaNode>();
-	private HashSet<PatriciaNode> distinctPredUris = new HashSet<PatriciaNode>();
-	private HashSet<PatriciaNode> distinctPredBnodes = new HashSet<PatriciaNode>();
-	private HashSet<PatriciaNode> distinctObjUris = new HashSet<PatriciaNode>();
-	private HashSet<PatriciaNode> distinctObjBnodes = new HashSet<PatriciaNode>();
+
+	
 	private Set<PatriciaNode> distinctLangTags = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctDataTypes = new HashSet<PatriciaNode>();
 	private Set<PatriciaNode> distinctDefinedObjects = new HashSet<PatriciaNode>();
@@ -144,23 +149,29 @@ public class StreamDataset implements Runnable  {
 		/**
 		 * Do some post processing with the counts
 		 */
-		distinctUris = new HashSet<PatriciaNode>(distinctSubUris);
-		distinctUris.addAll(distinctPredUris);
-		distinctUris.addAll(distinctObjUris);
+		distinctUris = new HashSet<PatriciaNode>(subUris.elementSet());
+		distinctUris.addAll(predUris.elementSet());
+		distinctUris.addAll(objUris.elementSet());
 		 
 		 
 		uriBnodeSet = new HashSet<PatriciaNode>(distinctUris);
-		uriBnodeSet.addAll(distinctSubBnodes);
-		uriBnodeSet.addAll(distinctPredBnodes);
-		uriBnodeSet.addAll(distinctObjBnodes);
+		uriBnodeSet.addAll(subBnodes.elementSet());
+		uriBnodeSet.addAll(predBnodes.elementSet());
+		uriBnodeSet.addAll(objBnodes.elementSet());
 		
-		distinctSos = new HashSet<PatriciaNode>(distinctSubUris);
-		distinctSos.addAll(distinctObjUris);
-		distinctSos.addAll(distinctSubBnodes);
-		distinctSos.addAll(distinctObjBnodes);
-		distinctSos.addAll(distinctLiterals);
+		distinctSos = new HashSet<PatriciaNode>(subUris.elementSet());
+		distinctSos.addAll(objUris.elementSet());
+		distinctSos.addAll(subBnodes.elementSet());
+		distinctSos.addAll(objBnodes.elementSet());
+		distinctSos.addAll(literals.elementSet());
 		
-		
+		subjects = HashMultiset.create();
+		subjects.addAll(subUris);
+		subjects.addAll(subBnodes);
+		objects = HashMultiset.create();
+		objects.addAll(objUris);
+		objects.addAll(objBnodes);
+		objects.addAll(literals);
 		
 		double[] allUriLengths = ArrayUtils.addAll(uriSubLengthStats.getValues(), uriPredLengthStats.getValues());
 		uriLengthStats = new DescriptiveStatistics(ArrayUtils.addAll(allUriLengths, uriObjLengthStats.getValues()));
@@ -178,18 +189,18 @@ public class StreamDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), distinctSos.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), distinctDataTypes.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), distinctLangTags.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), distinctLiterals.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), literals.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_TRIPLES), tripleCount);
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), outdegreeCounts.elementSet().size());
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), indegreeCounts.elementSet().size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), subjects.elementSet().size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), objects.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS), distinctUris.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_SUB), distinctSubUris.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), distinctSubBnodes.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), distinctObjUris.size());
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), distinctObjBnodes.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_SUB), subUris.elementSet().size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), subBnodes.elementSet().size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), objUris.elementSet().size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), objBnodes.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_URIS), uriCount);
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_LITERALS), uriCount);
-		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), distinctObjBnodes.size());
+		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), objBnodes.elementSet().size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_CLASSES), distinctDefinedObjects.size());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_PROPERTIES), distinctDefinedProperties.size());
 		
@@ -200,7 +211,7 @@ public class StreamDataset implements Runnable  {
 		 */
 		DescriptiveStatistics stats = new DescriptiveStatistics();
 		
-		for (PatriciaNode pNode: outdegreeCounts.elementSet()) stats.addValue(outdegreeCounts.count(pNode));
+		for (PatriciaNode pNode: subjects.elementSet()) stats.addValue(subjects.count(pNode));
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), stats.getSum());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_AVG), stats.getMean());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MEDIAN), stats.getPercentile(50));
@@ -210,7 +221,7 @@ public class StreamDataset implements Runnable  {
 		
 		//indegree (media/median/mode/range)
 		stats.clear();
-		for (PatriciaNode pNode: indegreeCounts.elementSet()) stats.addValue(indegreeCounts.count(pNode));
+		for (PatriciaNode pNode: objects.elementSet()) stats.addValue(objects.count(pNode));
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), stats.getSum());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_AVG), stats.getMean());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MEDIAN), stats.getPercentile(50));
@@ -219,10 +230,10 @@ public class StreamDataset implements Runnable  {
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MIN), stats.getMin());
 		//degree (media/median/mode/range)
 		HashMultiset<PatriciaNode> degrees = HashMultiset.create();
-		degrees.addAll(indegreeCounts);
-		degrees.addAll(outdegreeCounts);
+		degrees.addAll(objects);
+		degrees.addAll(subjects);
 		stats.clear();
-		for (PatriciaNode pNode: outdegreeCounts.elementSet()) stats.addValue(degrees.count(pNode));
+		for (PatriciaNode pNode: subjects.elementSet()) stats.addValue(degrees.count(pNode));
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_AVG), stats.getMean());
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MEDIAN), stats.getPercentile(50));
 		writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_STD), stats.getStandardDeviation());
@@ -357,8 +368,8 @@ public class StreamDataset implements Runnable  {
 			 * Some generic counters
 			 */
 			tripleCount++;
-			outdegreeCounts.add(subWrapper.ticket);
-			indegreeCounts.add(objWrapper.ticket);
+//			subjects.add(subWrapper.ticket);
+//			objects.add(objWrapper.ticket);
 			PredicateCounter predCounter = null;
 
 			if (!predicateCounts.containsKey(predWrapper.ticket)) {
@@ -395,7 +406,7 @@ public class StreamDataset implements Runnable  {
 			if (predWrapper.isBnode) bnodeCounts.add(predWrapper.ticket);
 			if (objWrapper.isBnode) {
 			    bnodeCounts.add(objWrapper.ticket);
-			    distinctObjBnodes.add(objWrapper.ticket);
+			    objBnodes.add(objWrapper.ticket);
 			}
 
 			
@@ -405,7 +416,7 @@ public class StreamDataset implements Runnable  {
 			if (objWrapper.isLiteral) {
 				literalCount++;
 				literalLengthStats.addValue(objWrapper.literalLength);
-				distinctLiterals.add(objWrapper.ticket);
+				literals.add(objWrapper.ticket);
 				if (objWrapper.datatype != null) {
 					distinctDataTypes.add(objWrapper.datatype);
 				}
@@ -440,9 +451,9 @@ public class StreamDataset implements Runnable  {
 				uriCount++;
 //				uriLengthStats.addValue(subWrapper.uriLength);
 				uriSubLengthStats.addValue(subWrapper.uriLength);
-				distinctSubUris.add(subWrapper.ticket);
+				subUris.add(subWrapper.ticket);
 			} else if (subWrapper.isBnode) {
-				distinctSubBnodes.add(subWrapper.ticket);
+				subBnodes.add(subWrapper.ticket);
 			}
 			
 			
@@ -453,7 +464,7 @@ public class StreamDataset implements Runnable  {
 				uriPredLengthStats.addValue(predWrapper.uriLength);
 			} else if (predWrapper.isBnode) {
 			    //shouldnt be there, but use just in case
-			    distinctPredBnodes.add(predWrapper.ticket);
+			    predBnodes.add(predWrapper.ticket);
 			}
 			
 			
@@ -462,9 +473,9 @@ public class StreamDataset implements Runnable  {
 				uriCount++;
 //				uriLengthStats.addValue(objWrapper.uriLength);
 				uriObjLengthStats.addValue(objWrapper.uriLength);
-				distinctObjUris.add(objWrapper.ticket);
+				objUris.add(objWrapper.ticket);
 			} else if (objWrapper.isBnode) {
-			    distinctObjBnodes.add(objWrapper.ticket);
+			    objBnodes.add(objWrapper.ticket);
 			}
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
