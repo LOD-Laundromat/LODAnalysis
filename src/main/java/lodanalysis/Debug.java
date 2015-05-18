@@ -13,7 +13,7 @@ public class Debug {
 	
 	
 	public static void main(String[] args) throws IOException {
-
+//	    new Entry(new String[]{});
 		/**
 		 * ad hoc dataset resources script
 		 */
@@ -23,8 +23,9 @@ public class Debug {
 		/**
 		 * streamer
 		 */
+		new Entry(new String[]{"-force", "-max_size", "1", "-datasets", "datasets/", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 //		new Entry(new String[]{"-force","-dataset", "datasets/d11df3c8bc6e99c7d7a25cea746631e4", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
-		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+//		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 
 		/**
 		 * model creator

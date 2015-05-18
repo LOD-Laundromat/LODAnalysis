@@ -197,6 +197,7 @@ public class Utils {
     public static void writeSingleCountToFile(File targetFile, int val) throws IOException {
         FileUtils.writeStringToFile(targetFile, Integer.toString(val));
     }
+
     /**
      * just a simple helper method, to store the maps with a string as key, and counter as val
      * @throws IOException 

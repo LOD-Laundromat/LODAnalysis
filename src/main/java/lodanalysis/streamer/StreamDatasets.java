@@ -47,7 +47,7 @@ public class StreamDatasets  extends RuneableClass {
 	
 	private void runSingleThread() throws IOException {
 	    for (File datasetDir : datasetDirs) {
-		printProgress(datasetDir);
+	        printProgress(datasetDir);
 	        if (entry.forceExec() || Utils.getDelta(new File(entry.getMetricParentDir(), datasetDir.getName()), DELTA_FILENAME) < DELTA_ID) {
 	            StreamDataset stream = new StreamDataset(entry, datasetDir);
 	            stream.run();

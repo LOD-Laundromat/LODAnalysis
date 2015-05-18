@@ -110,6 +110,10 @@ public class StreamDataset implements Runnable  {
 			    inputFile = new File(datasetDir, Paths.INPUT_NQ_GZ);
 			    isNquadFile = true;
 			}
+			if (!entry.datasetFitsSize(inputFile)) {
+                System.err.println("Skipping because of file size: " + inputFile.toString());
+                return;
+            }
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;
@@ -147,32 +151,12 @@ public class StreamDataset implements Runnable  {
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
 		
 		
-		/**
-		 * Do some post processing with the counts
-		 */
-		distinctUris = new HashSet<PatriciaNode>(subUris.elementSet());
-		distinctUris.addAll(predUris.elementSet());
-		distinctUris.addAll(objUris.elementSet());
-		 
-		 
-		uriBnodeSet = new HashSet<PatriciaNode>(distinctUris);
-		uriBnodeSet.addAll(subBnodes.elementSet());
-		uriBnodeSet.addAll(predBnodes.elementSet());
-		uriBnodeSet.addAll(objBnodes.elementSet());
+
 		
-		distinctSos = new HashSet<PatriciaNode>(subUris.elementSet());
-		distinctSos.addAll(objUris.elementSet());
-		distinctSos.addAll(subBnodes.elementSet());
-		distinctSos.addAll(objBnodes.elementSet());
-		distinctSos.addAll(literals.elementSet());
+
 		
-		subjects = HashMultiset.create();
-		subjects.addAll(subUris);
-		subjects.addAll(subBnodes);
-		objects = HashMultiset.create();
-		objects.addAll(objUris);
-		objects.addAll(objBnodes);
-		objects.addAll(literals);
+
+		
 		
 		double[] allUriLengths = ArrayUtils.addAll(uriSubLengthStats.getValues(), uriPredLengthStats.getValues());
 		uriLengthStats = new DescriptiveStatistics(ArrayUtils.addAll(allUriLengths, uriObjLengthStats.getValues()));
@@ -186,14 +170,13 @@ public class StreamDataset implements Runnable  {
 		Utils.writePatriciaCountsToFile(vault, new File(datasetOutputDir, Paths.BNODE_COUNTS), bnodeCounts);
 		writePredCountersToFile(datasetOutputDir, predicateCounts);
 		Utils.writePatriciaCountsToFile(vault, new File(datasetOutputDir, Paths.CLASS_COUNTS), classCounts);
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), distinctSos.size());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), distinctDataTypes.size());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), distinctLangTags.size());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), literals.elementSet().size());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_TRIPLES), tripleCount);
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), subjects.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), objects.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS), distinctUris.size());
+		
+		
+		
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_SUB), subUris.elementSet().size());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), subBnodes.elementSet().size());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), objUris.elementSet().size());
@@ -211,71 +194,47 @@ public class StreamDataset implements Runnable  {
 		 */
 		DescriptiveStatistics stats = new DescriptiveStatistics();
 		
-		for (PatriciaNode pNode: subjects.elementSet()) stats.addValue(subjects.count(pNode));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_AVG), stats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MEDIAN), stats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_STD), stats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MAX), stats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MIN), stats.getMin());
 		
-		//indegree (media/median/mode/range)
-		stats.clear();
-		for (PatriciaNode pNode: objects.elementSet()) stats.addValue(objects.count(pNode));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_AVG), stats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MEDIAN), stats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_STD), stats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MAX), stats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MIN), stats.getMin());
-		//degree (media/median/mode/range)
-		HashMultiset<PatriciaNode> degrees = HashMultiset.create();
-		degrees.addAll(objects);
-		degrees.addAll(subjects);
-		stats.clear();
-		for (PatriciaNode pNode: subjects.elementSet()) stats.addValue(degrees.count(pNode));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_AVG), stats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MEDIAN), stats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_STD), stats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MAX), stats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MIN), stats.getMin());
+		
+		
 		
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_AVG), literalLengthStats.getMean());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MEDIAN), literalLengthStats.getPercentile(50));
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_STD), literalLengthStats.getStandardDeviation());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MAX), literalLengthStats.getMax());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MIN), literalLengthStats.getMin());
+		literalLengthStats = null;
 		
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_AVG), uriLengthStats.getMean());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MEDIAN), uriLengthStats.getPercentile(50));
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_STD), uriLengthStats.getStandardDeviation());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MAX), uriLengthStats.getMax());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MIN), uriLengthStats.getMin());
+		uriLengthStats = null;
 		
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_AVG), uriObjLengthStats.getMean());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MEDIAN), uriObjLengthStats.getPercentile(50));
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_STD), uriObjLengthStats.getStandardDeviation());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MAX), uriObjLengthStats.getMax());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MIN), uriObjLengthStats.getMin());
+		uriObjLengthStats = null;
 		
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_AVG), uriSubLengthStats.getMean());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MEDIAN), uriSubLengthStats.getPercentile(50));
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_STD), uriSubLengthStats.getStandardDeviation());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MAX), uriSubLengthStats.getMax());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MIN), uriSubLengthStats.getMin());
-
+		uriSubLengthStats = null;
+		
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_AVG), uriPredLengthStats.getMean());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MEDIAN), uriPredLengthStats.getPercentile(50));
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_STD), uriPredLengthStats.getStandardDeviation());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MAX), uriPredLengthStats.getMax());
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MIN), uriPredLengthStats.getMin());
+		uriPredLengthStats = null;
 		
 		
-        FileOutputStream output = new FileOutputStream(new File(datasetOutputDir, Paths.URI_BNODE_SET));
-        Writer resourcesFileFw = new OutputStreamWriter(new GZIPOutputStream(output), "UTF-8");
-        for (PatriciaNode pNode : uriBnodeSet) {
-            resourcesFileFw.write(vault.redeem(pNode) + System.getProperty("line.separator"));
-        }
-        resourcesFileFw.close();
-        output.close();
+
 
 		//this one is a bit different (key is a set of strings)
 		File nsTripleCountsFile = new File(datasetOutputDir, Paths.NS_TRIPLE_COUNTS);
@@ -287,8 +246,89 @@ public class StreamDataset implements Runnable  {
 			namespaceTripleCountsOutput.write("\t" + entry.getCount() + System.getProperty("line.separator"));
 		}
 		namespaceTripleCountsOutput.close();
+		tripleNsCounts = null;
 		
-		
+		//first create our sos set
+        distinctSos = new HashSet<PatriciaNode>(subUris.elementSet());
+        distinctSos.addAll(objUris.elementSet());
+        distinctSos.addAll(subBnodes.elementSet());
+        distinctSos.addAll(objBnodes.elementSet());
+        distinctSos.addAll(literals.elementSet());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), distinctSos.size());
+        distinctSos = null;
+        
+        
+		//first create our subjects set
+        subjects = HashMultiset.create();
+        subjects.addAll(subUris);
+        subjects.addAll(subBnodes);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), subjects.elementSet().size());
+        stats.clear();
+        for (PatriciaNode pNode: subjects.elementSet()) stats.addValue(subjects.count(pNode));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MIN), stats.getMin());
+        
+        
+        //first create our objects set
+        objects = HashMultiset.create();
+        objects.addAll(objUris);
+        objects.addAll(objBnodes);
+        objects.addAll(literals);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), objects.elementSet().size());
+        //indegree (media/median/mode/range)
+        stats.clear();
+        for (PatriciaNode pNode: objects.elementSet()) stats.addValue(objects.count(pNode));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MIN), stats.getMin());
+        
+        
+        // degree (media/median/mode/range)
+        HashMultiset<PatriciaNode> degrees = HashMultiset.create();
+        degrees.addAll(objects);
+        objects = null;//not used anymore
+        degrees.addAll(subjects);
+        subjects = null;
+        stats.clear();
+        for (PatriciaNode pNode : degrees.elementSet())
+            stats.addValue(degrees.count(pNode));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MIN), stats.getMin());
+        stats.clear();
+        degrees = null;
+        
+        /**
+         * Do some post processing with the counts
+         */
+        distinctUris = new HashSet<PatriciaNode>(subUris.elementSet());
+        subUris = null;//not used anymore
+        distinctUris.addAll(predUris.elementSet());
+        predUris = null;//not used anymore
+        distinctUris.addAll(objUris.elementSet());
+        objUris = null;//not used anymore
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS), distinctUris.size());
+        
+        
+		//first create our uribnode set
+        uriBnodeSet = new HashSet<PatriciaNode>(distinctUris);
+        uriBnodeSet.addAll(subBnodes.elementSet());
+        uriBnodeSet.addAll(predBnodes.elementSet());
+        uriBnodeSet.addAll(objBnodes.elementSet());
+        FileOutputStream output = new FileOutputStream(new File(datasetOutputDir, Paths.URI_BNODE_SET));
+        Writer resourcesFileFw = new OutputStreamWriter(new GZIPOutputStream(output), "UTF-8");
+        for (PatriciaNode pNode : uriBnodeSet) {
+            resourcesFileFw.write(vault.redeem(pNode) + System.getProperty("line.separator"));
+        }
+        resourcesFileFw.close();
+        output.close();
 		
 		/**
 		 * Finally, store the delta of this run

@@ -53,6 +53,10 @@ public class StreamDatasetSubjectsAndObjects implements Runnable  {
 			    inputFile = new File(datasetDir, Paths.INPUT_NQ_GZ);
 			    isNquadFile = true;
 			}
+			if (!entry.datasetFitsSize(inputFile)) {
+			    System.err.println("Skipping because of file size: " + inputFile.toString());
+			    return;
+			}
 			if (inputFile.exists()) {
 				BufferedReader br = getNtripleInputStream(inputFile);
 				String line = null;

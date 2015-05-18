@@ -23,7 +23,7 @@ import org.apache.commons.cli.ParseException;
 
 public class Entry {
 	private static Properties DEFAULTS = new Properties();
-	private enum OptionKeys {help, threads, dataset, datasets, verbose, metrics,metric, force,sparql_endpoint, tmp_dir, sparql_update, graph_update, namedgraph};
+	private enum OptionKeys {help, threads, dataset, datasets, min_size, max_size, verbose, metrics,metric, force,sparql_endpoint, tmp_dir, sparql_update, graph_update, namedgraph};
 	private Map<String, String> args = new HashMap<String, String>();
 	private Set<File> datasetDirs = new HashSet<File>();
 	private Set<File> metricDirs = null;
@@ -52,6 +52,23 @@ public class Entry {
 	public int getNumThreads() {
 		return Integer.parseInt(args.get(OptionKeys.threads.toString()));
 	}
+
+    public int getMinSize() {
+        return Integer.parseInt(args.get(OptionKeys.min_size.toString()));
+    }
+    public int getMaxSize() {
+        int max = Integer.parseInt(args.get(OptionKeys.max_size.toString()));
+        if (max <= 0) {
+            return Integer.MAX_VALUE;
+        } else {
+            return max;
+        }
+    }
+    public boolean datasetFitsSize(File file) throws IOException {
+        long fileSizeMb = file.length() / (1024 * 1024);
+        System.out.println(fileSizeMb);
+        return fileSizeMb > getMinSize() && fileSizeMb < getMaxSize();
+    }
 
 	public File getDatasetParentDir() {
 		File parentDir = null;
@@ -235,6 +252,8 @@ public class Entry {
 		Option sparqlEndpoint = OptionBuilder.withArgName(OptionKeys.sparql_endpoint.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.sparql_endpoint, "SPARQL update to query for existing dataset metrics")).create(OptionKeys.sparql_endpoint.toString());
 		Option graphUpdate = OptionBuilder.withArgName(OptionKeys.graph_update.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.graph_update, "Graph protocol URL to use for inserting new metrics")).create(OptionKeys.graph_update.toString());
 		Option namedGraph = OptionBuilder.withArgName(OptionKeys.namedgraph.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.namedgraph, "Which named graph to use for storing the prefixes")).create(OptionKeys.namedgraph.toString());
+		Option minSize = OptionBuilder.withArgName(OptionKeys.min_size.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.min_size, "Minimum size (MB) of dataset to process")).create(OptionKeys.min_size.toString());
+		Option maxSize = OptionBuilder.withArgName(OptionKeys.max_size.toString()).hasArg().withDescription(getOptionTextWithDefault(OptionKeys.max_size, "Maximum size (MB) of dataset to process")).create(OptionKeys.max_size.toString());
 		Option help = new Option(OptionKeys.help.toString(), "print this message");
 		
 		
@@ -249,6 +268,8 @@ public class Entry {
 		options.addOption(sparqlEndpoint);
 		options.addOption(graphUpdate);
 		options.addOption(namedGraph);
+		options.addOption(minSize);
+		options.addOption(maxSize);
 		return options;
 	}
 
