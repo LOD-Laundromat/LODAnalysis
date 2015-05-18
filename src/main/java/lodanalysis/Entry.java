@@ -66,7 +66,6 @@ public class Entry {
     }
     public boolean datasetFitsSize(File file) throws IOException {
         long fileSizeMb = file.length() / (1024 * 1024);
-        System.out.println(fileSizeMb);
         return fileSizeMb > getMinSize() && fileSizeMb < getMaxSize();
     }
 
