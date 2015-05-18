@@ -31,7 +31,7 @@ public class Debug {
 		 */
 		
 //		new Entry(new String[]{"-force","-metrics", "metrics", "lodanalysis.model.CreateModels"});
-//		new Entry(new String[]{"-force","-metric", "/home/lrd900/code/anytime/test/data/clod/044e27f4a8d7e2cb0172dc8469308628", "lodanalysis.model.CreateModels"});
+//		new Entry(new String[]{"-force","-metric", "metrics/testDataset", "lodanalysis.model.CreateModels"});
 		/**
 		 * upload models
 		 */

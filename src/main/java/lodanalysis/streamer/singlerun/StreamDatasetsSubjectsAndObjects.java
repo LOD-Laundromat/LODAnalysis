@@ -12,7 +12,7 @@ import lodanalysis.Paths;
 import lodanalysis.RuneableClass;
 import lodanalysis.utils.Utils;
 
-public class StreamDatasetsNamespaces  extends RuneableClass {
+public class StreamDatasetsSubjectsAndObjects  extends RuneableClass {
 	public static int DELTA_ID = 2;//useful when we re-run code. We store this id in each directory. When we re-run a (possibly newer) dataset dir, we can check whether we should re-analyze this dir, or skip it
 	public static String DELTA_FILENAME = "aggregator_delta";
 	private Collection<File> datasetDirs;
@@ -20,7 +20,7 @@ public class StreamDatasetsNamespaces  extends RuneableClass {
 	public static int PROCESSED_COUNT = 0;
 	public static File PROVENANCE_FILE = null;;
 	
-	public StreamDatasetsNamespaces(Entry entry) throws IOException, InterruptedException {
+	public StreamDatasetsSubjectsAndObjects(Entry entry) throws IOException, InterruptedException {
 		super(entry);
 		/**
 		 * initialize temp file containing all provenance. We'll copy this file next to every statistic file we generate (for provenance reasons)
@@ -49,7 +49,7 @@ public class StreamDatasetsNamespaces  extends RuneableClass {
 	    for (File datasetDir : datasetDirs) {
 		printProgress(datasetDir);
 	        if (entry.forceExec() || !(new File(entry.getMetricParentDir().getPath() + "/" + datasetDir.getName() + "/" + Paths.NS_COUNTS).exists())) {
-	            StreamDatasetNamespaces stream = new StreamDatasetNamespaces(entry, datasetDir);
+	            StreamDatasetSubjectsAndObjects stream = new StreamDatasetSubjectsAndObjects(entry, datasetDir);
 	            stream.run();
 	        } else {
 	            if (entry.isVerbose()) System.out.println("Skipping " + datasetDir.getName() + ". Already analyzed");
@@ -64,7 +64,7 @@ public class StreamDatasetsNamespaces  extends RuneableClass {
 	    ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         for (File datasetDir : datasetDirs) {
             if (entry.forceExec() || !(new File(entry.getMetricParentDir().getPath() + "/" + datasetDir.getName() + "/" + Paths.NS_COUNTS).exists())) {
-                Runnable worker = new StreamDatasetNamespaces(entry, datasetDir);
+                Runnable worker = new StreamDatasetSubjectsAndObjects(entry, datasetDir);
                 executor.execute(worker);
             } else {
                 if (entry.isVerbose()) System.out.println("Skipping " + datasetDir.getName() + ". Already analyzed");

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -19,6 +20,10 @@ import lodanalysis.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.data2semantics.vault.Vault;
+import org.data2semantics.vault.PatriciaVault.PatriciaNode;
+
+import com.google.common.collect.HashMultiset;
 
 public class Utils {
 	private static final String[] RELEVANT_SYS_PROPS = new String[]{
@@ -183,5 +188,26 @@ public class Utils {
 			delta = Integer.parseInt(FileUtils.readFileToString(deltaFile).trim());
 		}
 		return delta;
-	}
+    }
+
+    public static void writeSingleCountToFile(File targetFile, double val) throws IOException {
+        FileUtils.writeStringToFile(targetFile, Double.toString(val));
+    }
+
+    public static void writeSingleCountToFile(File targetFile, int val) throws IOException {
+        FileUtils.writeStringToFile(targetFile, Integer.toString(val));
+    }
+    /**
+     * just a simple helper method, to store the maps with a string as key, and counter as val
+     * @throws IOException 
+     */
+    public static void writePatriciaCountsToFile(Vault<String, PatriciaNode> vault, File targetFile, HashMultiset<PatriciaNode> multiset) throws IOException {
+        FileWriter fw = new FileWriter(targetFile);
+        for (com.google.common.collect.Multiset.Entry<PatriciaNode> entry: multiset.entrySet()) {
+            fw.write(vault.redeem((PatriciaNode)entry.getElement()) + "\t" + entry.getCount() + System.getProperty("line.separator"));
+            
+        }
+        fw.close();
+        
+    }
 }
