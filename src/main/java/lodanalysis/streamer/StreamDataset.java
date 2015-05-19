@@ -15,6 +15,8 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -24,7 +26,6 @@ import lodanalysis.Paths;
 import lodanalysis.utils.Utils;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.data2semantics.vault.PatriciaVault;
 import org.data2semantics.vault.PatriciaVault.PatriciaNode;
@@ -34,6 +35,9 @@ import com.google.common.collect.HashMultiset;
 
 public class StreamDataset implements Runnable  {
 	public class PredicateCounter {
+	    
+	    
+	    
 		int count = 1;//how often does this predicate occur. (initialize with 1)
 		//how many literals (objects) does it co-occur with
 		int objLiteralCount = 0;
@@ -44,7 +48,6 @@ public class StreamDataset implements Runnable  {
         //how many distinct subjects (URIs or bnodes) does it co-occur with
         HashSet<PatriciaNode> distinctSubCount = new HashSet<PatriciaNode>();
 	}
-
 	private File datasetDir;
 	private InputStream gzipStream;
 	private InputStream fileStream;
@@ -55,42 +58,54 @@ public class StreamDataset implements Runnable  {
 	int tripleCount = 0;
 	int uriCount = 0;
 	int literalCount = 0;
-	private HashMultiset<Set<PatriciaNode>> tripleNsCounts = HashMultiset.create();
+	int distinctObjects = 0;
+	
+	//private Set<PatriciaNode> binaryInfo = new HashSet<PatriciaNode>();
+	//option: store fingerprint in single hashmap for 
+	    //bnode/uri/literal, 
+	    //class yes/no
+	    //subject count
+	    //predicate count
+	    //object count
+	    //definedsub/definedobj
+	private Map<PatriciaNode, NodeWrapper> nodesInfo = new HashMap<PatriciaNode, NodeWrapper>();
+	
+	
+	//this would reduce the number of hashmultisets we need (and greatly reduce memory)
+//	private HashMultiset<PatriciaNode> bnodeCounts = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> subjects = null;
+//	private HashMultiset<PatriciaNode> objects;
+//	private HashMultiset<PatriciaNode> subUris = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> predUris = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> predBnodes = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> objUris = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> objBnodes = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> subBnodes = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> literals = HashMultiset.create();
+//	private HashMultiset<PatriciaNode> classCounts = HashMultiset.create();
+	
+	
 	private HashMultiset<PatriciaNode> nsCounts = HashMultiset.create();
-	private HashMultiset<PatriciaNode> bnodeCounts = HashMultiset.create();
-	private HashMultiset<PatriciaNode> classCounts = HashMultiset.create();
-	private HashMultiset<PatriciaNode> subjects = null;
-	private HashMultiset<PatriciaNode> objects;
-	
-    private HashMultiset<PatriciaNode> subUris = HashMultiset.create();
-    private HashMultiset<PatriciaNode> subBnodes = HashMultiset.create();
-    private HashMultiset<PatriciaNode> predUris = HashMultiset.create();
-    private HashMultiset<PatriciaNode> predBnodes = HashMultiset.create();
-    private HashMultiset<PatriciaNode> objUris = HashMultiset.create();
-    private HashMultiset<PatriciaNode> objBnodes = HashMultiset.create();
-    private HashMultiset<PatriciaNode> literals = HashMultiset.create();
-	    
-	
 	private HashMap<PatriciaNode, PredicateCounter> predicateCounts = new HashMap<PatriciaNode, PredicateCounter>();
-	private Set<PatriciaNode> distinctUris;
-	private Set<PatriciaNode> uriBnodeSet;
+//	private Set<PatriciaNode> distinctUris;
+//	private Set<PatriciaNode> uriBnodeSet;
 
 	
-	private Set<PatriciaNode> distinctLangTags = new HashSet<PatriciaNode>();
-	private Set<PatriciaNode> distinctDataTypes = new HashSet<PatriciaNode>();
-	private Set<PatriciaNode> distinctDefinedObjects = new HashSet<PatriciaNode>();
-	private Set<PatriciaNode> distinctDefinedProperties = new HashSet<PatriciaNode>();
-	private DescriptiveStatistics uriLengthStats;
-	private DescriptiveStatistics uriSubLengthStats = new DescriptiveStatistics();
-	private DescriptiveStatistics uriPredLengthStats = new DescriptiveStatistics();
-	private DescriptiveStatistics uriObjLengthStats = new DescriptiveStatistics();
-	private DescriptiveStatistics literalLengthStats = new DescriptiveStatistics();
-	private Set<PatriciaNode> distinctSos;
+//	private Set<PatriciaNode> distinctLangTags = new HashSet<PatriciaNode>();
+//	private Set<PatriciaNode> distinctDataTypes = new HashSet<PatriciaNode>();
+//	private Set<PatriciaNode> distinctDefinedObjects = new HashSet<PatriciaNode>();
+//	private Set<PatriciaNode> distinctDefinedProperties = new HashSet<PatriciaNode>();
+//	private DescriptiveStatistics uriLengthStats;
+//	private DescriptiveStatistics uriSubLengthStats = new DescriptiveStatistics();
+//	private DescriptiveStatistics uriPredLengthStats = new DescriptiveStatistics();
+//	private DescriptiveStatistics uriObjLengthStats = new DescriptiveStatistics();
+//	private DescriptiveStatistics literalLengthStats = new DescriptiveStatistics();
+//	private Set<PatriciaNode> distinctSos;
 	
 	
-	private NodeWrapper subWrapper = new NodeWrapper(vault);
-    private NodeWrapper predWrapper = new NodeWrapper(vault);
-    private NodeWrapper objWrapper = new NodeWrapper(vault);
+//	private NodeWrapper subWrapper = new NodeWrapper(vault);
+//    private NodeWrapper predWrapper = new NodeWrapper(vault);
+//    private NodeWrapper objWrapper = new NodeWrapper(vault);
 	
 	private Entry entry;
 	public static void stream(Entry entry, File datasetDir) throws IOException {
@@ -144,127 +159,263 @@ public class StreamDataset implements Runnable  {
 		if (entry.isVerbose()) System.out.println(msg);
 	}
 
+	private void storeLiteralInfoAndMeasureCounts(File datasetOutputDir) throws IOException {
+	    int distinctLiterals = 0;
+        Set<String> dataTypes = new HashSet<String>();
+        Set<String> langTags = new HashSet<String>();
+        double[] literalLengths = new double[literalCount];
+        int nextIndex = 0;
+        for (java.util.Map.Entry<PatriciaNode, NodeWrapper> entry : nodesInfo.entrySet()) {
+            NodeWrapper nodeWrapper = entry.getValue();
+            if (nodeWrapper.type == Type.LITERAL) {
+                distinctLiterals++;
+                String stringRepresentation = vault.redeem(entry.getKey());
+                String dataType = Utils.getDataType(stringRepresentation);
+                int dataTypeLength = 0;
+                if (dataType != null) {
+                    dataTypes.add(dataType);
+                    dataTypeLength = dataType.length();
+                }
+                String langTag = Utils.getLangTag(stringRepresentation);
+                int langTagLength = 0;
+                if (langTag != null) {
+                    langTags.add(langTag);
+                    langTagLength = langTag.length();
+                } 
+                
+                int literalLength = Utils.getLiteralLength(stringRepresentation, dataTypeLength, langTagLength);
+                int numOccurances = nodeWrapper.getNumOccurances();
+                for (int i = 0; i < numOccurances; i++) {
+                    literalLengths[nextIndex++] = literalLength;
+                }
+            }
+            if (nodeWrapper.objCount > 0) {
+                distinctObjects++;
+            }
+        }
+        
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), dataTypes.size());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), langTags.size());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), distinctLiterals);
+        
+        DescriptiveStatistics stats = new DescriptiveStatistics(literalLengths);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MIN), stats.getMin());
+	}
 	private void store() throws IOException {
 	    
 		String datasetMd5 = datasetDir.getName();
 		File datasetOutputDir = new File(entry.getMetricParentDir(), datasetMd5);
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
 		
-		
-
-		
-
-		
-
-		
-		
-		double[] allUriLengths = ArrayUtils.addAll(uriSubLengthStats.getValues(), uriPredLengthStats.getValues());
-		uriLengthStats = new DescriptiveStatistics(ArrayUtils.addAll(allUriLengths, uriObjLengthStats.getValues()));
-		
-		
-		
 		//store provenance file
-		FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(datasetOutputDir, ".sysinfo"));
+        FileUtils.copyFile(StreamDatasets.PROVENANCE_FILE, new File(datasetOutputDir, ".sysinfo"));
+        
+        
+		writePredCountersToFile(datasetOutputDir, predicateCounts);
+		predicateCounts = null;
+		
 		
 		Utils.writePatriciaCountsToFile(vault, new File(datasetOutputDir, Paths.NS_COUNTS), nsCounts);
-		Utils.writePatriciaCountsToFile(vault, new File(datasetOutputDir, Paths.BNODE_COUNTS), bnodeCounts);
-		writePredCountersToFile(datasetOutputDir, predicateCounts);
-		Utils.writePatriciaCountsToFile(vault, new File(datasetOutputDir, Paths.CLASS_COUNTS), classCounts);
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), distinctDataTypes.size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), distinctLangTags.size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), literals.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_TRIPLES), tripleCount);
+		nsCounts = null;
 		
-		
-		
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_SUB), subUris.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), subBnodes.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), objUris.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), objBnodes.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_URIS), uriCount);
 		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_LITERALS), literalCount);
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), objBnodes.elementSet().size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_CLASSES), distinctDefinedObjects.size());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_PROPERTIES), distinctDefinedProperties.size());
+		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.ALL_URIS), uriCount);
 		
+		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_TRIPLES), tripleCount);
+		/**
+		 * Now do tricky part, and post-process all the node info
+		 */
 		
 		
 		/**
-		 * Write degree info
+		 * process all literals
 		 */
-		DescriptiveStatistics stats = new DescriptiveStatistics();
-		
-		
-		
-		
-		
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_AVG), literalLengthStats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MEDIAN), literalLengthStats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_STD), literalLengthStats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MAX), literalLengthStats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MIN), literalLengthStats.getMin());
-		literalLengthStats = null;
-		
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_AVG), uriLengthStats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MEDIAN), uriLengthStats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_STD), uriLengthStats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MAX), uriLengthStats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MIN), uriLengthStats.getMin());
-		uriLengthStats = null;
-		
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_AVG), uriObjLengthStats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MEDIAN), uriObjLengthStats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_STD), uriObjLengthStats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MAX), uriObjLengthStats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MIN), uriObjLengthStats.getMin());
-		uriObjLengthStats = null;
-		
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_AVG), uriSubLengthStats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MEDIAN), uriSubLengthStats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_STD), uriSubLengthStats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MAX), uriSubLengthStats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MIN), uriSubLengthStats.getMin());
-		uriSubLengthStats = null;
-		
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_AVG), uriPredLengthStats.getMean());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MEDIAN), uriPredLengthStats.getPercentile(50));
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_STD), uriPredLengthStats.getStandardDeviation());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MAX), uriPredLengthStats.getMax());
-		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MIN), uriPredLengthStats.getMin());
-		uriPredLengthStats = null;
-		
-		
+		storeLiteralInfoAndMeasureCounts(datasetOutputDir);
 
-
-		//this one is a bit different (key is a set of strings)
-		File nsTripleCountsFile = new File(datasetOutputDir, Paths.NS_TRIPLE_COUNTS);
-		FileWriter namespaceTripleCountsOutput = new FileWriter(nsTripleCountsFile);
-		for (com.google.common.collect.Multiset.Entry<Set<PatriciaNode>> entry: tripleNsCounts.entrySet()) {
-			for (PatriciaNode pNode: entry.getElement()) {
-				namespaceTripleCountsOutput.write(vault.redeem(pNode) + " ");
-			}
-			namespaceTripleCountsOutput.write("\t" + entry.getCount() + System.getProperty("line.separator"));
+		/**
+		 * store sos and objects info. After this, we can remove literals from our nodes info thing, to reduce memory
+		 */
+		
+		
+		
+		
+		HashSet<PatriciaNode> distinctSos = new HashSet<PatriciaNode>();
+		int allSubUriCount = 0;
+		int allPredUriCount = 0;
+		int allObjUriCount = 0;
+		
+		int distinctSubjects = 0;
+		int distinctObjectsAndSubjects = 0;
+		double[] indegree = new double[distinctObjects];
+		int indegreeNextIndex = 0;
+        for (Iterator<java.util.Map.Entry<PatriciaNode, NodeWrapper>> it = nodesInfo.entrySet().iterator(); it.hasNext();) {
+            java.util.Map.Entry<PatriciaNode, NodeWrapper> entry = it.next();
+            
+            NodeWrapper nodeWrapper = entry.getValue();
+            if (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0) distinctSos.add(entry.getKey());
+            if (nodeWrapper.objCount > 0) {
+                indegree[indegreeNextIndex++] = nodeWrapper.objCount;
+            }
+            if (nodeWrapper.subCount > 0) {
+                distinctSubjects++;
+            } 
+            if (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0) distinctObjectsAndSubjects++;
+            
+            //we can remove literals from this hashmap now, to clean up memory
+            if (nodeWrapper.type == Type.LITERAL) {
+                vault.trash(entry.getKey());
+                it.remove();
+            } else if (nodeWrapper.type == Type.URI) {
+                allSubUriCount += nodeWrapper.subCount;
+                allPredUriCount += nodeWrapper.predCount;
+                allObjUriCount += nodeWrapper.objCount;
+            }
+        }
+		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), distinctSos.size());
+		distinctSos = null;
+		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), distinctObjects);
+		Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), distinctSubjects);
+        //indegree (media/median/mode/range)
+        DescriptiveStatistics stats = new DescriptiveStatistics(indegree);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MIN), stats.getMin());
+		
+		
+		/**
+		 * Process all the rest
+		 */
+		double[] allUriLengths = new double[allSubUriCount + allPredUriCount + allObjUriCount];
+		int allUriLengthsNextIndex = 0;
+		double[] allSubUriLengths = new double[allSubUriCount];
+		int allSubUriLengthsNextIndex = 0;
+		double[] allPredUriLengths = new double[allPredUriCount];
+		int allPredUriLengthsNextIndex = 0;
+		double[] allObjUriLengths = new double[allObjUriCount];
+		int allObjUriLengthsNextIndex = 0;
+		double[] outDegree = new double[distinctSubjects];
+		int outDegreeNextIndex = 0;
+		double[] degree = new double[distinctObjectsAndSubjects];
+		int degreeNextIndex = 0;
+		int distinctUris = 0;
+		int distinctUrisSub = 0;//
+		int distinctBnodesSub = 0;//
+		int distinctUrisObj = 0;//
+		int distinctBnodesObj = 0;//
+		int distinctDefinedClasses = 0;
+		int distinctDefinedProperties = 0;
+		FileWriter bnodeCountsFw = new FileWriter(new File(datasetOutputDir, Paths.BNODE_COUNTS));
+		FileWriter classCountsFw = new FileWriter(new File(datasetOutputDir, Paths.CLASS_COUNTS));
+		FileOutputStream output = new FileOutputStream(new File(datasetOutputDir, Paths.URI_BNODE_SET));
+        Writer resourcesFileFw = new OutputStreamWriter(new GZIPOutputStream(output), "UTF-8");
+	        
+	        
+	        
+		for (java.util.Map.Entry<PatriciaNode, NodeWrapper> entry : nodesInfo.entrySet()) {
+		    NodeWrapper nodeWrapper = entry.getValue();
+		    PatriciaNode pnode = entry.getKey();
+		    String stringRepresentation = vault.redeem(pnode);
+		    if (nodeWrapper.type == Type.URI) {
+		        distinctUris++;
+		        if (nodeWrapper.subCount > 0) {
+		            distinctUrisSub++;
+                }
+                if (nodeWrapper.objCount > 0) {
+                    distinctUrisObj++;
+                }
+		        
+		        for (int i = 0; i < nodeWrapper.subCount; i++) {
+		            allUriLengths[allUriLengthsNextIndex] = stringRepresentation.length();
+		            allSubUriLengths[allSubUriLengthsNextIndex] = stringRepresentation.length();
+		        }
+		        for (int i = 0; i < nodeWrapper.predCount; i++) {
+		            allUriLengths[allUriLengthsNextIndex] = stringRepresentation.length();
+		            allPredUriLengths[allPredUriLengthsNextIndex] = stringRepresentation.length();
+		        }
+		        for (int i = 0; i < nodeWrapper.objCount; i++) {
+		            allUriLengths[allUriLengthsNextIndex] = stringRepresentation.length();
+		            allObjUriLengths[allObjUriLengthsNextIndex] = stringRepresentation.length();
+		        }
+		    } else if (nodeWrapper.type == Type.BNODE) {
+		        
+		        if (nodeWrapper.subCount > 0) {
+		            distinctBnodesSub++;
+                }
+                if (nodeWrapper.objCount > 0) {
+                    distinctBnodesObj++;
+                }
+		    }
+		    if (nodeWrapper.definedAsClass) distinctDefinedClasses++;
+		    if (nodeWrapper.definedAsProperty) distinctDefinedProperties++;
+		    if (nodeWrapper.subCount > 0) {
+		        outDegree[outDegreeNextIndex] = nodeWrapper.subCount;
+		    }
+		    if (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0) {
+		        degree[degreeNextIndex] = nodeWrapper.subCount + nodeWrapper.objCount;
+		    }
+		    if (nodeWrapper.type == Type.BNODE) {
+		        bnodeCountsFw.write(stringRepresentation + "\t" + nodeWrapper.getNumOccurances() + System.getProperty("line.separator"));
+		    }
+		    if (nodeWrapper.asTypeCount > 0) {
+		        classCountsFw.write(stringRepresentation + "\t" + nodeWrapper.getNumOccurances() + System.getProperty("line.separator"));
+		    }
+		    
+		    if (nodeWrapper.type == Type.BNODE || nodeWrapper.type == Type.URI) {
+		        resourcesFileFw.write(stringRepresentation + System.getProperty("line.separator"));
+		    }
 		}
-		namespaceTripleCountsOutput.close();
-		tripleNsCounts = null;
+		bnodeCountsFw.close();
+		classCountsFw.close();
+		resourcesFileFw.close();
+		output.close();
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_SUB), distinctUrisSub);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_SUB), distinctBnodesSub);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS_OBJ), distinctUrisObj);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_BNODES_OBJ), distinctBnodesObj);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_CLASSES), distinctDefinedClasses);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DEFINED_PROPERTIES), distinctDefinedProperties);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS), distinctUris);
+        
+        stats = new DescriptiveStatistics(allUriLengths);
+        allUriLengths = null;
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_LENGTH_MIN), stats.getMin());
 		
-		//first create our sos set
-        distinctSos = new HashSet<PatriciaNode>(subUris.elementSet());
-        distinctSos.addAll(objUris.elementSet());
-        distinctSos.addAll(subBnodes.elementSet());
-        distinctSos.addAll(objBnodes.elementSet());
-        distinctSos.addAll(literals.elementSet());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SOS_COUNT), distinctSos.size());
-        distinctSos = null;
+        stats = new DescriptiveStatistics(allObjUriLengths);
+        allObjUriLengths = null;
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_OBJ_LENGTH_MIN), stats.getMin());
         
+        stats = new DescriptiveStatistics(allSubUriLengths);
+        allSubUriLengths = null;
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_SUB_LENGTH_MIN), stats.getMin());
         
-		//first create our subjects set
-        subjects = HashMultiset.create();
-        subjects.addAll(subUris);
-        subjects.addAll(subBnodes);
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_SUBJECTS), subjects.elementSet().size());
-        stats.clear();
-        for (PatriciaNode pNode: subjects.elementSet()) stats.addValue(subjects.count(pNode));
+        stats = new DescriptiveStatistics(allPredUriLengths);
+        allPredUriLengths = null;
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.URI_PRED_LENGTH_MIN), stats.getMin());
+        
+        stats = new DescriptiveStatistics(outDegree);
+        outDegree = null;
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_AVG), stats.getMean());
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MEDIAN), stats.getPercentile(50));
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_STD), stats.getStandardDeviation());
@@ -272,64 +423,16 @@ public class StreamDataset implements Runnable  {
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.OUTDEGREE_MIN), stats.getMin());
         
         
-        //first create our objects set
-        objects = HashMultiset.create();
-        objects.addAll(objUris);
-        objects.addAll(objBnodes);
-        objects.addAll(literals);
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_OBJECTS), objects.elementSet().size());
-        //indegree (media/median/mode/range)
-        stats.clear();
-        for (PatriciaNode pNode: objects.elementSet()) stats.addValue(objects.count(pNode));
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_AVG), stats.getMean());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MEDIAN), stats.getPercentile(50));
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_STD), stats.getStandardDeviation());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MAX), stats.getMax());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.INDEGREE_MIN), stats.getMin());
-        
-        
-        // degree (media/median/mode/range)
-        HashMultiset<PatriciaNode> degrees = HashMultiset.create();
-        degrees.addAll(objects);
-        objects = null;//not used anymore
-        degrees.addAll(subjects);
-        subjects = null;
-        stats.clear();
-        for (PatriciaNode pNode : degrees.elementSet())
-            stats.addValue(degrees.count(pNode));
+        stats = new DescriptiveStatistics(degree);
+        degree = null;
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_AVG), stats.getMean());
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MEDIAN), stats.getPercentile(50));
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_STD), stats.getStandardDeviation());
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MAX), stats.getMax());
         Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DEGREE_MIN), stats.getMin());
-        stats.clear();
-        degrees = null;
         
-        /**
-         * Do some post processing with the counts
-         */
-        distinctUris = new HashSet<PatriciaNode>(subUris.elementSet());
-        subUris = null;//not used anymore
-        distinctUris.addAll(predUris.elementSet());
-        predUris = null;//not used anymore
-        distinctUris.addAll(objUris.elementSet());
-        objUris = null;//not used anymore
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_URIS), distinctUris.size());
-        
-        
-		//first create our uribnode set
-        uriBnodeSet = new HashSet<PatriciaNode>(distinctUris);
-        uriBnodeSet.addAll(subBnodes.elementSet());
-        uriBnodeSet.addAll(predBnodes.elementSet());
-        uriBnodeSet.addAll(objBnodes.elementSet());
-        FileOutputStream output = new FileOutputStream(new File(datasetOutputDir, Paths.URI_BNODE_SET));
-        Writer resourcesFileFw = new OutputStreamWriter(new GZIPOutputStream(output), "UTF-8");
-        for (PatriciaNode pNode : uriBnodeSet) {
-            resourcesFileFw.write(vault.redeem(pNode) + System.getProperty("line.separator"));
-        }
-        resourcesFileFw.close();
-        output.close();
 		
+
 		/**
 		 * Finally, store the delta of this run
 		 */
@@ -387,6 +490,15 @@ public class StreamDataset implements Runnable  {
 		}
 	    return new String[]{sub, pred, obj, graph};
 	}
+	
+	private NodeWrapper getAndSetNodeWrapper(PatriciaNode pnode, String stringRepresentation) {
+	    NodeWrapper nodeWrapper = nodesInfo.get(pnode);
+	    if (nodeWrapper == null) {
+	        nodeWrapper = new NodeWrapper(stringRepresentation);
+	        nodesInfo.put(pnode, nodeWrapper);
+	    }
+	    return nodeWrapper;
+	}
 
 	private void processLine(String line) {
 		String[] nodes;
@@ -397,87 +509,72 @@ public class StreamDataset implements Runnable  {
 			return;
 		}
 		if (nodes.length >= 3) {
-		    subWrapper.init(nodes[0], NodeWrapper.Position.SUB);
-			predWrapper.init(nodes[1], NodeWrapper.Position.PRED);
-			objWrapper.init(nodes[2], NodeWrapper.Position.OBJ);
-			
-			
-			/**
+		    PatriciaNode subTicket = vault.store(nodes[0]);
+		    PatriciaNode predTicket = vault.store(nodes[1]);
+		    PatriciaNode objTicket = vault.store(nodes[2]);
+		    
+		    NodeWrapper subWrapper = getAndSetNodeWrapper(subTicket, nodes[0]);
+		    NodeWrapper predWrapper = getAndSetNodeWrapper(predTicket, nodes[1]);
+		    NodeWrapper objWrapper = getAndSetNodeWrapper(objTicket, nodes[2]);
+		    
+		    subWrapper.update(Position.SUB);
+		    predWrapper.update(Position.PRED);
+		    objWrapper.update(Position.OBJ);
+		    
+		    /**
 			 * Some generic counters
 			 */
 			tripleCount++;
-//			subjects.add(subWrapper.ticket);
-//			objects.add(objWrapper.ticket);
 			PredicateCounter predCounter = null;
 
-			if (!predicateCounts.containsKey(predWrapper.ticket)) {
+			if (!predicateCounts.containsKey(predTicket)) {
 				predCounter = new PredicateCounter();
-				predicateCounts.put(predWrapper.ticket, predCounter);
+				predicateCounts.put(predTicket, predCounter);
 			} else {
-			    predCounter = predicateCounts.get(predWrapper.ticket);
+			    predCounter = predicateCounts.get(predTicket);
 			    predCounter.count++;
 			}
-			predCounter.distinctSubCount.add(subWrapper.ticket);
+			predCounter.distinctSubCount.add(subTicket);
 			
-			
-			/**
-			 * store ns triples
-			 */
-			Set<PatriciaNode> tripleNs = new HashSet<PatriciaNode>();
-			if (subWrapper.nsTicket != null) tripleNs.add(subWrapper.nsTicket);
-			if (predWrapper.nsTicket != null) tripleNs.add(predWrapper.nsTicket);
-			if (objWrapper.nsTicket != null) tripleNs.add(objWrapper.nsTicket);
-			tripleNsCounts.add(tripleNs);
+
 
 			/**
 			 * store ns counters
 			 */
-			if (subWrapper.isUri) nsCounts.add(subWrapper.nsTicket);
-			if (predWrapper.isUri) nsCounts.add(predWrapper.nsTicket);
-			if (objWrapper.isUri) nsCounts.add(objWrapper.nsTicket);
+			if (subWrapper.type == Type.URI) nsCounts.add(subTicket);
+			if (predWrapper.type == Type.URI) nsCounts.add(predTicket);
+			if (objWrapper.type == Type.URI) nsCounts.add(objTicket);
 
-			
-			/**
-			 * store uniq bnodes
-			 */
-			if (subWrapper.isBnode) bnodeCounts.add(subWrapper.ticket);
-			if (predWrapper.isBnode) bnodeCounts.add(predWrapper.ticket);
-			if (objWrapper.isBnode) {
-			    bnodeCounts.add(objWrapper.ticket);
-			    objBnodes.add(objWrapper.ticket);
-			}
-
-			
 			/**
 			 * Store literal info
 			 */
-			if (objWrapper.isLiteral) {
+			if (objWrapper.type == Type.LITERAL) {
 				literalCount++;
-				literalLengthStats.addValue(objWrapper.literalLength);
-				literals.add(objWrapper.ticket);
-				if (objWrapper.datatype != null) {
-					distinctDataTypes.add(objWrapper.datatype);
-				}
-				if (objWrapper.langTag != null) {
-					distinctLangTags.add(objWrapper.langTag);
-				}
+//				literalLengthStats.addValue(objWrapper.literalLength);
+//				literals.add(objWrapper.ticket);
+//				if (objWrapper.datatype != null) {
+//					distinctDataTypes.add(objWrapper.datatype);
+//				}
+//				if (objWrapper.langTag != null) {
+//					distinctLangTags.add(objWrapper.langTag);
+//				}
 				predCounter.objLiteralCount++;
-				predCounter.distinctObjLiteralCount.add(objWrapper.ticket);
+				predCounter.distinctObjLiteralCount.add(objTicket);
 			} else {
 				predCounter.objNonLiteralCount++;
-				predCounter.distinctObjNonLiteralCount.add(objWrapper.ticket);
+				predCounter.distinctObjNonLiteralCount.add(objTicket);
 			}
 			
 			/**
 			 * Store classes and props
 			 */
-			if (predWrapper.isRdf_type) {
-				classCounts.add(objWrapper.ticket);
+			if (predWrapper.isRdfType) {
+				objWrapper.asTypeCount++;
 				
-				if (objWrapper.isDefinedClass()) {
-					distinctDefinedObjects.add(subWrapper.ticket);
-				} else if (objWrapper.isDefinedProperty()) {
-					distinctDefinedProperties.add(subWrapper.ticket);
+				if (objWrapper.classType != null  && objWrapper.classType == ClassType.CLASS) {
+				    subWrapper.definedAsClass = true;
+				} else if (objWrapper.classType != null  && objWrapper.classType == ClassType.PROPERTY) {
+				    subWrapper.definedAsProperty = true;
 				}
 			}
 			
@@ -485,36 +582,39 @@ public class StreamDataset implements Runnable  {
 			
 			
 			//Store URI info
-			if (subWrapper.isUri) {
+			if (subWrapper.type == Type.URI) {
 				uriCount++;
 //				uriLengthStats.addValue(subWrapper.uriLength);
-				uriSubLengthStats.addValue(subWrapper.uriLength);
-				subUris.add(subWrapper.ticket);
-			} else if (subWrapper.isBnode) {
-				subBnodes.add(subWrapper.ticket);
-			}
+//				uriSubLengthStats.addValue(subWrapper.uriLength);
+//				subUris.add(subWrapper.ticket);
+			} 
+//			else if (subWrapper.isBnode) {
+////				subBnodes.add(subWrapper.ticket);
+//			}
 			
 			
 			
-			if (predWrapper.isUri) {
+			if (predWrapper.type == Type.URI) {
 				uriCount++;
 //				uriLengthStats.addValue(predWrapper.uriLength);
-				uriPredLengthStats.addValue(predWrapper.uriLength);
-			} else if (predWrapper.isBnode) {
-			    //shouldnt be there, but use just in case
-			    predBnodes.add(predWrapper.ticket);
+//				uriPredLengthStats.addValue(predWrapper.uriLength);
 			}
+//			else if (predWrapper.isBnode) {
+//			    //shouldnt be there, but use just in case
+////			    predBnodes.add(predWrapper.ticket);
+//			}
 			
 			
 			
-			if (objWrapper.isUri) {
+			if (objWrapper.type == Type.URI) {
 				uriCount++;
 //				uriLengthStats.addValue(objWrapper.uriLength);
-				uriObjLengthStats.addValue(objWrapper.uriLength);
-				objUris.add(objWrapper.ticket);
-			} else if (objWrapper.isBnode) {
-			    objBnodes.add(objWrapper.ticket);
+//				uriObjLengthStats.addValue(objWrapper.uriLength);
+//				objUris.add(objWrapper.ticket);
 			}
+//			else if (objWrapper.isBnode) {
+//			    objBnodes.add(objWrapper.ticket);
+//			}
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
 		}

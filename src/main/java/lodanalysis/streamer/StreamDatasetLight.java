@@ -21,6 +21,7 @@ import java.util.zip.GZIPOutputStream;
 
 import lodanalysis.Entry;
 import lodanalysis.Paths;
+import lodanalysis.utils.Utils;
 
 import org.apache.commons.io.FileUtils;
 import org.data2semantics.vault.PatriciaVault;
@@ -238,17 +239,17 @@ public class StreamDatasetLight implements Runnable  {
             //get distinct uris
             if (nodes[0].length() > 0 && nodes[0].charAt(0) != '"') {
                 uriBnodeSet.add(sub);
-                if (!nodes[0].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[0])));
+                if (!nodes[0].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(Utils.getNs(nodes[0])));
             }
             if (nodes[1].length() > 0 && nodes[1].charAt(0) != '"') {
                 uriBnodeSet.add(pred);
-                if (!nodes[1].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[1])));
+                if (!nodes[1].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(Utils.getNs(nodes[1])));
             }
             if (nodes[2].length() > 0 && nodes[2].charAt(0) != '"') {
                 predCounter.objNonLiteralCount++;
                 predCounter.distinctObjNonLiteralCount.add(obj);
                 uriBnodeSet.add(obj);
-                if (!nodes[2].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(NodeWrapper.getNs(nodes[2])));
+                if (!nodes[2].startsWith(NodeWrapper.BNODE_SUBSTRING)) nsCounts.add(vault.store(Utils.getNs(nodes[2])));
             }
 
 			

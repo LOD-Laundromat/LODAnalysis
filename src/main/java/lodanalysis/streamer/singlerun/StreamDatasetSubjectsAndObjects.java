@@ -15,7 +15,6 @@ import java.util.zip.GZIPInputStream;
 
 import lodanalysis.Entry;
 import lodanalysis.Paths;
-import lodanalysis.streamer.NodeWrapper;
 import lodanalysis.utils.Utils;
 
 import org.data2semantics.vault.PatriciaVault;
@@ -160,8 +159,8 @@ public class StreamDatasetSubjectsAndObjects implements Runnable  {
 		if (nodes.length >= 3) {
 		    tripleCount++;
             //get distinct uris
-            subjects.add(vault.store(NodeWrapper.getNs(nodes[0])));
-            objects.add(vault.store(NodeWrapper.getNs(nodes[2])));
+            subjects.add(vault.store(Utils.getNs(nodes[0])));
+            objects.add(vault.store(Utils.getNs(nodes[2])));
 		} else {
 			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
 		}

@@ -211,4 +211,73 @@ public class Utils {
         fw.close();
         
     }
+    public static int getLiteralLength(String string, int dataTypeLength, int langTagLength) {
+            int literalLength = string.length() - 2; //subtract the two quotes
+            
+            
+            if (dataTypeLength > 0) {
+                //subtract datatype length, plus the two ^^
+                literalLength -= dataTypeLength - 2;
+            } else if (langTagLength > 0) {
+                //also subtract the @
+                literalLength -= langTagLength - 1;
+            }
+            return literalLength;
+    }
+    
+    // based on jena, but heavily modified. Jena allows e.g. % or _ as ns
+    // delimiter. I only want #, : and /
+    public static String getNs(String uri) {
+        char ch;
+        int lg = uri.length();
+        if (lg == 0)
+            return "";
+        int i = lg - 1;
+        for (; i >= 1; i--) {
+            ch = uri.charAt(i);
+            if (ch == '#' || ch == ':' || ch == '/')
+                break;
+        }
+
+        int j = i + 1;
+
+        if (j >= lg)
+            return uri;
+
+        return uri.substring(0, j);
+    }
+    public static String getDataType(String literal) {
+            if (literal.contains("^^")) {
+                // probably a datatype
+                int closingQuote = literal.lastIndexOf("\"");
+
+                if (literal.length() <= closingQuote + 2 || literal.charAt(closingQuote + 1) != '^'
+                        || literal.charAt(closingQuote + 2) != '^' || literal.charAt(closingQuote + 3) != '<') {
+                    // ah, no lang tag after all!! either nothing comes after the
+                    // quote, or something else than an '^^' follows
+                } else {
+                    return literal.substring(closingQuote + 4, literal.length() - 1);
+//                    this.datatype = vault.store(stringRepresentation.substring(closingQuote + 4, stringRepresentation.length() - 1));
+//                    this.dataTypeLength = stringRepresentation.length() - 1 - closingQuote - 4;
+                }
+            }
+            return null;
+    }
+    
+    public static String getLangTag(String literal) {
+        String langTag = null;
+
+        if (literal.indexOf('@') >= 0) {
+            //this is probably a langtagged literal
+
+            int closingQuote = literal.lastIndexOf("\"");
+            if (literal.length() == closingQuote + 1 || literal.charAt(closingQuote+1) != '@') {
+                //ah, no lang tag after all!! either nothing comes after the quote, or something else than an '@' follows
+            } else {
+                langTag = literal.substring(closingQuote + 2, literal.length());
+            }
+        }
+        return langTag;
+    }
+    
 }
