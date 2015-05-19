@@ -154,57 +154,160 @@ public class StreamDataset implements Runnable  {
 			e.printStackTrace();
 		}
 	}
+	/**
+     * get nodes. if it is a uri, remove the < and >. For literals, keep quotes. This makes the number of substring operation later on low, and we can still distinguish between URIs and literals
+     * @param line
+     * @return
+     */
+    public static String[] parseStatement(String line, boolean isNquadFile) throws IndexOutOfBoundsException {
+        int offset = 1;//remove first <
+        String sub = line.substring(offset, line.indexOf("> "));
+        offset += sub.length()+3;//remove '> <'
+        String pred = line.substring(offset, line.indexOf("> ", offset));
+        offset += pred.length() + 2;//remove '> '
+        
+        
+        
+        int endIndex = line.lastIndexOf(' '); //remove final ' .';
+        boolean objIsUri = false;
+        if (line.charAt(offset) == '<') {
+            //a uri
+            objIsUri = true;
+            endIndex--;//remove '>'
+            offset++;//remove '<' as well
+        }
+        String obj = line.substring(offset, endIndex);
+        String graph = null;
+        
+        
+        if (isNquadFile) {
+            //there might be a graph specified in this statement
+            if (objIsUri) {
+                int separatorIndex = obj.indexOf(' ');
+                if (separatorIndex > 0) {
+                    //ah, this line has graph specified
+                    graph = obj.substring(separatorIndex + 2);//remove ' <' of ng ('>' is already removed)
+                    obj = obj.substring(0, separatorIndex-1);//remove '>' of obj
+                }
+            } else {
+                if (obj.charAt(obj.length() - 1) == '>' && obj.lastIndexOf(' ') > obj.lastIndexOf('^')) {
+                    //ah, this line has graph specified. Tricky condition, because we don't want to confuse datatyped literals: "literal"^^<datatype>
+                    int separatorIndex = obj.lastIndexOf(' ');
+                    graph = obj.substring(separatorIndex + 2, obj.length() - 1);
+                    obj = obj.substring(0, separatorIndex);
+                }
+            }
+            
+            
+        }
+        return new String[]{sub, pred, obj, graph};
+    }
+    
+    private NodeWrapper getAndSetNodeWrapper(PatriciaNode pnode, String stringRepresentation) {
+        NodeWrapper nodeWrapper = nodesInfo.get(pnode);
+        if (nodeWrapper == null) {
+            nodeWrapper = new NodeWrapper(stringRepresentation);
+            nodesInfo.put(pnode, nodeWrapper);
+        }
+        return nodeWrapper;
+    }
 
+    private void processLine(String line) {
+        String[] nodes;
+        try {
+            nodes = parseStatement(line, isNquadFile);
+        } catch (Exception e) {
+            // Invalid triples. In our class it should never happen
+            return;
+        }
+        if (nodes.length >= 3) {
+            PatriciaNode subTicket = vault.store(nodes[0]);
+            PatriciaNode predTicket = vault.store(nodes[1]);
+            PatriciaNode objTicket = vault.store(nodes[2]);
+            
+            NodeWrapper subWrapper = getAndSetNodeWrapper(subTicket, nodes[0]);
+            NodeWrapper predWrapper = getAndSetNodeWrapper(predTicket, nodes[1]);
+            NodeWrapper objWrapper = getAndSetNodeWrapper(objTicket, nodes[2]);
+            
+            subWrapper.update(Position.SUB);
+            predWrapper.update(Position.PRED);
+            objWrapper.update(Position.OBJ);
+            
+            /**
+             * Some generic counters
+             */
+            tripleCount++;
+            PredicateCounter predCounter = null;
+
+            if (!predicateCounts.containsKey(predTicket)) {
+                predCounter = new PredicateCounter();
+                predicateCounts.put(predTicket, predCounter);
+            } else {
+                predCounter = predicateCounts.get(predTicket);
+                predCounter.count++;
+            }
+            predCounter.distinctSubCount.add(subTicket);
+            
+
+
+            /**
+             * store ns counters
+             */
+            if (subWrapper.type == Type.URI) nsCounts.add(subTicket);
+            if (predWrapper.type == Type.URI) nsCounts.add(predTicket);
+            if (objWrapper.type == Type.URI) nsCounts.add(objTicket);
+
+            /**
+             * Store literal info
+             */
+            if (objWrapper.type == Type.LITERAL) {
+                literalCount++;
+                predCounter.objLiteralCount++;
+                predCounter.distinctObjLiteralCount.add(objTicket);
+            } else {
+                predCounter.objNonLiteralCount++;
+                predCounter.distinctObjNonLiteralCount.add(objTicket);
+            }
+            
+            /**
+             * Store classes and props
+             */
+            if (predWrapper.isRdfType) {
+                objWrapper.asTypeCount++;
+                
+                if (objWrapper.classType != null  && objWrapper.classType == ClassType.CLASS) {
+                    subWrapper.definedAsClass = true;
+                } else if (objWrapper.classType != null  && objWrapper.classType == ClassType.PROPERTY) {
+                    subWrapper.definedAsProperty = true;
+                }
+            }
+            
+            
+            
+            
+            //Store URI info
+            if (subWrapper.type == Type.URI) {
+                uriCount++;
+            } 
+            
+            
+            
+            if (predWrapper.type == Type.URI) {
+                uriCount++;
+            }
+            if (objWrapper.type == Type.URI) {
+                uriCount++;
+            }
+        } else {
+            System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
+        }
+
+    }
 	private void log(String msg) throws IOException {
 		if (entry.isVerbose()) System.out.println(msg);
 	}
 
-	private void storeLiteralInfoAndMeasureCounts(File datasetOutputDir) throws IOException {
-	    int distinctLiterals = 0;
-        Set<String> dataTypes = new HashSet<String>();
-        Set<String> langTags = new HashSet<String>();
-        double[] literalLengths = new double[literalCount];
-        int nextIndex = 0;
-        for (java.util.Map.Entry<PatriciaNode, NodeWrapper> entry : nodesInfo.entrySet()) {
-            NodeWrapper nodeWrapper = entry.getValue();
-            if (nodeWrapper.type == Type.LITERAL) {
-                distinctLiterals++;
-                String stringRepresentation = vault.redeem(entry.getKey());
-                String dataType = Utils.getDataType(stringRepresentation);
-                int dataTypeLength = 0;
-                if (dataType != null) {
-                    dataTypes.add(dataType);
-                    dataTypeLength = dataType.length();
-                }
-                String langTag = Utils.getLangTag(stringRepresentation);
-                int langTagLength = 0;
-                if (langTag != null) {
-                    langTags.add(langTag);
-                    langTagLength = langTag.length();
-                } 
-                
-                int literalLength = Utils.getLiteralLength(stringRepresentation, dataTypeLength, langTagLength);
-                int numOccurances = nodeWrapper.getNumOccurances();
-                for (int i = 0; i < numOccurances; i++) {
-                    literalLengths[nextIndex++] = literalLength;
-                }
-            }
-            if (nodeWrapper.objCount > 0) {
-                distinctObjects++;
-            }
-        }
-        
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), dataTypes.size());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), langTags.size());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), distinctLiterals);
-        
-        DescriptiveStatistics stats = new DescriptiveStatistics(literalLengths);
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_AVG), stats.getMean());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MEDIAN), stats.getPercentile(50));
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_STD), stats.getStandardDeviation());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MAX), stats.getMax());
-        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MIN), stats.getMin());
-	}
+	
 	private void store() throws IOException {
 	    
 		String datasetMd5 = datasetDir.getName();
@@ -440,186 +543,54 @@ public class StreamDataset implements Runnable  {
 		FileUtils.write(new File(datasetOutputDir, StreamDatasets.DELTA_FILENAME), Integer.toString(StreamDatasets.DELTA_ID));
 	}
 
+	private void storeLiteralInfoAndMeasureCounts(File datasetOutputDir) throws IOException {
+        int distinctLiterals = 0;
+        Set<String> dataTypes = new HashSet<String>();
+        Set<String> langTags = new HashSet<String>();
+        double[] literalLengths = new double[literalCount];
+        int nextIndex = 0;
+        for (java.util.Map.Entry<PatriciaNode, NodeWrapper> entry : nodesInfo.entrySet()) {
+            NodeWrapper nodeWrapper = entry.getValue();
+            if (nodeWrapper.type == Type.LITERAL) {
+                distinctLiterals++;
+                String stringRepresentation = vault.redeem(entry.getKey());
+                String dataType = Utils.getDataType(stringRepresentation);
+                int dataTypeLength = 0;
+                if (dataType != null) {
+                    dataTypes.add(dataType);
+                    dataTypeLength = dataType.length();
+                }
+                String langTag = Utils.getLangTag(stringRepresentation);
+                int langTagLength = 0;
+                if (langTag != null) {
+                    langTags.add(langTag);
+                    langTagLength = langTag.length();
+                } 
+                
+                int literalLength = Utils.getLiteralLength(stringRepresentation, dataTypeLength, langTagLength);
+                int numOccurances = nodeWrapper.getNumOccurances();
+                for (int i = 0; i < numOccurances; i++) {
+                    literalLengths[nextIndex++] = literalLength;
+                }
+            }
+            if (nodeWrapper.objCount > 0) {
+                distinctObjects++;
+            }
+        }
+        
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_DATA_TYPES), dataTypes.size());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LANG_TAGS), langTags.size());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.DISTINCT_LITERALS), distinctLiterals);
+        
+        DescriptiveStatistics stats = new DescriptiveStatistics(literalLengths);
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_AVG), stats.getMean());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MEDIAN), stats.getPercentile(50));
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_STD), stats.getStandardDeviation());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MAX), stats.getMax());
+        Utils.writeSingleCountToFile(new File(datasetOutputDir, Paths.LITERAL_LENGTH_MIN), stats.getMin());
+    }
 
-
-	/**
-	 * get nodes. if it is a uri, remove the < and >. For literals, keep quotes. This makes the number of substring operation later on low, and we can still distinguish between URIs and literals
-	 * @param line
-	 * @return
-	 */
-	public static String[] parseStatement(String line, boolean isNquadFile) throws IndexOutOfBoundsException {
-		int offset = 1;//remove first <
-		String sub = line.substring(offset, line.indexOf("> "));
-		offset += sub.length()+3;//remove '> <'
-		String pred = line.substring(offset, line.indexOf("> ", offset));
-		offset += pred.length() + 2;//remove '> '
-		
-		
-		
-		int endIndex = line.lastIndexOf(' '); //remove final ' .';
-		boolean objIsUri = false;
-		if (line.charAt(offset) == '<') {
-		    //a uri
-		    objIsUri = true;
-		    endIndex--;//remove '>'
-			offset++;//remove '<' as well
-		}
-		String obj = line.substring(offset, endIndex);
-		String graph = null;
-		
-		
-		if (isNquadFile) {
-		    //there might be a graph specified in this statement
-		    if (objIsUri) {
-		        int separatorIndex = obj.indexOf(' ');
-		        if (separatorIndex > 0) {
-		            //ah, this line has graph specified
-		            graph = obj.substring(separatorIndex + 2);//remove ' <' of ng ('>' is already removed)
-		            obj = obj.substring(0, separatorIndex-1);//remove '>' of obj
-		        }
-		    } else {
-		        if (obj.charAt(obj.length() - 1) == '>' && obj.lastIndexOf(' ') > obj.lastIndexOf('^')) {
-		            //ah, this line has graph specified. Tricky condition, because we don't want to confuse datatyped literals: "literal"^^<datatype>
-		            int separatorIndex = obj.lastIndexOf(' ');
-		            graph = obj.substring(separatorIndex + 2, obj.length() - 1);
-		            obj = obj.substring(0, separatorIndex);
-		        }
-		    }
-		    
-		    
-		}
-	    return new String[]{sub, pred, obj, graph};
-	}
 	
-	private NodeWrapper getAndSetNodeWrapper(PatriciaNode pnode, String stringRepresentation) {
-	    NodeWrapper nodeWrapper = nodesInfo.get(pnode);
-	    if (nodeWrapper == null) {
-	        nodeWrapper = new NodeWrapper(stringRepresentation);
-	        nodesInfo.put(pnode, nodeWrapper);
-	    }
-	    return nodeWrapper;
-	}
-
-	private void processLine(String line) {
-		String[] nodes;
-		try {
-			nodes = parseStatement(line, isNquadFile);
-		} catch (Exception e) {
-			// Invalid triples. In our class it should never happen
-			return;
-		}
-		if (nodes.length >= 3) {
-		    PatriciaNode subTicket = vault.store(nodes[0]);
-		    PatriciaNode predTicket = vault.store(nodes[1]);
-		    PatriciaNode objTicket = vault.store(nodes[2]);
-		    
-		    NodeWrapper subWrapper = getAndSetNodeWrapper(subTicket, nodes[0]);
-		    NodeWrapper predWrapper = getAndSetNodeWrapper(predTicket, nodes[1]);
-		    NodeWrapper objWrapper = getAndSetNodeWrapper(objTicket, nodes[2]);
-		    
-		    subWrapper.update(Position.SUB);
-		    predWrapper.update(Position.PRED);
-		    objWrapper.update(Position.OBJ);
-		    
-		    /**
-			 * Some generic counters
-			 */
-			tripleCount++;
-			PredicateCounter predCounter = null;
-
-			if (!predicateCounts.containsKey(predTicket)) {
-				predCounter = new PredicateCounter();
-				predicateCounts.put(predTicket, predCounter);
-			} else {
-			    predCounter = predicateCounts.get(predTicket);
-			    predCounter.count++;
-			}
-			predCounter.distinctSubCount.add(subTicket);
-			
-
-
-			/**
-			 * store ns counters
-			 */
-			if (subWrapper.type == Type.URI) nsCounts.add(subTicket);
-			if (predWrapper.type == Type.URI) nsCounts.add(predTicket);
-			if (objWrapper.type == Type.URI) nsCounts.add(objTicket);
-
-			/**
-			 * Store literal info
-			 */
-			if (objWrapper.type == Type.LITERAL) {
-				literalCount++;
-//				literalLengthStats.addValue(objWrapper.literalLength);
-//				literals.add(objWrapper.ticket);
-//				if (objWrapper.datatype != null) {
-//					distinctDataTypes.add(objWrapper.datatype);
-//				}
-//				if (objWrapper.langTag != null) {
-//					distinctLangTags.add(objWrapper.langTag);
-//				}
-				predCounter.objLiteralCount++;
-				predCounter.distinctObjLiteralCount.add(objTicket);
-			} else {
-				predCounter.objNonLiteralCount++;
-				predCounter.distinctObjNonLiteralCount.add(objTicket);
-			}
-			
-			/**
-			 * Store classes and props
-			 */
-			if (predWrapper.isRdfType) {
-				objWrapper.asTypeCount++;
-				
-				if (objWrapper.classType != null  && objWrapper.classType == ClassType.CLASS) {
-				    subWrapper.definedAsClass = true;
-				} else if (objWrapper.classType != null  && objWrapper.classType == ClassType.PROPERTY) {
-				    subWrapper.definedAsProperty = true;
-				}
-			}
-			
-			
-			
-			
-			//Store URI info
-			if (subWrapper.type == Type.URI) {
-				uriCount++;
-//				uriLengthStats.addValue(subWrapper.uriLength);
-//				uriSubLengthStats.addValue(subWrapper.uriLength);
-//				subUris.add(subWrapper.ticket);
-			} 
-//			else if (subWrapper.isBnode) {
-////				subBnodes.add(subWrapper.ticket);
-//			}
-			
-			
-			
-			if (predWrapper.type == Type.URI) {
-				uriCount++;
-//				uriLengthStats.addValue(predWrapper.uriLength);
-//				uriPredLengthStats.addValue(predWrapper.uriLength);
-			}
-//			else if (predWrapper.isBnode) {
-//			    //shouldnt be there, but use just in case
-////			    predBnodes.add(predWrapper.ticket);
-//			}
-			
-			
-			
-			if (objWrapper.type == Type.URI) {
-				uriCount++;
-//				uriLengthStats.addValue(objWrapper.uriLength);
-//				uriObjLengthStats.addValue(objWrapper.uriLength);
-//				objUris.add(objWrapper.ticket);
-			}
-//			else if (objWrapper.isBnode) {
-//			    objBnodes.add(objWrapper.ticket);
-//			}
-		} else {
-			System.out.println("Could not get triple from line. " + Arrays.toString(nodes));
-		}
-
-	}
 
 
 	private void writePredCountersToFile(File targetDir, HashMap<PatriciaNode, PredicateCounter> predCounters) throws IOException {
