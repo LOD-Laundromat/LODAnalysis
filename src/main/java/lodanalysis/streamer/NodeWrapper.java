@@ -82,7 +82,7 @@ public class NodeWrapper {
 	 * This makes detection of things like lang tags and datatypes very easy and very fast.
 	 */
 	private void calcInfo() {
-		if (stringRepresentation.charAt(0) == '"') {
+		if (stringRepresentation.length() > 0 && stringRepresentation.charAt(0) == '"') {
 			this.isLiteral = true;
 			this.isUri = false;
 		}
