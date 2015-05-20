@@ -22,7 +22,7 @@ public class NumDistinctSubjects extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLM, "distinctSubjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_SUBJECTS)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.VOID, "distinctSubjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_SUBJECTS)), XSDDatatype.XSDlong);
 	}
 
 }

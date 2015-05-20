@@ -41,7 +41,7 @@ public class NumDistinctRDFNodes extends CreateModelStatement {
             //just skip
         }
 	    
-		doc.addProperty(getProp(Namespace.LLM, "distinctRDFNodes"), Integer.toString(bnodes + literals + uris), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.VOID_EXT, "distinctRDFNodes"), Integer.toString(bnodes + literals + uris), XSDDatatype.XSDlong);
 	}
 
 }

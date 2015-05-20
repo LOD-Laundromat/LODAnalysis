@@ -22,7 +22,7 @@ public class NumSubUris extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLM, "distinctSubjectIRIs"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS_SUB)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.VOID_EXT, "distinctIRIReferenceSubjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS_SUB)), XSDDatatype.XSDlong);
 	}
 
 }

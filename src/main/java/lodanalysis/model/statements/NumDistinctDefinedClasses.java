@@ -22,7 +22,7 @@ public class NumDistinctDefinedClasses extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.LLM, "distinctDefinedClasses"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_DEFINED_CLASSES)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.LLM, "definedClasses"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_DEFINED_CLASSES)), XSDDatatype.XSDlong);
 	}
 
 }
