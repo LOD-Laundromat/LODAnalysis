@@ -121,7 +121,6 @@ public class CreateModel {
         Resource plan = model.createResource("http://lodlaundromat.org/metrics/resource/" + commitHash);
         plan.addProperty(typeProperty, model.createResource(Namespace.PROV.getUrl() + "Plan"));
         plan.addProperty(typeProperty, model.createResource(Namespace.PROV.getUrl() + "Entity"));
-        plan.addProperty(model.createProperty(Namespace.RDFS.getUrl() + "comment"), "SOME COMMENT", XSDDatatype.XSDstring);
         plan.addProperty(model.createProperty(Namespace.LLM.getUrl() + "gitCommitId"), commitHash, XSDDatatype.XSDstring);
         plan.addProperty(model.createProperty(Namespace.LLM.getUrl() + "gitRepository"), model.createResource(gitRepo));;
         
