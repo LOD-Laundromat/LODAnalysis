@@ -3,7 +3,7 @@
 
 force='-force';
 verbose='-verbose';
-memory="-Xmx30G"
+memory="-Xmx60G"
 [ -z "$1" ] && echo "No dataset provided as argument" && exit 1;
 datasetsDir=`dirname $1`;
 version=`basename $datasetsDir`;
