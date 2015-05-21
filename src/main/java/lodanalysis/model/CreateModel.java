@@ -175,8 +175,7 @@ public class CreateModel {
 			description.createDescription();
 		}
 		
-		
-		model.write(new FileOutputStream(new File(metricDir, Paths.DESCRIPTION_NT)), "NT");
+		model.write(new FileOutputStream(new File(metricDir, Paths.DESCRIPTION_TTL)), "TURTLE");
 	}
 	
 	

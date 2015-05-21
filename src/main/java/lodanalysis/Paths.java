@@ -74,6 +74,7 @@ public class Paths {
 	public static final String URI_BNODE_SET = "uriBnodeSet.gz";
 	
 	public static final String DESCRIPTION_NT = "_description.nt";
+	public static final String DESCRIPTION_TTL = "_description.ttl";
 	public static final String PROVENANCE = "provenance";
 	
 	

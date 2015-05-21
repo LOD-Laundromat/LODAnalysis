@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -199,7 +198,7 @@ public class StoreModelsInEndpoint  extends RuneableClass{
 			
 			
 			if (force || !metricDirDone) {
-				File descrFile = new File(metricDir, Paths.DESCRIPTION_NT);
+				File descrFile = new File(metricDir, Paths.DESCRIPTION_TTL);
 				if (!descrFile.exists()) {
 					System.err.println(descrFile.getAbsolutePath() + " does not exist. Skip sending");
 					continue;
