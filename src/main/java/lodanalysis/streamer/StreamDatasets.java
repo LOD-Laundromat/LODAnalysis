@@ -83,6 +83,8 @@ public class StreamDatasets  extends RuneableClass {
     }
 
     public static void printProgress(File datasetDir) throws IOException {
+        System.out.println(TOTAL_DIR_COUNT);
+        System.out.println(PROCESSED_COUNT);
 		Utils.printProgress("aggregating", TOTAL_DIR_COUNT, PROCESSED_COUNT);
 	}
 	

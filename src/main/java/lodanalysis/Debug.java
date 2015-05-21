@@ -32,7 +32,7 @@ public class Debug {
 		 */
 		
 //		new Entry(new String[]{"-force","-metrics", "metrics", "lodanalysis.model.CreateModels"});
-		new Entry(new String[]{"-force","-metric", "metrics/testDataset", "lodanalysis.model.CreateModels"});
+		new Entry(new String[]{"-force","-threads", "4", "-metrics", "metrics/", "lodanalysis.model.CreateModels"});
 		/**
 		 * upload models
 		 */
