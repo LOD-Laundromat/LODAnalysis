@@ -7,9 +7,9 @@
 
 #force='-force';
 #verbose='-verbose';
-threads=2;
+threads=6;
 datasetDir="/scratch/lodlaundromat/12/"
-memory="-Xmx30G"
+memory="-Xmx60G"
 
 
 if [ -z "$1" ]; then
