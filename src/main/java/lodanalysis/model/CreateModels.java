@@ -24,12 +24,15 @@ public class CreateModels  extends RuneableClass{
 		for (File metricDir: metricDirs) {
 			Utils.printProgress("creating descriptions", totalCount, processed);
 			processed++;
-			
-			if (new File(metricDir, StreamDatasets.DELTA_FILENAME).exists() && //i.e., it has some files we can create the model from
-					(entry.forceExec() || Utils.getDelta(metricDir, DELTA_FILENAME) < DELTA_ID)) {
-				new CreateModel(metricDir);
-				//write newest delta
-				FileUtils.write(new File(metricDir, DELTA_FILENAME), Integer.toString(DELTA_ID));
+			try {
+    			if (new File(metricDir, StreamDatasets.DELTA_FILENAME).exists() && //i.e., it has some files we can create the model from
+    					(entry.forceExec() || Utils.getDelta(metricDir, DELTA_FILENAME) < DELTA_ID)) {
+    				new CreateModel(metricDir);
+    				//write newest delta
+    				FileUtils.write(new File(metricDir, DELTA_FILENAME), Integer.toString(DELTA_ID));
+    			}
+			} catch (Exception e) {
+			    e.printStackTrace();
 			}
 			
 		}

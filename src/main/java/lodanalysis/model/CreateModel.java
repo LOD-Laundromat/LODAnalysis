@@ -93,10 +93,12 @@ public class CreateModel {
 	}
 	
 	private void setProvenance() throws IOException {
+	    File sysInfo = new File(metricDir, ".sysinfo");
+	    if (!sysInfo.exists()) return;
 	    //get git info from sysinfo file
 	    String gitRepo = null;
 	    String commitHash = null;
-	    LineIterator it = FileUtils.lineIterator(new File(metricDir, ".sysinfo"));
+	    LineIterator it = FileUtils.lineIterator(sysInfo);
 	    int count = 1;
 	    int gitRepoLine = 1;
 	    int commitHashLine = 3;
