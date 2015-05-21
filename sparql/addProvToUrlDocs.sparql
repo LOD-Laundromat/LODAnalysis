@@ -1,0 +1,69 @@
+SPARQL PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX llo: <http://lodlaundromat.org/ontology/>
+PREFIX ll: <http://lodlaundromat.org/resource/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX void: <http://rdfs.org/ns/void#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+INSERT {
+  GRAPH <http://lodlaundromat.org#metrics-12> {
+    ?dataset  a prov:Entity ;
+    	    prov:wasGeneratedBy ?cleaning_process ;
+  			prov:wasDerivedFrom ?source, ?source_representation .
+  ?cleaning_process a prov:Activity ;
+    		prov:used ?unpacked_copy ;
+    		prov:wasInformedBy ?unpack_process ;
+    		prov:wasStartedBy ?unpacked_copy ;
+    		prov:startedAtTime ?startC ;
+    		prov:endedAtTime ?endC .
+  ?unpacked_copy a prov:Entity ;
+    		prov:wasGeneratedBy ?unpack_process ;
+    		llo:serializationFormat ?format ;
+    		llo:lineCount ?lines ;
+    		llo:byteCount ?bytes ;
+    		llo:charCount ?chars ;
+    		prov:wasDerivedFrom ?source, ?source_representation .
+  ?unpack_process a prov:Activity ;
+    		prov:used ?downloaded_copy ;
+    		prov:wasInformedBy ?download_process ;
+    		prov:endedAtTime ?endU .
+  ?downloaded_copy a prov:Entity ;
+    		prov:wasGeneratedBy ?download_process ;
+    		prov:wasDerivedFrom ?source, ?source_representation ;
+    		llo:contentType ?contentType ;
+    		llo:fileExtension ?extension ;
+    		llo:downloadSize ?size .
+  ?download_process a prov:Activity ;
+        	prov:startedAtTime ?startU ;
+    		prov:used ?source, ?source_representation .
+  ?source_representation a prov:Entity;
+    		owl:sameAs ?source ;
+    		llo:added ?added .
+  }
+} WHERE {
+#  BIND(<http://lodlaundromat.org/resource/e8f74020ae3cf760c34af2b20c4451c4> AS ?dataset)
+  ?dataset llo:startUnpack ?startU ;
+           llo:endUnpack ?endU ;
+           llo:endClean ?endC ;
+           llo:startClean ?startC ;
+           llo:added ?added ;
+           llo:url	?source ;
+           llo:downloadSize ?size ;
+           llo:contentLength ?length ;
+           llo:byteCount ?bytes ;
+           llo:charCount ?chars ;
+           llo:lineCount ?lines ;
+           llo:contentType ?contentType ;
+           llo:fileExtension ?extension ;
+           llo:serializationFormat ?format .
+  FILTER(NOT EXISTS{?dataset a prov:Entity})
+  BIND(iri(concat(str(?dataset),'/source')) AS ?source_representation)
+  BIND(iri(concat(str(?dataset),'/download')) AS ?download_process)
+  BIND(iri(concat(str(?dataset),'/downloaded')) AS ?downloaded_copy)
+  BIND(iri(concat(str(?dataset),'/unpack')) AS ?unpack_process)
+  BIND(iri(concat(str(?dataset),'/unpacked')) AS ?unpacked_copy)
+  BIND(iri(concat(str(?dataset),'/clean')) AS ?cleaning_process)
+} 
+LIMIT 10;
+
