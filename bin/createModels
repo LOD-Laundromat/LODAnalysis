@@ -2,6 +2,6 @@
 [ -z $LOD_ANALYSIS_JAR ] && echo "LOD_ANALYSIS_JAR environment variable not set" && exit 1;
 
 force='-force';
+threads="10"
 
-
-java -jar $LOD_ANALYSIS_JAR $force -metrics $METRIC_DIR "lodanalysis.model.CreateModels";
+java -jar $LOD_ANALYSIS_JAR -threads $threads $force -metrics $METRIC_DIR "lodanalysis.model.CreateModels";
