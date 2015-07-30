@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import lodanalysis.Entry;
 import lodanalysis.RuneableClass;
@@ -16,7 +17,7 @@ public class CreateModels  extends RuneableClass{
 	private static String DELTA_FILENAME = "description_delta";
     public static int PROCESSED_COUNT = 0;
     public static int TOTAL_DIR_COUNT;
-	public CreateModels(Entry entry) throws IOException {
+	public CreateModels(Entry entry) throws IOException, InterruptedException {
 		super(entry);
 		Set<File> metricDirs = entry.getMetricDirs();
 		
@@ -39,7 +40,9 @@ public class CreateModels  extends RuneableClass{
                 e.printStackTrace();
             }
         }
-        
+        executor.shutdown();
+        // Wait until all threads are finish
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
 		
 	}
