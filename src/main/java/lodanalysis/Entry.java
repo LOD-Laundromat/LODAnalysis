@@ -94,23 +94,40 @@ public class Entry {
 	    }
 	    return parentDir;
 	}
+	public File getMetricDirForMd5(String md5) {
+	    File chunkDir = new File(getMetricParentDir(), md5.substring(0, 2));
+	    if (!chunkDir.exists()) chunkDir.mkdir();
+	    return new File(chunkDir, md5.substring(2));
+	}
 	public String getMetricNamedGraph() {
 		return args.get(OptionKeys.namedgraph.toString());
 	}
 	public Set<File> getMetricDirs() {
 	    if (metricDirs == null && args.containsKey(OptionKeys.metrics.toString())) {
-		metricDirs = new HashSet<File>();
-		for (File metricDir: new File(args.get(OptionKeys.metrics.toString())).listFiles()) {
-		    if (metricDir.isDirectory()) metricDirs.add(metricDir);
-		}
+    		metricDirs = new HashSet<File>();
+    		for (File chunkDir: new File(args.get(OptionKeys.metrics.toString())).listFiles()) {
+    		    //System.out.println("chunk " + chunkDir.getName());
+    		    if (chunkDir.isDirectory()) {
+    		        for (File datasetDir: chunkDir.listFiles()) {
+    		            if (datasetDir.isDirectory()) metricDirs.add(datasetDir);
+    		        }
+    		    }
+    		    
+    		}
 	    }
 	    return metricDirs;
 	}
 	private void processParameters() {
 		if (args.containsKey(OptionKeys.datasets.toString()))  {
 		    System.out.println("Fetching directories to analyze");
-		    for (File dataset: new File(args.get(OptionKeys.datasets.toString())).listFiles()) {
-			if (dataset.isDirectory()) datasetDirs.add(dataset);
+		    for (File chunk: new File(args.get(OptionKeys.datasets.toString())).listFiles()) {
+		        //System.out.println("chunk " + chunk.getName());
+		        if (chunk.isDirectory()) {
+		            for (File datasetDir: chunk.listFiles()) {
+		                if (datasetDir.isDirectory()) datasetDirs.add(datasetDir);
+		            }
+		            
+		        }
 		    }
 		}
 		if (args.containsKey(OptionKeys.dataset.toString())) datasetDirs.add(new File(args.get(OptionKeys.dataset.toString())));

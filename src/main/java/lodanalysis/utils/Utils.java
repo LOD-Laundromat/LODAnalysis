@@ -280,4 +280,9 @@ public class Utils {
         return langTag;
     }
     
+    
+    public static String pathToMd5(File path) {
+        return path.getParentFile().getName() + path.getName();
+    }
+    
 }

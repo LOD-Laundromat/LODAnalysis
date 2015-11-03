@@ -310,8 +310,7 @@ public class StreamDataset implements Runnable  {
 	
 	private void store() throws IOException {
 	    
-		String datasetMd5 = datasetDir.getName();
-		File datasetOutputDir = new File(entry.getMetricParentDir(), datasetMd5);
+		File datasetOutputDir = entry.getMetricDirForMd5(Utils.pathToMd5(datasetDir));
 		if (!datasetOutputDir.exists()) datasetOutputDir.mkdir();
 		
 		//store provenance file

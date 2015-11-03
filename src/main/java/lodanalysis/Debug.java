@@ -18,12 +18,12 @@ public class Debug {
 		 * ad hoc dataset resources script
 		 */
 //	    new Entry(new String[]{"-threads", "4","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasetsLight"});
-//	    new Entry(new String[]{"-threads", "4","-datasets", "datasets", "-metrics", "metrics", "lodanalysis.streamer.singlerun.StreamDatasetsNamespaces"});
+//	    new Entry(new String[]{"-force", "-threads", "4","-metrics", "/scratch/lodlaundromat/metrics/13", "-dataset", "/scratch/lodlaundromat/crawls/13/bb/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "lodanalysis.streamer.StreamDatasets"});
 	    
 		/**
 		 * streamer
 		 */
-//		new Entry(new String[]{"-force", "-max_size", "1", "-datasets", "datasets/", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
+//		new Entry(new String[]{"-force", "-max_size", "1", "-datasets", "/scratch/lodlaundromat/crawls/13/", "-metrics", "/scratch/lodlaundromat/metrics/13", "lodanalysis.streamer.StreamDatasets"});
 //		new Entry(new String[]{"-force","-dataset", "datasets/8cb01c478a21c579e96f69cfeeff1475", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 //		new Entry(new String[]{"-force","-dataset", "datasets/testDataset", "-metrics", "metrics", "lodanalysis.streamer.StreamDatasets"});
 
@@ -31,12 +31,12 @@ public class Debug {
 		 * model creator
 		 */
 		
-		new Entry(new String[]{"-force","-metrics", "metrics", "lodanalysis.model.CreateModels"});
+		new Entry(new String[]{"-force","-metric", "/scratch/lodlaundromat/metrics/13/bb/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "lodanalysis.model.CreateModels"});
 //		new Entry(new String[]{"-force","-threads", "4", "-metrics", "metrics/", "lodanalysis.model.CreateModels"});
 		/**
 		 * upload models
 		 */
 //		http://lodlaundromat.org#metrics-11
-//		new Entry(new String[]{ "-force", "-metric", "metrics/0fb5cc2fb77fcd6c187ef3b4856f7813", "lodanalysis.model.StoreModelsInEndpoint"});
+		new Entry(new String[]{ "-force", "-metrics", "/scratch/lodlaundromat/metrics/13/", "lodanalysis.model.StoreModelsInEndpoint"});
 	}
 }
