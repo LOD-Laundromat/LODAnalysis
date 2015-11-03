@@ -5,12 +5,11 @@ force='-force';
 verbose='-verbose';
 memory="-Xmx60G"
 [ -z "$1" ] && echo "No dataset provided as argument" && exit 1;
-datasetsDir=`dirname $1`;
-version=`basename $datasetsDir`;
-metrics="/scratch/lodlaundromat/metrics-$version"
+
+metrics="$METRIC_DIR"
 
 if [ -z "$2" ]; then
-	echo "Using metric dir $metrics"
+	echo "Using metric dir $METRIC_DIR"
 else
 	metrics=$2;
 fi

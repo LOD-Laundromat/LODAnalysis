@@ -1,10 +1,9 @@
 #!/bin/bash
 [ -z $LOD_ANALYSIS_JAR ] && echo "LOD_ANALYSIS_JAR environment variable not set" && exit 1;
-[ -z "$1" ] && echo "No metric dir provided as argument" && exit 1;
+[ -z "$1" ] && echo "No dataset dir provided as argument" && exit 1;
 
 force='-force';
-md5=`basename $1`
+md5=`pathToMd5 $1`
 
-metric=$METRIC_DIR/$md5;
+metric=$METRIC_DIR/`md5ToPath $md5`;
 java -jar $LOD_ANALYSIS_JAR $force -metric $metric "lodanalysis.model.CreateModels";
-

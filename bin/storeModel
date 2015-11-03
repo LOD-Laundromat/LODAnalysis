@@ -3,11 +3,8 @@
 [ -z "$1" ] && echo "No dataset dir provided as argument" && exit 1;
 
 force='-force';
-md5=`basename $1`
-datasetsDir=`dirname $1`;
-version=`basename $datasetsDir`;
-metrics="/scratch/lodlaundromat/metrics-$version"
+md5=`pathToMd5 $1`
 
-metric=$metrics/$md5;
+metric=$METRIC_DIR/`md5ToPath $md5`;
+
 java -jar $LOD_ANALYSIS_JAR $force -metric $metric "lodanalysis.model.StoreModelsInEndpoint";
-

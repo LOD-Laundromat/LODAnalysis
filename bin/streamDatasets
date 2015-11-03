@@ -8,7 +8,7 @@
 #force='-force';
 #verbose='-verbose';
 threads=6;
-datasetDir="/scratch/lodlaundromat/12/"
+datasetDir="$CRAWL_DIR"
 memory="-Xmx60G"
 
 
@@ -17,9 +17,9 @@ if [ -z "$1" ]; then
 else
     datasetDir=$1
 fi
-metricDir="/scratch/lodlaundromat/metrics-12/"
+metricDir="METRIC_DIR"
 if [ -z "$2" ]; then
-    echo "Using metric dir $metricDir"
+    echo "Using metric dir $METRIC_DIR"
 else
     metricDir=$2
 fi
@@ -31,7 +31,7 @@ fi
 
 while true; do
     echo "Run cmd [Y/n]?"
-    cmd="java $memory -jar $LOD_ANALYSIS_JAR $force $verbose -threads $threads -datasets $datasetDir -metrics $metricDir \"lodanalysis.streamer.StreamDatasetsLight\""
+    cmd="java $memory -jar $LOD_ANALYSIS_JAR $force $verbose -threads $threads -datasets $datasetDir -metrics $metricDir \"lodanalysis.streamer.StreamDatasets\""
     echo "$cmd"
     read -n 1 -r yn
     case $yn in
@@ -40,4 +40,3 @@ while true; do
         * ) echo "Please answer yes or no.";;
     esac
 done
-
