@@ -7,7 +7,7 @@ PREFIX void: <http://rdfs.org/ns/void#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
 INSERT  {
-  GRAPH <http://lodlaundromat.org#metrics-12> {
+  GRAPH <http://lodlaundromat.org#metrics-#CRAWL_ID#> {
     ?dataset  a prov:Entity ;
     	    prov:wasGeneratedBy ?cleaning_process ;
   			prov:wasDerivedFrom ?parent, ?source_representation .
