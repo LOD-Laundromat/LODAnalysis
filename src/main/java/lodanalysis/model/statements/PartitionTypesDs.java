@@ -36,7 +36,7 @@ public class PartitionTypesDs extends CreateModelStatement {
 			Resource bnode = getBnode();
 			bnode.addProperty(getProp(Namespace.RDF, "type"), getResource(Namespace.DS, "Dataset-Type-Count"));
 			bnode.addProperty(getProp(Namespace.VOID, "class"), factory.model.createResource(typeLineSplit[0]));
-			bnode.addProperty(getProp(Namespace.VOID, "entities"), typeLineSplit[1], XSDDatatype.XSDlong);
+			bnode.addProperty(getProp(Namespace.VOID, "entities"), typeLineSplit[1], XSDDatatype.XSDinteger);
 			doc.addProperty(getProp(Namespace.VOID, "subset"), bnode);
 		}
 	}

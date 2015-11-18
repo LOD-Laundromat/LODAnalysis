@@ -22,7 +22,7 @@ public class NumDistinctDataTypes extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.VOID_EXT, "dataTypes"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_DATA_TYPES)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.VOID_EXT, "dataTypes"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_DATA_TYPES)), XSDDatatype.XSDinteger);
 	}
 
 }

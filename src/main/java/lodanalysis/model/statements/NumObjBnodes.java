@@ -22,7 +22,7 @@ public class NumObjBnodes extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.VOID_EXT, "distinctBlankNodeObjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_BNODES_OBJ)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.VOID_EXT, "distinctBlankNodeObjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_BNODES_OBJ)), XSDDatatype.XSDinteger);
 	}
 
 }

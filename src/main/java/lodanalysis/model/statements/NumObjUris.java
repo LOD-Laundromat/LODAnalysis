@@ -22,7 +22,7 @@ public class NumObjUris extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.VOID_EXT, "distinctIRIReferenceObjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS_OBJ)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.VOID_EXT, "distinctIRIReferenceObjects"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_URIS_OBJ)), XSDDatatype.XSDinteger);
 	}
 
 }

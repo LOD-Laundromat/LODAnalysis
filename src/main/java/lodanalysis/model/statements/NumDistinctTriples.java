@@ -22,7 +22,7 @@ public class NumDistinctTriples extends CreateModelStatement {
 
 	@Override
 	public void createDescription() throws IOException {
-		doc.addProperty(getProp(Namespace.VOID, "triples"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_TRIPLES)), XSDDatatype.XSDlong);
+		doc.addProperty(getProp(Namespace.VOID, "triples"), FileUtils.readFileToString(new File(dir, Paths.DISTINCT_TRIPLES)), XSDDatatype.XSDinteger);
 	}
 
 }
