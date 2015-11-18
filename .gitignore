@@ -8,3 +8,4 @@
 *.err
 tags
 src/main/resources/git.properties
+tmp

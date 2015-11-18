@@ -1,6 +1,7 @@
 #!/bin/bash
 
-[ -z $SPARQL_DIR ] && echo "SPARQL_DIR env not set" && exit;
+[ -z $SPARQL_DIR ] && echo "SPARQL_DIR env not set" && exit 1;
+[ -z $CRAWL_ID ] && echo "CRAWL_ID env not set" && exit 1;
 #this automatically takes docs without prov, and adds it (limit 100)
-cat $SPARQL_DIR/addProvToArchiveDocs.sparql | isql;
+cat $SPARQL_DIR/addProvToArchiveDocs.sparql | sed "s/#CRAWL_ID#/$CRAWL_ID/g" | isql;
 cat $SPARQL_DIR/addProvToUrlDocs.sparql | isql;
