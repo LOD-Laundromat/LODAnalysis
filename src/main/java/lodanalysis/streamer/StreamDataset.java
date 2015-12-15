@@ -353,19 +353,18 @@ public class StreamDataset implements Runnable  {
 		int distinctSubjects = 0;
 		int distinctObjectsAndSubjects = 0;
 		double[] indegree = new double[distinctObjects];
-		int indegreeNextIndex = 0;
         for (Iterator<java.util.Map.Entry<PatriciaNode, NodeWrapper>> it = nodesInfo.entrySet().iterator(); it.hasNext();) {
             java.util.Map.Entry<PatriciaNode, NodeWrapper> entry = it.next();
             
             NodeWrapper nodeWrapper = entry.getValue();
             if (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0) distinctSos.add(entry.getKey());
-            if (nodeWrapper.objCount > 0) {
-                indegree[indegreeNextIndex++] = nodeWrapper.objCount;
+            if (nodeWrapper.type != Type.LITERAL && nodeWrapper.objCount > 0) {
+                indegree[indegree.length] = nodeWrapper.objCount;
             }
             if (nodeWrapper.subCount > 0) {
                 distinctSubjects++;
             } 
-            if (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0) distinctObjectsAndSubjects++;
+            if (nodeWrapper.type != Type.LITERAL && (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0)) distinctObjectsAndSubjects++;
             
             //we can remove literals from this hashmap now, to clean up memory
             if (nodeWrapper.type == Type.LITERAL) {
@@ -402,9 +401,7 @@ public class StreamDataset implements Runnable  {
 		double[] allObjUriLengths = new double[allObjUriCount];
 		int allObjUriLengthsNextIndex = 0;
 		double[] outDegree = new double[distinctSubjects];
-		int outDegreeNextIndex = 0;
 		double[] degree = new double[distinctObjectsAndSubjects];
-		int degreeNextIndex = 0;
 		int distinctUris = 0;
 		int distinctUrisSub = 0;//
 		int distinctBnodesSub = 0;//
@@ -456,10 +453,10 @@ public class StreamDataset implements Runnable  {
 		    if (nodeWrapper.definedAsClass) distinctDefinedClasses++;
 		    if (nodeWrapper.definedAsProperty) distinctDefinedProperties++;
 		    if (nodeWrapper.subCount > 0) {
-		        outDegree[outDegreeNextIndex] = nodeWrapper.subCount;
+		        outDegree[outDegree.length] = nodeWrapper.subCount;
 		    }
-		    if (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0) {
-		        degree[degreeNextIndex] = nodeWrapper.subCount + nodeWrapper.objCount;
+		    if (nodeWrapper.type != Type.LITERAL && (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0)) {
+		        degree[degree.length] = nodeWrapper.subCount + nodeWrapper.objCount;
 		    }
 		    if (nodeWrapper.type == Type.BNODE) {
 		        bnodeCountsFw.write(stringRepresentation + "\t" + nodeWrapper.getNumOccurances() + System.getProperty("line.separator"));
