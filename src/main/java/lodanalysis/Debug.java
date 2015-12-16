@@ -31,12 +31,18 @@ public class Debug {
 		 * model creator
 		 */
 		
-		new Entry(new String[]{"-force","-metric", "/scratch/lodlaundromat/metrics/13/bb/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "lodanalysis.model.CreateModels"});
+//		new Entry(new String[]{"-force","-metric", "/scratch/lodlaundromat/metrics/13/bb/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "lodanalysis.model.CreateModels"});
 //		new Entry(new String[]{"-force","-threads", "4", "-metrics", "metrics/", "lodanalysis.model.CreateModels"});
 		/**
 		 * upload models
 		 */
 //		http://lodlaundromat.org#metrics-11
-		new Entry(new String[]{ "-force", "-metrics", "/scratch/lodlaundromat/metrics/13/", "lodanalysis.model.StoreModelsInEndpoint"});
+//		new Entry(new String[]{ "-force", "-metrics", "/scratch/lodlaundromat/metrics/13/", "lodanalysis.model.StoreModelsInEndpoint"});
+	    
+	    /**
+	     * StreamAndModel
+	     */
+//	    new Entry(new String[]{"-force","-dataset", "src/test/resources/testDataset", "-metrics", "src/test/resources/", "lodanalysis.streamer.StreamDatasets", });
+//	    new Entry(new String[]{"-force", "-metric", "src/test/resources/re/sourcestestDataset", "lodanalysis.model.CreateModels", });
 	}
 }

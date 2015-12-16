@@ -59,6 +59,7 @@ public class StreamDataset implements Runnable  {
 	int uriCount = 0;
 	int literalCount = 0;
 	int distinctObjects = 0;
+	int distinctNonLiteralObjects = 0;
 	
 	//private Set<PatriciaNode> binaryInfo = new HashSet<PatriciaNode>();
 	//option: store fingerprint in single hashmap for 
@@ -352,14 +353,17 @@ public class StreamDataset implements Runnable  {
 		
 		int distinctSubjects = 0;
 		int distinctObjectsAndSubjects = 0;
-		double[] indegree = new double[distinctObjects];
+		double[] indegree = new double[distinctNonLiteralObjects];
+//		System.out.println(distinctNonLiteralObjects);
+		int indegreeArrIndex = 0;
         for (Iterator<java.util.Map.Entry<PatriciaNode, NodeWrapper>> it = nodesInfo.entrySet().iterator(); it.hasNext();) {
             java.util.Map.Entry<PatriciaNode, NodeWrapper> entry = it.next();
             
             NodeWrapper nodeWrapper = entry.getValue();
             if (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0) distinctSos.add(entry.getKey());
             if (nodeWrapper.type != Type.LITERAL && nodeWrapper.objCount > 0) {
-                indegree[indegree.length] = nodeWrapper.objCount;
+                indegree[indegreeArrIndex] = nodeWrapper.objCount;
+                indegreeArrIndex++;
             }
             if (nodeWrapper.subCount > 0) {
                 distinctSubjects++;
@@ -401,7 +405,9 @@ public class StreamDataset implements Runnable  {
 		double[] allObjUriLengths = new double[allObjUriCount];
 		int allObjUriLengthsNextIndex = 0;
 		double[] outDegree = new double[distinctSubjects];
+		int outDegreeNextIndex = 0;
 		double[] degree = new double[distinctObjectsAndSubjects];
+		int degreeNextIndex = 0;
 		int distinctUris = 0;
 		int distinctUrisSub = 0;//
 		int distinctBnodesSub = 0;//
@@ -429,17 +435,22 @@ public class StreamDataset implements Runnable  {
                     distinctUrisObj++;
                 }
 		        
+                for (int i = 0; i < nodeWrapper.subCount + nodeWrapper.predCount + nodeWrapper.objCount; i++) {
+                    allUriLengths[allUriLengthsNextIndex] = stringRepresentation.length();
+                    allUriLengthsNextIndex++;
+                }
 		        for (int i = 0; i < nodeWrapper.subCount; i++) {
-		            allUriLengths[allUriLengthsNextIndex] = stringRepresentation.length();
 		            allSubUriLengths[allSubUriLengthsNextIndex] = stringRepresentation.length();
+		            allSubUriLengthsNextIndex++;
 		        }
 		        for (int i = 0; i < nodeWrapper.predCount; i++) {
-		            allUriLengths[allUriLengthsNextIndex] = stringRepresentation.length();
 		            allPredUriLengths[allPredUriLengthsNextIndex] = stringRepresentation.length();
+		            allPredUriLengthsNextIndex++;
 		        }
 		        for (int i = 0; i < nodeWrapper.objCount; i++) {
-		            allUriLengths[allUriLengthsNextIndex] = stringRepresentation.length();
 		            allObjUriLengths[allObjUriLengthsNextIndex] = stringRepresentation.length();
+		            allObjUriLengthsNextIndex++;
+		            
 		        }
 		    } else if (nodeWrapper.type == Type.BNODE) {
 		        
@@ -453,10 +464,12 @@ public class StreamDataset implements Runnable  {
 		    if (nodeWrapper.definedAsClass) distinctDefinedClasses++;
 		    if (nodeWrapper.definedAsProperty) distinctDefinedProperties++;
 		    if (nodeWrapper.subCount > 0) {
-		        outDegree[outDegree.length] = nodeWrapper.subCount;
+		        outDegree[outDegreeNextIndex] = nodeWrapper.subCount;
+		        outDegreeNextIndex++;
 		    }
 		    if (nodeWrapper.type != Type.LITERAL && (nodeWrapper.subCount > 0 || nodeWrapper.objCount > 0)) {
-		        degree[degree.length] = nodeWrapper.subCount + nodeWrapper.objCount;
+		        degree[degreeNextIndex] = nodeWrapper.subCount + nodeWrapper.objCount;
+		        degreeNextIndex++;
 		    }
 		    if (nodeWrapper.type == Type.BNODE) {
 		        bnodeCountsFw.write(stringRepresentation + "\t" + nodeWrapper.getNumOccurances() + System.getProperty("line.separator"));
@@ -571,6 +584,7 @@ public class StreamDataset implements Runnable  {
             }
             if (nodeWrapper.objCount > 0) {
                 distinctObjects++;
+                if (nodeWrapper.type != Type.LITERAL) distinctNonLiteralObjects++;
             }
         }
         

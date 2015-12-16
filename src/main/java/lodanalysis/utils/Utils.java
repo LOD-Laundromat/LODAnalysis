@@ -216,11 +216,13 @@ public class Utils {
             
             
             if (dataTypeLength > 0) {
-                //subtract datatype length, plus the two ^^
-                literalLength -= dataTypeLength - 2;
+                //subtract datatype length, plus the two ^^ and the < >
+                literalLength -= dataTypeLength;
+                literalLength -= 4;
             } else if (langTagLength > 0) {
                 //also subtract the @
-                literalLength -= langTagLength - 1;
+                literalLength -= langTagLength;
+                literalLength -= 1;
             }
             return literalLength;
     }
