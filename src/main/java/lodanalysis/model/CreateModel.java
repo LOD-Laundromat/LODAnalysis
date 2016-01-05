@@ -117,7 +117,6 @@ public class CreateModel implements Runnable {
         voidDoc.addProperty(model.createProperty(Namespace.PROV.getUrl(), "used"), model.createResource(Namespace.LL.getUrl() + metricDir.getName()));
 
         // init provenance plan (the resource referencing the github resource)
-
         Resource plan = model.createResource("http://lodlaundromat.org/metrics/resource/" + commitHash);
         plan.addProperty(typeProperty, model.createResource(Namespace.PROV.getUrl() + "Plan"));
         plan.addProperty(typeProperty, model.createResource(Namespace.PROV.getUrl() + "Entity"));

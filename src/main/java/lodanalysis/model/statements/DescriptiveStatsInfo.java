@@ -30,6 +30,7 @@ public abstract class DescriptiveStatsInfo extends CreateModelStatement {
 		descriptiveStats.addProperty(getProp(Namespace.LLM, "min"), FileUtils.readFileToString(new File(dir, getMinFilename())), XSDDatatype.XSDinteger);
 		descriptiveStats.addProperty(getProp(Namespace.LLM, "max"), FileUtils.readFileToString(new File(dir, getMaxFilename())), XSDDatatype.XSDinteger);
 		descriptiveStats.addProperty(getProp(Namespace.LLM, "std"), FileUtils.readFileToString(new File(dir, getStdFilename())), XSDDatatype.XSDdouble);
+		descriptiveStats.addProperty(getProp(Namespace.RDF, "type"), getResource(Namespace.LLM, "DescriptiveStatistics"));
 		doc.addProperty(getDescriptiveProp(), descriptiveStats);
 	}
 	

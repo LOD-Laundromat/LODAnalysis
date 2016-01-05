@@ -28,7 +28,7 @@ public class PartitionTypesVoid extends CreateModelStatement {
 			if (classLineSplit.length != 2) throw new IllegalStateException("Unexpected input. Cannot split: " + classLine);
 			Resource bnode = getBnode();
 			bnode.addProperty(getProp(Namespace.VOID, "class"), factory.model.createResource(classLineSplit[0]));
-			bnode.addProperty(getProp(Namespace.VOID, "entities"), classLineSplit[1], XSDDatatype.XSDlong);
+			bnode.addProperty(getProp(Namespace.VOID, "entities"), classLineSplit[1], XSDDatatype.XSDinteger);
 			doc.addProperty(getProp(Namespace.VOID, "classPartition"), bnode);
 		}
 	}
