@@ -21,7 +21,7 @@ public class CreateModels  extends RuneableClass{
 		super(entry);
 		Set<File> metricDirs = entry.getMetricDirs();
 		
-
+		System.out.println("processing " + metricDirs.size() + " metric dirs");
 		TOTAL_DIR_COUNT = metricDirs.size();
 		
 		ExecutorService executor = Executors.newFixedThreadPool(entry.getNumThreads());
@@ -31,7 +31,9 @@ public class CreateModels  extends RuneableClass{
                         (entry.forceExec() || Utils.getDelta(metricDir, DELTA_FILENAME) < DELTA_ID)) {
                     Runnable worker = new CreateModel(metricDir);
                     executor.execute(worker);
+                    if (entry.isVerbose()) System.out.println("processed " + metricDir.getName());
                 } else {
+                    if (entry.isVerbose()) System.out.println("skipped " + metricDir.getName());
                     PROCESSED_COUNT ++;
                     printProgress(metricDir);//i.e., include the unprocessed datasets (which we already processed before) in the progress counter
                         

@@ -128,6 +128,7 @@ public class CreateModel implements Runnable {
         Resource calculationActivity = model.createResource(Namespace.LL.getUrl() + metricDir.getName() + "/metricCalculation");
         calculationActivity.addProperty(typeProperty, model.getResource(Namespace.PROV.getUrl() + "Activity"));
         calculationActivity.addProperty(model.createProperty(Namespace.PROV.getUrl() + "generated"), voidDoc);
+        calculationActivity.addProperty(model.createProperty(Namespace.PROV.getUrl() + "used"), model.createResource(Namespace.LL.getUrl() + metricDir.getName()));
 
         Resource qualifiedAssociationBnode = model.createResource();
         qualifiedAssociationBnode.addProperty(typeProperty, model.createResource(Namespace.PROV.getUrl() + "Association"));
