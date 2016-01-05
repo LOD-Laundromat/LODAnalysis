@@ -9,3 +9,6 @@
 tags
 src/main/resources/git.properties
 tmp
+*.jar
+metrics
+datasets
