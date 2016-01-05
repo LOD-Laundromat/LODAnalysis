@@ -162,6 +162,7 @@ public class CreateModel implements Runnable {
             addStructuralProps();
 
             model.write(new FileOutputStream(new File(metricDir, Paths.DESCRIPTION_TTL)), "TURTLE");
+            model.write(new FileOutputStream(new File(metricDir, Paths.DESCRIPTION_NT)), "N-TRIPLE");
             CreateModels.PROCESSED_COUNT++;
             CreateModels.printProgress(metricDir);
         } catch (Exception e) {
